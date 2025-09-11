@@ -8,6 +8,13 @@ class WebhookController {
       const timestamp = req.headers['x-hubspot-request-timestamp'];
       const body = JSON.stringify(req.body);
 
+      // Log the complete request for debugging
+      logger.info('=== WEBHOOK REQUEST DEBUG ===');
+      logger.info('Headers:', JSON.stringify(req.headers, null, 2));
+      logger.info('Body type:', typeof req.body);
+      logger.info('Body content:', JSON.stringify(req.body, null, 2));
+      logger.info('Raw body:', req.body);
+
       // Verify webhook signature (disabled for now)
       if (false && process.env.NODE_ENV === 'production' && signature) {
         const isValid = webhookService.verifyHubSpotSignature(body, signature, timestamp);
