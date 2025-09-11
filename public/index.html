@@ -195,7 +195,7 @@
 
             <!-- Search and Filters -->
             <div class="row mb-4">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="input-group">
                         <input type="text" class="form-control" id="searchInput" placeholder="Search contacts...">
                         <button class="btn btn-primary" id="searchButton">
@@ -203,18 +203,31 @@
                         </button>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select class="form-select" id="segmentFilter">
                         <option value="">All Contacts</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <div class="btn-group" role="group">
+                    <select class="form-select" id="sortSelect">
+                        <option value="createdAt-desc">📅 Newest First</option>
+                        <option value="createdAt-asc">📅 Oldest First</option>
+                        <option value="lastSyncedAt-desc">🔄 Recently Synced</option>
+                        <option value="firstName-asc">🔤 Name A-Z</option>
+                        <option value="firstName-desc">🔤 Name Z-A</option>
+                        <option value="company-asc">🏢 Company A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="btn-group w-100" role="group">
                         <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
                             <i class="fas fa-th"></i> Grid
                         </button>
                         <button type="button" class="btn btn-outline-secondary" id="listViewBtn">
                             <i class="fas fa-list"></i> List
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="refreshContactsBtn">
+                            <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
                 </div>

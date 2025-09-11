@@ -45,6 +45,23 @@ function setupEventListeners() {
     if (segmentFilter) {
         segmentFilter.addEventListener('change', loadContactsBySegment);
     }
+    
+    // Sort and refresh functionality
+    const sortSelect = document.getElementById('sortSelect');
+    const refreshContactsBtn = document.getElementById('refreshContactsBtn');
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            loadContacts(1); // Reload with new sort
+        });
+    }
+    
+    if (refreshContactsBtn) {
+        refreshContactsBtn.addEventListener('click', function() {
+            console.log('Refreshing contacts...');
+            loadContacts(currentPage);
+        });
+    }
 
     // HubSpot buttons
     const testHubSpotBtn = document.getElementById('testHubSpotBtn');
@@ -242,7 +259,12 @@ async function loadContacts(page = 1) {
         showLoading(true);
         currentPage = page;
         
-        let url = `${API_BASE}/contacts?page=${page}&limit=100`;
+        // Get sort selection
+        const sortSelect = document.getElementById('sortSelect');
+        const sortValue = sortSelect ? sortSelect.value : 'createdAt-desc';
+        const [sortField, sortOrder] = sortValue.split('-');
+        
+        let url = `${API_BASE}/contacts?page=${page}&limit=100&sort=${sortField}&order=${sortOrder}`;
         console.log('Fetching from URL:', url);
         const response = await fetch(url);
         console.log('Response status:', response.status);
