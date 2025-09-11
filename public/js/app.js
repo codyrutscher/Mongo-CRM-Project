@@ -1056,14 +1056,14 @@ function displaySegments(segments) {
                         <small class="text-muted">${segment.contactCount} contacts</small>
                     </div>
                     <div class="segment-actions">
-                        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewSegmentContacts('${segment._id}')">
+                        <button class="btn btn-sm btn-outline-primary me-1" data-action="view" data-segment-id="${segment._id}">
                             <i class="fas fa-eye"></i> View
                         </button>
-                        <button class="btn btn-sm btn-outline-success me-1" onclick="exportSegment('${segment._id}')">
+                        <button class="btn btn-sm btn-outline-success me-1" data-action="export" data-segment-id="${segment._id}">
                             <i class="fas fa-download"></i> Export
                         </button>
                         ${!segment.isSystem ? `
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSegment('${segment._id}')">
+                            <button class="btn btn-sm btn-outline-danger" data-action="delete" data-segment-id="${segment._id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         ` : ''}
@@ -1074,6 +1074,28 @@ function displaySegments(segments) {
     });
     
     segmentsList.innerHTML = html;
+    
+    // Add event listeners to segment action buttons
+    segmentsList.querySelectorAll('[data-action]').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            const segmentId = this.getAttribute('data-segment-id');
+            
+            switch(action) {
+                case 'view':
+                    viewSegmentContacts(segmentId);
+                    break;
+                case 'export':
+                    exportSegment(segmentId);
+                    break;
+                case 'delete':
+                    if (confirm('Are you sure you want to delete this segment?')) {
+                        deleteSegment(segmentId);
+                    }
+                    break;
+            }
+        });
+    });
 }
 
 function viewSegmentContacts(segmentId) {
@@ -1127,7 +1149,7 @@ function displayHubSpotLists(lists) {
                     <strong>${list.name}</strong>
                     <br><small class="text-muted">${list.processingType || 'Static'} list</small>
                 </div>
-                <button class="btn btn-sm btn-primary" onclick="syncHubSpotList('${list.listId}', '${list.name}')">
+                <button class="btn btn-sm btn-primary" data-action="sync" data-list-id="${list.listId}" data-list-name="${list.name}">
                     <i class="fas fa-sync"></i> Sync
                 </button>
             </div>
@@ -1136,6 +1158,15 @@ function displayHubSpotLists(lists) {
     html += '</div>';
     
     listsDiv.innerHTML = html;
+    
+    // Add event listeners to sync buttons
+    listsDiv.querySelectorAll('[data-action="sync"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const listId = this.getAttribute('data-list-id');
+            const listName = this.getAttribute('data-list-name');
+            syncHubSpotList(listId, listName);
+        });
+    });
 }
 
 async function syncHubSpotList(listId, listName) {

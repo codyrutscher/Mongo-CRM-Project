@@ -91,10 +91,10 @@ class SegmentService {
       },
       {
         name: 'HubSpot DNC List',
-        description: 'Contacts from HubSpot DNC list (ID: 6029)',
+        description: 'Contacts from HubSpot DNC list (ID: 6199)',
         filters: { 
           source: 'hubspot',
-          'customFields.hubspotListId': '6029'
+          'customFields.hubspotListId': '6199'
         },
         isSystem: true,
         color: '#6f42c1',

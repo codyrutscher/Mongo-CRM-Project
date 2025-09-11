@@ -116,26 +116,57 @@ class HubSpotService {
         logger.error('Error fetching static lists:', error.message);
       }
 
-      // Get segments (smart lists) - this is where your DNC list likely is
+      // Get object lists/saved filters (this is where your DNC list 6029 likely is)
       try {
-        const segmentsResponse = await axios.get(`${this.baseURL}/crm/v3/objects/contact_lists`, {
+        const objectListsResponse = await axios.get(`${this.baseURL}/crm/v3/objects/contact_lists`, {
           headers: {
             'Authorization': `Bearer ${this.accessToken}`,
             'Content-Type': 'application/json'
           }
         });
         
-        if (segmentsResponse.data.results) {
-          lists.push(...segmentsResponse.data.results.map(segment => ({
-            listId: segment.id,
-            name: segment.properties.name,
-            listType: 'SEGMENT',
-            type: 'segment',
-            size: segment.properties.size || 0
+        if (objectListsResponse.data.results) {
+          lists.push(...objectListsResponse.data.results.map(objectList => ({
+            listId: objectList.id,
+            name: objectList.properties.name || `Object List ${objectList.id}`,
+            listType: 'OBJECT_LIST',
+            type: 'object_list',
+            size: objectList.properties.size || 0,
+            processingType: objectList.properties.processingType || 'Unknown'
           })));
         }
       } catch (error) {
-        logger.error('Error fetching segments:', error.message);
+        logger.error('Error fetching object lists:', error.message);
+      }
+
+      // Try the specific object lists endpoint that matches your URL
+      try {
+        const savedFiltersResponse = await axios.get(`https://api.hubapi.com/crm/v3/objects/contact_lists`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          params: {
+            limit: 100,
+            properties: 'name,size,processingType,listType'
+          }
+        });
+        
+        if (savedFiltersResponse.data.results) {
+          const savedFilters = savedFiltersResponse.data.results.filter(filter => 
+            !lists.some(existingList => existingList.listId === filter.id)
+          );
+          
+          lists.push(...savedFilters.map(filter => ({
+            listId: filter.id,
+            name: filter.properties.name || `Saved Filter ${filter.id}`,
+            listType: 'SAVED_FILTER',
+            type: 'saved_filter',
+            size: filter.properties.size || 0
+          })));
+        }
+      } catch (error) {
+        logger.error('Error fetching saved filters:', error.message);
       }
 
       // Try another segments endpoint

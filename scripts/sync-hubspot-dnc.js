@@ -4,7 +4,7 @@ const hubspotService = require('../src/services/hubspotService');
 const segmentService = require('../src/services/segmentService');
 const Contact = require('../src/models/Contact');
 
-const DNC_LIST_ID = '6029'; // Your client's DNC list ID
+const DNC_LIST_ID = '6199'; // Your client's DNC list ID (new static list)
 const BATCH_SIZE = 500;
 
 async function syncHubSpotDNCList() {
