@@ -142,6 +142,22 @@ function setupEventListeners() {
     if (processWithMappingBtn) {
         processWithMappingBtn.addEventListener('click', processWithMapping);
     }
+
+    // Segments buttons
+    const createSegmentBtn = document.getElementById('createSegmentBtn');
+    const loadHubSpotListsBtn = document.getElementById('loadHubSpotListsBtn');
+    
+    if (createSegmentBtn) {
+        createSegmentBtn.addEventListener('click', function() {
+            showCreateSegmentModal();
+        });
+    }
+    
+    if (loadHubSpotListsBtn) {
+        loadHubSpotListsBtn.addEventListener('click', function() {
+            loadHubSpotLists();
+        });
+    }
 }
 
 function showSection(sectionName) {
@@ -1068,6 +1084,84 @@ function viewSegmentContacts(segmentId) {
 
 function exportSegment(segmentId) {
     window.open(`${API_BASE}/segments/${segmentId}/export?format=csv`, '_blank');
+}
+
+function showCreateSegmentModal() {
+    const modal = document.getElementById('createSegmentModal');
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    document.body.classList.add('modal-open');
+}
+
+async function loadHubSpotLists() {
+    try {
+        showStatus('hubspotListsList', 'Loading HubSpot lists...', 'info');
+        
+        const response = await fetch(`${API_BASE}/segments/hubspot-lists`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayHubSpotLists(data.data);
+        } else {
+            showStatus('hubspotListsList', `Failed to load lists: ${data.error}`, 'danger');
+        }
+    } catch (error) {
+        console.error('Error loading HubSpot lists:', error);
+        showStatus('hubspotListsList', 'Failed to load HubSpot lists', 'danger');
+    }
+}
+
+function displayHubSpotLists(lists) {
+    const listsDiv = document.getElementById('hubspotListsList');
+    
+    if (!lists || lists.length === 0) {
+        listsDiv.innerHTML = '<p class="text-muted">No lists found.</p>';
+        return;
+    }
+    
+    let html = '<div class="list-group">';
+    lists.forEach(list => {
+        html += `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>${list.name}</strong>
+                    <br><small class="text-muted">${list.processingType || 'Static'} list</small>
+                </div>
+                <button class="btn btn-sm btn-primary" onclick="syncHubSpotList('${list.listId}', '${list.name}')">
+                    <i class="fas fa-sync"></i> Sync
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    listsDiv.innerHTML = html;
+}
+
+async function syncHubSpotList(listId, listName) {
+    try {
+        console.log(`Syncing HubSpot list: ${listName} (${listId})`);
+        
+        const response = await fetch(`${API_BASE}/segments/sync-hubspot-list`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ listId, listName })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showStatus('hubspotListsList', `List "${listName}" synced successfully!`, 'success');
+            loadSegments(); // Refresh segments list
+        } else {
+            showStatus('hubspotListsList', `Sync failed: ${data.error}`, 'danger');
+        }
+    } catch (error) {
+        console.error('Error syncing HubSpot list:', error);
+        showStatus('hubspotListsList', 'Sync failed', 'danger');
+    }
 }
 
 // Utility Functions

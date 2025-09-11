@@ -108,7 +108,11 @@ class SegmentService {
       for (const segmentData of this.defaultSegments) {
         const existing = await Segment.findOne({ name: segmentData.name });
         if (!existing) {
-          const segment = new Segment(segmentData);
+          // Convert filters object to Map for MongoDB
+          const segment = new Segment({
+            ...segmentData,
+            filters: new Map(Object.entries(segmentData.filters))
+          });
           await segment.save();
           logger.info(`Created default segment: ${segmentData.name}`);
         }
