@@ -95,39 +95,86 @@ class HubSpotService {
 
   async getContactLists() {
     try {
-      // Try the legacy contacts API first (which has your lists)
-      const response = await axios.get(`https://api.hubapi.com/contacts/v1/lists`, {
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      return response.data.lists || [];
-    } catch (error) {
-      logger.error('Error fetching HubSpot lists:', error.response?.data || error.message);
+      const lists = [];
       
-      // Fallback to newer API
+      // Get static lists
       try {
-        const fallbackResponse = await axios.get(`${this.baseURL}/crm/v3/lists`, {
+        const listsResponse = await axios.get(`https://api.hubapi.com/contacts/v1/lists`, {
           headers: {
             'Authorization': `Bearer ${this.accessToken}`,
             'Content-Type': 'application/json'
           }
         });
-        return fallbackResponse.data.lists || [];
-      } catch (fallbackError) {
-        logger.error('Error with fallback lists API:', fallbackError.response?.data || fallbackError.message);
-        throw fallbackError;
+        
+        if (listsResponse.data.lists) {
+          lists.push(...listsResponse.data.lists.map(list => ({
+            ...list,
+            type: 'list'
+          })));
+        }
+      } catch (error) {
+        logger.error('Error fetching static lists:', error.message);
       }
+
+      // Get segments (smart lists) - this is where your DNC list likely is
+      try {
+        const segmentsResponse = await axios.get(`${this.baseURL}/crm/v3/objects/contact_lists`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (segmentsResponse.data.results) {
+          lists.push(...segmentsResponse.data.results.map(segment => ({
+            listId: segment.id,
+            name: segment.properties.name,
+            listType: 'SEGMENT',
+            type: 'segment',
+            size: segment.properties.size || 0
+          })));
+        }
+      } catch (error) {
+        logger.error('Error fetching segments:', error.message);
+      }
+
+      // Try another segments endpoint
+      try {
+        const altSegmentsResponse = await axios.get(`https://api.hubapi.com/contacts/v1/lists/dynamic`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (altSegmentsResponse.data.lists) {
+          const dynamicLists = altSegmentsResponse.data.lists.filter(list => 
+            !lists.some(existingList => existingList.listId === list.listId)
+          );
+          
+          lists.push(...dynamicLists.map(list => ({
+            ...list,
+            type: 'dynamic_list'
+          })));
+        }
+      } catch (error) {
+        logger.error('Error fetching dynamic lists:', error.message);
+      }
+
+      logger.info(`Found ${lists.length} total lists/segments`);
+      return lists;
+      
+    } catch (error) {
+      logger.error('Error in getContactLists:', error);
+      throw error;
     }
   }
 
   async getContactsFromList(listId, limit = 100, after = null) {
     try {
       const params = {
-        limit,
-        properties: [
+        count: limit,
+        property: [
           'firstname', 'lastname', 'email', 'phone', 'company', 'jobtitle',
           'address', 'city', 'state', 'zip', 'country', 'lifecyclestage',
           'createdate', 'lastmodifieddate',
@@ -136,14 +183,15 @@ class HubSpotService {
           'optout', 'optout_date', 'federal_dnc', 'federal_dnc_date',
           'state_dnc', 'state_dnc_date', 'wireless_dnc', 'wireless_dnc_date',
           'compliance_notes'
-        ].join(',')
+        ]
       };
 
       if (after) {
-        params.after = after;
+        params.vidOffset = after;
       }
 
-      const response = await axios.get(`${this.baseURL}/crm/v3/lists/${listId}/memberships`, {
+      // Use legacy contacts API for list memberships
+      const response = await axios.get(`https://api.hubapi.com/contacts/v1/lists/${listId}/contacts/all`, {
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
           'Content-Type': 'application/json'
@@ -151,10 +199,43 @@ class HubSpotService {
         params
       });
 
-      return response.data;
+      return {
+        results: response.data.contacts || [],
+        paging: response.data['has-more'] ? { 
+          next: { after: response.data['vid-offset'] } 
+        } : null
+      };
     } catch (error) {
       logger.error('Error fetching contacts from HubSpot list:', error.response?.data || error.message);
-      throw error;
+      
+      // Fallback to newer API
+      try {
+        const params = {
+          limit,
+          properties: [
+            'firstname', 'lastname', 'email', 'phone', 'company', 'jobtitle',
+            'address', 'city', 'state', 'zip', 'country', 'lifecyclestage',
+            'createdate', 'lastmodifieddate'
+          ].join(',')
+        };
+
+        if (after) {
+          params.after = after;
+        }
+
+        const fallbackResponse = await axios.get(`${this.baseURL}/crm/v3/lists/${listId}/memberships`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          params
+        });
+
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        logger.error('Error with fallback list contacts API:', fallbackError.response?.data || fallbackError.message);
+        throw fallbackError;
+      }
     }
   }
 
