@@ -95,7 +95,8 @@ class HubSpotService {
 
   async getContactLists() {
     try {
-      const response = await axios.get(`${this.baseURL}/crm/v3/lists`, {
+      // Try the legacy contacts API first (which has your lists)
+      const response = await axios.get(`https://api.hubapi.com/contacts/v1/lists`, {
         headers: {
           'Authorization': `Bearer ${this.accessToken}`,
           'Content-Type': 'application/json'
@@ -105,7 +106,20 @@ class HubSpotService {
       return response.data.lists || [];
     } catch (error) {
       logger.error('Error fetching HubSpot lists:', error.response?.data || error.message);
-      throw error;
+      
+      // Fallback to newer API
+      try {
+        const fallbackResponse = await axios.get(`${this.baseURL}/crm/v3/lists`, {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        return fallbackResponse.data.lists || [];
+      } catch (fallbackError) {
+        logger.error('Error with fallback lists API:', fallbackError.response?.data || fallbackError.message);
+        throw fallbackError;
+      }
     }
   }
 
