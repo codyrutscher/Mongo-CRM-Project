@@ -56,25 +56,28 @@ class WebhookService {
   }
 
   async processWebhookEvent(event) {
-    logger.info('Raw webhook event:', JSON.stringify(event, null, 2));
+    // Try different property names that HubSpot might use
+    const subscriptionType = event.subscriptionType || event.objectType || 'contact';
+    const eventType = event.eventType || event.changeType || event.action;
+    const objectId = event.objectId || event.contactId || event.vid || event.id;
+    const propertyName = event.propertyName || event.property;
     
-    const { subscriptionType, eventType, objectId, propertyName, changeSource } = event;
-
+    logger.info(`Event keys: ${Object.keys(event).join(', ')}`);
     logger.info(`Processing event: ${eventType} for ${subscriptionType} ${objectId}`);
 
-    if (subscriptionType === 'contact') {
-      switch (eventType) {
-        case 'contact.creation':
-          await this.handleContactCreation(objectId);
-          break;
-        case 'contact.deletion':
-          await this.handleContactDeletion(objectId);
-          break;
-        case 'contact.propertyChange':
-          await this.handleContactUpdate(objectId, propertyName);
-          break;
-        default:
-          logger.warn(`Unknown contact event type: ${eventType}`);
+    if (subscriptionType === 'contact' || !subscriptionType) {
+      // Handle based on eventType or fallback to update
+      if (eventType === 'contact.creation' || eventType === 'creation') {
+        await this.handleContactCreation(objectId);
+      } else if (eventType === 'contact.deletion' || eventType === 'deletion') {
+        await this.handleContactDeletion(objectId);
+      } else if (eventType === 'contact.propertyChange' || eventType === 'propertyChange' || !eventType) {
+        // Default to update if we're not sure
+        await this.handleContactUpdate(objectId, propertyName);
+      } else {
+        logger.warn(`Unknown contact event type: ${eventType}`);
+        // Still try to update as fallback
+        await this.handleContactUpdate(objectId, propertyName);
       }
     }
   }
