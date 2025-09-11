@@ -1,0 +1,118 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+
+const connectDB = require('./config/database');
+const routes = require('./routes');
+const logger = require('./utils/logger');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Connect to MongoDB
+connectDB();
+
+// Security middleware with relaxed CSP for development
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://cdnjs.cloudflare.com"
+      ],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"]
+    }
+  }
+}));
+app.use(cors());
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  }
+});
+app.use('/api', limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files
+app.use(express.static('public'));
+
+// API routes
+app.use('/api', routes);
+
+// Serve basic web interface
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/../public/index.html');
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found'
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  logger.error('Unhandled error:', err);
+  
+  // Handle multer errors
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      success: false,
+      error: 'File too large'
+    });
+  }
+  
+  if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({
+      success: false,
+      error: 'Unexpected file field'
+    });
+  }
+
+  res.status(500).json({
+    success: false,
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+  });
+});
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`ProspereCRM server running on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🚀 ProspereCRM is running in production`);
+    console.log(`🌐 Webhook URL: ${process.env.BASE_URL}/api/webhooks/hubspot`);
+  } else {
+    console.log(`🚀 ProspereCRM is running at http://localhost:${PORT}`);
+  }
+});
+
+module.exports = app;

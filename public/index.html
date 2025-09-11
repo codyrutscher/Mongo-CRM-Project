@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProspereCRM - Customer Relationship Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c3e50 !important;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+        .sync-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .sync-running { background-color: #fff3cd; }
+        .sync-completed { background-color: #d1edff; }
+        .sync-failed { background-color: #f8d7da; }
+        .contact-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+        .contact-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #667eea;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .contact-list-view {
+            display: none;
+        }
+        .contact-list-view.active {
+            display: block;
+        }
+        .contact-grid-view.active {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .contact-list-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .contact-list-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        .segment-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .segment-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .segment-item .segment-actions {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .segment-item:hover .segment-actions {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-chart-line"></i> ProspereCRM</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="#dashboard">Dashboard</a>
+                <a class="nav-link" href="#contacts">Contacts</a>
+                <a class="nav-link" href="#segments">Segments</a>
+                <a class="nav-link" href="#sync">Sync</a>
+                <a class="nav-link" href="#upload">Upload</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4" id="statsCards">
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <h3 id="totalContacts">-</h3>
+                            <p>Total Contacts</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i>
+                            <h3 id="newLeads">-</h3>
+                            <p>New Leads</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-handshake fa-2x mb-2"></i>
+                            <h3 id="customers">-</h3>
+                            <p>Customers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <i class="fas fa-eye fa-2x mb-2"></i>
+                            <h3 id="prospects">-</h3>
+                            <p>Prospects</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-clock"></i> Recent Sync Jobs</h5>
+                        </div>
+                        <div class="card-body" id="recentSyncJobs">
+                            <p class="text-muted">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-pie"></i> Contact Sources</h5>
+                        </div>
+                        <div class="card-body" id="contactSources">
+                            <p class="text-muted">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacts Section -->
+        <div id="contacts" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-address-book"></i> Contacts</h2>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search contacts...">
+                        <button class="btn btn-primary" id="searchButton">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="segmentFilter">
+                        <option value="">All Contacts</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="gridViewBtn">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="listViewBtn">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts List -->
+            <div id="contactsList" class="row">
+                <div class="col-12">
+                    <p class="text-muted">Use the search above or select a segment to view contacts.</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav id="contactsPagination" style="display: none;">
+                <ul class="pagination justify-content-center"></ul>
+            </nav>
+        </div>
+
+        <!-- Segments Section -->
+        <div id="segments" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-layer-group"></i> Audience Segments</h2>
+                </div>
+            </div>
+
+            <!-- Segments Management -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5>Your Segments</h5>
+                            <button class="btn btn-primary btn-sm" id="createSegmentBtn">
+                                <i class="fas fa-plus"></i> Create Segment
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="segmentsList">
+                                <p class="text-muted">Loading segments...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>HubSpot Lists</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted">Sync specific lists from your HubSpot account</p>
+                            <button class="btn btn-outline-primary btn-sm" id="loadHubSpotListsBtn">
+                                <i class="fab fa-hubspot"></i> Load HubSpot Lists
+                            </button>
+                            <div id="hubspotListsList" class="mt-3">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Section -->
+        <div id="sync" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-sync-alt"></i> Data Synchronization</h2>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- HubSpot Sync -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fab fa-hubspot"></i> HubSpot Integration</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Sync contacts from your HubSpot account.</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" id="testHubSpotBtn">
+                                    <i class="fas fa-plug"></i> Test Connection
+                                </button>
+                                <button class="btn btn-success" id="fullSyncHubSpotBtn">
+                                    <i class="fas fa-download"></i> Full Sync
+                                </button>
+                                <button class="btn btn-outline-success" id="incrementalSyncHubSpotBtn">
+                                    <i class="fas fa-refresh"></i> Incremental Sync
+                                </button>
+                            </div>
+                            <div id="hubspotStatus" class="mt-3"></div>
+                            
+                            <!-- Real-time Sync -->
+                            <div class="mt-4">
+                                <h6>Real-time Sync</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="realtimeSyncEnabled">
+                                    <label class="form-check-label" for="realtimeSyncEnabled">
+                                        Enable real-time webhook sync
+                                    </label>
+                                </div>
+                                <small class="text-muted">
+                                    Automatically sync changes from HubSpot as they happen
+                                </small>
+                                <div id="webhookConfig" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <strong>Webhook URL:</strong><br>
+                                        <code id="webhookUrl">Loading...</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Google Sheets Sync -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fab fa-google"></i> Google Sheets Integration</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Import contacts from Google Sheets.</p>
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="spreadsheetId" 
+                                       placeholder="Spreadsheet ID or URL">
+                            </div>
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="sheetName" 
+                                       placeholder="Sheet Name (optional)">
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" id="testGoogleSheetsBtn">
+                                    <i class="fas fa-plug"></i> Test Connection
+                                </button>
+                                <button class="btn btn-success" id="startGoogleSheetsBtn">
+                                    <i class="fas fa-download"></i> Import Data
+                                </button>
+                            </div>
+                            <div id="googlesheetsStatus" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync Jobs -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-list"></i> Sync Jobs</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="syncJobsList">
+                                <p class="text-muted">Loading sync jobs...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="upload" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-upload"></i> Upload Contacts</h2>
+                </div>
+            </div>
+
+            <!-- Step 1: File Upload -->
+            <div class="row" id="uploadStep">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Step 1: Select File</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                                <h5>Drop your CSV or Excel file here</h5>
+                                <p class="text-muted">Or click to browse files</p>
+                                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+                            </div>
+                            
+                            <div id="uploadStatus" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Column Mapping -->
+            <div class="row mt-4" id="mappingStep" style="display: none;">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Step 2: Map Your Columns</h5>
+                            <small class="text-muted">Map your file columns to contact fields</small>
+                        </div>
+                        <div class="card-body">
+                            <div id="columnMappingTable"></div>
+                            <div class="mt-3 text-end">
+                                <button class="btn btn-secondary me-2" id="backToUploadBtn">Back</button>
+                                <button class="btn btn-primary" id="processWithMappingBtn">
+                                    <i class="fas fa-upload"></i> Import Contacts
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uploadResults" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Processing your request...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Details Modal -->
+    <div class="modal fade" id="contactModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalTitle">Contact Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contactModalBody">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading contact details...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="editContactBtn">Edit Contact</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Segment Modal -->
+    <div class="modal fade" id="createSegmentModal">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Segment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createSegmentForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Segment Name</label>
+                                    <input type="text" class="form-control" id="segmentName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="segmentDescription" rows="3"></textarea>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Color</label>
+                                            <input type="color" class="form-control" id="segmentColor" value="#6c757d">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Icon</label>
+                                            <select class="form-select" id="segmentIcon">
+                                                <option value="fas fa-users">👥 Users</option>
+                                                <option value="fas fa-building">🏢 Building</option>
+                                                <option value="fas fa-star">⭐ Star</option>
+                                                <option value="fas fa-heart">❤️ Heart</option>
+                                                <option value="fas fa-flag">🚩 Flag</option>
+                                                <option value="fas fa-target">🎯 Target</option>
+                                                <option value="fas fa-crown">👑 Crown</option>
+                                                <option value="fas fa-fire">🔥 Fire</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Filter Criteria</label>
+                                <div id="filterBuilder">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Use Template</label>
+                                                <select class="form-select" id="filterTemplate">
+                                                    <option value="">Custom filters...</option>
+                                                </select>
+                                            </div>
+                                            <div id="customFilters">
+                                                <div class="filter-row mb-2">
+                                                    <div class="row">
+                                                        <div class="col-4">
+                                                            <select class="form-select filter-field">
+                                                                <option value="source">Source</option>
+                                                                <option value="lifecycleStage">Lifecycle Stage</option>
+                                                                <option value="company">Company</option>
+                                                                <option value="address.state">State</option>
+                                                                <option value="address.city">City</option>
+                                                                <option value="customFields.businessCategory">Industry</option>
+                                                                <option value="customFields.numberOfEmployees">Employees</option>
+                                                                <option value="customFields.sicCode">SIC Code</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-3">
+                                                            <select class="form-select filter-operator">
+                                                                <option value="equals">Equals</option>
+                                                                <option value="contains">Contains</option>
+                                                                <option value="gte">Greater Than</option>
+                                                                <option value="lte">Less Than</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <input type="text" class="form-control filter-value" placeholder="Value">
+                                                        </div>
+                                                        <div class="col-1">
+                                                            <button type="button" class="btn btn-outline-danger btn-sm remove-filter">×</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="addFilterBtn">
+                                                <i class="fas fa-plus"></i> Add Filter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted">Estimated contacts: <span id="estimatedCount">-</span></small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveSegmentBtn">Create Segment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
