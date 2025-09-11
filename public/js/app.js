@@ -164,6 +164,9 @@ function showSection(sectionName) {
         case 'contacts':
             loadContacts();
             break;
+        case 'segments':
+            loadSegments();
+            break;
         case 'sync':
             loadSyncJobs();
             break;
@@ -999,6 +1002,72 @@ function displayUploadResults(results) {
     }
     
     resultsDiv.innerHTML = html;
+}
+
+// Segments Functions
+async function loadSegments() {
+    try {
+        const response = await fetch(`${API_BASE}/segments`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displaySegments(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading segments:', error);
+    }
+}
+
+function displaySegments(segments) {
+    const segmentsList = document.getElementById('segmentsList');
+    
+    if (!segments || segments.length === 0) {
+        segmentsList.innerHTML = '<p class="text-muted">No segments found.</p>';
+        return;
+    }
+    
+    let html = '';
+    segments.forEach(segment => {
+        html += `
+            <div class="segment-item" data-segment-id="${segment._id}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">
+                            <i class="${segment.icon}" style="color: ${segment.color}"></i>
+                            ${segment.name}
+                        </h6>
+                        <p class="mb-1 text-muted">${segment.description}</p>
+                        <small class="text-muted">${segment.contactCount} contacts</small>
+                    </div>
+                    <div class="segment-actions">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewSegmentContacts('${segment._id}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-outline-success me-1" onclick="exportSegment('${segment._id}')">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        ${!segment.isSystem ? `
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSegment('${segment._id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    segmentsList.innerHTML = html;
+}
+
+function viewSegmentContacts(segmentId) {
+    // Switch to contacts view with this segment
+    showSection('contacts');
+    // TODO: Load contacts for this specific segment
+}
+
+function exportSegment(segmentId) {
+    window.open(`${API_BASE}/segments/${segmentId}/export?format=csv`, '_blank');
 }
 
 // Utility Functions
