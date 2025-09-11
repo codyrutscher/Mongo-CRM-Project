@@ -127,7 +127,7 @@ class SegmentService {
       const segment = new Segment({
         name: segmentData.name,
         description: segmentData.description,
-        filters: segmentData.filters,
+        filters: new Map(Object.entries(segmentData.filters || {})),
         createdBy: segmentData.createdBy || 'user',
         isSystem: false,
         color: segmentData.color || '#6c757d',
@@ -198,7 +198,11 @@ class SegmentService {
         throw new Error('Segment not found');
       }
 
-      const filters = segment.filters.toObject();
+      // Handle both Map and Object types for filters
+      const filters = segment.filters instanceof Map ? 
+        Object.fromEntries(segment.filters) : 
+        segment.filters.toObject ? segment.filters.toObject() : segment.filters;
+        
       return await searchService.advancedSearch(filters, options);
     } catch (error) {
       logger.error('Error fetching segment contacts:', error);
