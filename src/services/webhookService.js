@@ -56,6 +56,8 @@ class WebhookService {
   }
 
   async processWebhookEvent(event) {
+    logger.info('Raw webhook event:', JSON.stringify(event, null, 2));
+    
     const { subscriptionType, eventType, objectId, propertyName, changeSource } = event;
 
     logger.info(`Processing event: ${eventType} for ${subscriptionType} ${objectId}`);
@@ -83,10 +85,16 @@ class WebhookService {
 
       // Fetch the contact from HubSpot
       const hubspotContact = await this.fetchHubSpotContact(hubspotContactId);
-      if (!hubspotContact) return;
+      if (!hubspotContact) {
+        logger.warn(`❌ Could not fetch contact ${hubspotContactId} from HubSpot`);
+        return;
+      }
+
+      logger.info(`📋 Fetched contact data:`, JSON.stringify(hubspotContact, null, 2));
 
       // Transform and save
       const contactData = hubspotService.transformContactData(hubspotContact);
+      logger.info(`🔄 Transformed contact data:`, JSON.stringify(contactData, null, 2));
       
       // Check if contact already exists
       const existingContact = await Contact.findOne({
@@ -97,9 +105,9 @@ class WebhookService {
       if (!existingContact) {
         const contact = new Contact(contactData);
         await contact.save();
-        logger.info(`✅ Created contact: ${contact.firstName} ${contact.lastName}`);
+        logger.info(`✅ Created contact: ${contact.firstName} ${contact.lastName} (ID: ${contact._id})`);
       } else {
-        logger.info(`ℹ️  Contact already exists: ${existingContact.firstName} ${existingContact.lastName}`);
+        logger.info(`ℹ️  Contact already exists: ${existingContact.firstName} ${existingContact.lastName} (ID: ${existingContact._id})`);
       }
 
     } catch (error) {
