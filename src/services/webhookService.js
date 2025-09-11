@@ -56,29 +56,31 @@ class WebhookService {
   }
 
   async processWebhookEvent(event) {
-    // Try different property names that HubSpot might use
-    const subscriptionType = event.subscriptionType || event.objectType || 'contact';
-    const eventType = event.eventType || event.changeType || event.action;
-    const objectId = event.objectId || event.contactId || event.vid || event.id;
-    const propertyName = event.propertyName || event.property;
+    // HubSpot webhook structure based on actual logs
+    const subscriptionType = event.subscriptionType; // e.g., "contact.propertyChange"
+    const objectId = event.objectId;
+    const propertyName = event.propertyName;
+    const propertyValue = event.propertyValue;
+    const changeSource = event.changeSource;
     
     logger.info(`Event keys: ${Object.keys(event).join(', ')}`);
-    logger.info(`Processing event: ${eventType} for ${subscriptionType} ${objectId}`);
+    logger.info(`Processing: ${subscriptionType} for contact ${objectId} (property: ${propertyName})`);
 
-    if (subscriptionType === 'contact' || !subscriptionType) {
-      // Handle based on eventType or fallback to update
-      if (eventType === 'contact.creation' || eventType === 'creation') {
+    // Parse subscription type to determine action
+    if (subscriptionType && subscriptionType.includes('contact')) {
+      if (subscriptionType === 'contact.creation') {
         await this.handleContactCreation(objectId);
-      } else if (eventType === 'contact.deletion' || eventType === 'deletion') {
+      } else if (subscriptionType === 'contact.deletion') {
         await this.handleContactDeletion(objectId);
-      } else if (eventType === 'contact.propertyChange' || eventType === 'propertyChange' || !eventType) {
-        // Default to update if we're not sure
+      } else if (subscriptionType === 'contact.propertyChange') {
         await this.handleContactUpdate(objectId, propertyName);
       } else {
-        logger.warn(`Unknown contact event type: ${eventType}`);
-        // Still try to update as fallback
+        logger.warn(`Unknown subscription type: ${subscriptionType}`);
+        // Default to contact update
         await this.handleContactUpdate(objectId, propertyName);
       }
+    } else {
+      logger.warn(`No valid subscription type found: ${subscriptionType}`);
     }
   }
 
