@@ -3,6 +3,7 @@
 const API_BASE = '/api';
 let currentPage = 1;
 let currentSegment = '';
+let currentView = 'grid'; // 'grid' or 'list'
 
 // Navigation
 document.addEventListener('DOMContentLoaded', function() {
@@ -60,6 +61,22 @@ function setupEventListeners() {
         refreshContactsBtn.addEventListener('click', function() {
             console.log('Refreshing contacts...');
             loadContacts(currentPage);
+        });
+    }
+
+    // View toggle buttons
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', function() {
+            switchToGridView();
+        });
+    }
+    
+    if (listViewBtn) {
+        listViewBtn.addEventListener('click', function() {
+            switchToListView();
         });
     }
 
@@ -346,6 +363,32 @@ async function searchContacts() {
     }
 }
 
+function switchToGridView() {
+    currentView = 'grid';
+    document.getElementById('gridViewBtn').classList.add('active');
+    document.getElementById('listViewBtn').classList.remove('active');
+    
+    const contactsList = document.getElementById('contactsList');
+    contactsList.className = 'row';
+    
+    // Reload contacts in grid view
+    const contacts = window.currentContacts || [];
+    displayContacts(contacts);
+}
+
+function switchToListView() {
+    currentView = 'list';
+    document.getElementById('listViewBtn').classList.add('active');
+    document.getElementById('gridViewBtn').classList.remove('active');
+    
+    const contactsList = document.getElementById('contactsList');
+    contactsList.className = 'col-12';
+    
+    // Reload contacts in list view
+    const contacts = window.currentContacts || [];
+    displayContacts(contacts);
+}
+
 function displayContacts(contacts) {
     console.log('displayContacts called with', contacts.length, 'contacts');
     const contactsList = document.getElementById('contactsList');
@@ -361,41 +404,99 @@ function displayContacts(contacts) {
         return;
     }
     
+    // Store contacts for view switching
+    window.currentContacts = contacts;
+    
     let html = '';
-    contacts.forEach(contact => {
+    
+    if (currentView === 'list') {
+        // List view - table format
+        html = `
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Company</th>
+                            <th>Source</th>
+                            <th>Stage</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        contacts.forEach(contact => {
+            html += `
+                <tr style="cursor: pointer;" data-contact-id="${contact._id}" class="contact-row">
+                    <td><strong>${contact.firstName} ${contact.lastName}</strong></td>
+                    <td>${contact.email || '<span class="text-muted">No email</span>'}</td>
+                    <td>${contact.phone || '<span class="text-muted">No phone</span>'}</td>
+                    <td>${contact.company || '<span class="text-muted">No company</span>'}</td>
+                    <td><span class="badge bg-info">${formatSourceName(contact.source)}</span></td>
+                    <td><span class="badge bg-${getLifecycleColor(contact.lifecycleStage)}">${contact.lifecycleStage}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showContactDetails('${contact._id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
         html += `
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card contact-card" style="cursor: pointer;" data-contact-id="${contact._id}">
-                    <div class="card-body">
-                        <h6 class="card-title">${contact.firstName} ${contact.lastName}</h6>
-                        <p class="card-text">
-                            <small class="text-muted">
-                                <i class="fas fa-envelope"></i> ${contact.email || 'No email'}<br>
-                                <i class="fas fa-phone"></i> ${contact.phone || 'No phone'}<br>
-                                <i class="fas fa-building"></i> ${contact.company || 'No company'}
-                            </small>
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">${formatSourceName(contact.source)}</small>
-                            <span class="badge bg-${getLifecycleColor(contact.lifecycleStage)}">${contact.lifecycleStage}</span>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        // Grid view - card format
+        contacts.forEach(contact => {
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card contact-card" style="cursor: pointer;" data-contact-id="${contact._id}">
+                        <div class="card-body">
+                            <h6 class="card-title">${contact.firstName} ${contact.lastName}</h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-envelope"></i> ${contact.email || 'No email'}<br>
+                                    <i class="fas fa-phone"></i> ${contact.phone || 'No phone'}<br>
+                                    <i class="fas fa-building"></i> ${contact.company || 'No company'}
+                                </small>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${formatSourceName(contact.source)}</small>
+                                <span class="badge bg-${getLifecycleColor(contact.lifecycleStage)}">${contact.lifecycleStage}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
     
     console.log('Setting contactsList HTML with', html.length, 'characters');
     contactsList.innerHTML = html;
     console.log('contactsList updated, current content length:', contactsList.innerHTML.length);
     
-    // Add click event listeners to contact cards
-    contactsList.querySelectorAll('.contact-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const contactId = this.getAttribute('data-contact-id');
-            showContactDetails(contactId);
+    // Add click event listeners
+    if (currentView === 'grid') {
+        contactsList.querySelectorAll('.contact-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const contactId = this.getAttribute('data-contact-id');
+                showContactDetails(contactId);
+            });
         });
-    });
+    } else {
+        contactsList.querySelectorAll('.contact-row').forEach(row => {
+            row.addEventListener('click', function() {
+                const contactId = this.getAttribute('data-contact-id');
+                showContactDetails(contactId);
+            });
+        });
+    }
 }
 
 function updatePagination(pagination) {
