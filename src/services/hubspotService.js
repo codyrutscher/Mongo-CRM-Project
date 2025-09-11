@@ -251,6 +251,15 @@ class HubSpotService {
   }
 
   mapDncStatus(props) {
+    // Handle missing properties object
+    if (!props) {
+      return {
+        status: 'callable',
+        date: null,
+        reason: null
+      };
+    }
+    
     // Map HubSpot DNC properties to our DNC status
     if (props.do_not_call === 'true' || props.dnc_flag === 'true') {
       return {

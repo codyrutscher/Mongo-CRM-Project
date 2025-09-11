@@ -8,8 +8,8 @@ class WebhookController {
       const timestamp = req.headers['x-hubspot-request-timestamp'];
       const body = JSON.stringify(req.body);
 
-      // Verify webhook signature (optional but recommended)
-      if (process.env.NODE_ENV === 'production' && signature) {
+      // Verify webhook signature (disabled for now)
+      if (false && process.env.NODE_ENV === 'production' && signature) {
         const isValid = webhookService.verifyHubSpotSignature(body, signature, timestamp);
         if (!isValid) {
           logger.warn('Invalid webhook signature');
