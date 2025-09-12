@@ -4,6 +4,8 @@ const API_BASE = '/api';
 let currentPage = 1;
 let currentSegment = '';
 let currentView = 'grid'; // 'grid' or 'list'
+let selectedContacts = new Set(); // Track selected contact IDs
+let currentSegmentDetails = null; // Current segment being viewed
 
 // Navigation
 document.addEventListener('DOMContentLoaded', function() {
@@ -157,6 +159,23 @@ function setupEventListeners() {
         loadHubSpotListsBtn.addEventListener('click', function() {
             loadHubSpotLists();
         });
+    }
+
+    // Bulk actions
+    const createSegmentFromSelectedBtn = document.getElementById('createSegmentFromSelectedBtn');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+    
+    if (createSegmentFromSelectedBtn) {
+        createSegmentFromSelectedBtn.addEventListener('click', createSegmentFromSelected);
+    }
+    
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', selectAllContacts);
+    }
+    
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', clearSelection);
     }
 }
 
@@ -435,6 +454,9 @@ function displayContacts(contacts) {
                 <table class="table table-hover">
                     <thead>
                         <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllCheckbox" class="form-check-input">
+                            </th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Phone</th>
@@ -448,8 +470,13 @@ function displayContacts(contacts) {
         `;
         
         contacts.forEach(contact => {
+            const isSelected = selectedContacts.has(contact._id);
             html += `
-                <tr style="cursor: pointer;" data-contact-id="${contact._id}" class="contact-row">
+                <tr data-contact-id="${contact._id}" class="contact-row">
+                    <td>
+                        <input type="checkbox" class="form-check-input contact-checkbox" 
+                               data-contact-id="${contact._id}" ${isSelected ? 'checked' : ''}>
+                    </td>
                     <td><strong>${contact.firstName} ${contact.lastName}</strong></td>
                     <td>${contact.email || '<span class="text-muted">No email</span>'}</td>
                     <td>${contact.phone || '<span class="text-muted">No phone</span>'}</td>
@@ -457,7 +484,7 @@ function displayContacts(contacts) {
                     <td><span class="badge bg-info">${formatSourceName(contact.source)}</span></td>
                     <td><span class="badge bg-${getLifecycleColor(contact.lifecycleStage)}">${contact.lifecycleStage}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary" onclick="showContactDetails('${contact._id}')">
+                        <button class="btn btn-sm btn-outline-primary" data-action="view-details" data-contact-id="${contact._id}">
                             <i class="fas fa-eye"></i>
                         </button>
                     </td>
@@ -471,13 +498,18 @@ function displayContacts(contacts) {
             </div>
         `;
     } else {
-        // Grid view - card format
+        // Grid view - card format with checkboxes
         contacts.forEach(contact => {
+            const isSelected = selectedContacts.has(contact._id);
             html += `
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card contact-card" style="cursor: pointer;" data-contact-id="${contact._id}">
+                    <div class="card contact-card ${isSelected ? 'border-primary' : ''}" data-contact-id="${contact._id}">
                         <div class="card-body">
-                            <h6 class="card-title">${contact.firstName} ${contact.lastName}</h6>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">${contact.firstName} ${contact.lastName}</h6>
+                                <input type="checkbox" class="form-check-input contact-checkbox" 
+                                       data-contact-id="${contact._id}" ${isSelected ? 'checked' : ''}>
+                            </div>
                             <p class="card-text">
                                 <small class="text-muted">
                                     <i class="fas fa-envelope"></i> ${contact.email || 'No email'}<br>
@@ -500,22 +532,8 @@ function displayContacts(contacts) {
     contactsList.innerHTML = html;
     console.log('contactsList updated, current content length:', contactsList.innerHTML.length);
     
-    // Add click event listeners
-    if (currentView === 'grid') {
-        contactsList.querySelectorAll('.contact-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const contactId = this.getAttribute('data-contact-id');
-                showContactDetails(contactId);
-            });
-        });
-    } else {
-        contactsList.querySelectorAll('.contact-row').forEach(row => {
-            row.addEventListener('click', function() {
-                const contactId = this.getAttribute('data-contact-id');
-                showContactDetails(contactId);
-            });
-        });
-    }
+    // Add event listeners for checkboxes and contact actions
+    setupContactEventListeners();
 }
 
 function updatePagination(pagination) {
@@ -1099,9 +1117,245 @@ function displaySegments(segments) {
 }
 
 function viewSegmentContacts(segmentId) {
-    // Switch to contacts view with this segment
-    showSection('contacts');
-    // TODO: Load contacts for this specific segment
+    // Load segment details and show dedicated segment page
+    loadSegmentDetails(segmentId);
+}
+
+function setupContactEventListeners() {
+    const contactsList = document.getElementById('contactsList');
+    
+    // Checkbox change events
+    contactsList.querySelectorAll('.contact-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+            e.stopPropagation();
+            const contactId = this.getAttribute('data-contact-id');
+            
+            if (this.checked) {
+                selectedContacts.add(contactId);
+            } else {
+                selectedContacts.delete(contactId);
+            }
+            
+            updateSelectionUI();
+        });
+    });
+    
+    // Contact detail view events
+    contactsList.querySelectorAll('[data-action="view-details"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const contactId = this.getAttribute('data-contact-id');
+            showContactDetails(contactId);
+        });
+    });
+    
+    // Card click events (for grid view)
+    contactsList.querySelectorAll('.contact-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't trigger if clicking checkbox
+            if (e.target.type === 'checkbox') return;
+            
+            const contactId = this.getAttribute('data-contact-id');
+            showContactDetails(contactId);
+        });
+    });
+    
+    // Select all checkbox
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                selectAllContacts();
+            } else {
+                clearSelection();
+            }
+        });
+    }
+}
+
+function updateSelectionUI() {
+    const selectedCount = selectedContacts.size;
+    const bulkActionsBar = document.getElementById('bulkActionsBar');
+    const selectedCountSpan = document.getElementById('selectedCount');
+    
+    if (selectedCount > 0) {
+        bulkActionsBar.style.display = 'block';
+        selectedCountSpan.textContent = selectedCount;
+    } else {
+        bulkActionsBar.style.display = 'none';
+    }
+}
+
+function selectAllContacts() {
+    const checkboxes = document.querySelectorAll('.contact-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        selectedContacts.add(checkbox.getAttribute('data-contact-id'));
+    });
+    updateSelectionUI();
+}
+
+function clearSelection() {
+    selectedContacts.clear();
+    const checkboxes = document.querySelectorAll('.contact-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+    }
+    
+    updateSelectionUI();
+}
+
+function createSegmentFromSelected() {
+    if (selectedContacts.size === 0) {
+        alert('Please select contacts first');
+        return;
+    }
+    
+    const segmentName = prompt(`Create segment from ${selectedContacts.size} selected contacts.\n\nEnter segment name:`);
+    if (!segmentName) return;
+    
+    const selectedIds = Array.from(selectedContacts);
+    
+    // Create segment from selected contact IDs
+    fetch(`${API_BASE}/segments`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name: segmentName,
+            description: `Custom segment with ${selectedIds.length} selected contacts`,
+            filters: {
+                '_id': { '$in': selectedIds }
+            },
+            color: '#6c757d',
+            icon: 'fas fa-users'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Segment "${segmentName}" created with ${selectedIds.length} contacts!`);
+            clearSelection();
+            loadSegments(); // Refresh segments list
+        } else {
+            alert(`Failed to create segment: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error creating segment:', error);
+        alert('Failed to create segment');
+    });
+}
+
+async function loadSegmentDetails(segmentId) {
+    try {
+        const response = await fetch(`${API_BASE}/segments/${segmentId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentSegmentDetails = data.data;
+            showSegmentDetails(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading segment details:', error);
+    }
+}
+
+function showSegmentDetails(segment) {
+    // Update UI elements
+    document.getElementById('segmentDetailsTitle').textContent = segment.name;
+    document.getElementById('segmentDetailsDescription').textContent = segment.description;
+    document.getElementById('segmentContactCount').textContent = segment.contactCount;
+    
+    // Show segment details section
+    showSection('segment-details');
+    
+    // Load segment contacts
+    loadSegmentContacts(segment._id);
+}
+
+async function loadSegmentContacts(segmentId) {
+    try {
+        const response = await fetch(`${API_BASE}/segments/${segmentId}/contacts`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displaySegmentContacts(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading segment contacts:', error);
+    }
+}
+
+function displaySegmentContacts(contacts) {
+    const segmentContactsList = document.getElementById('segmentContactsList');
+    
+    if (!contacts || contacts.length === 0) {
+        segmentContactsList.innerHTML = '<p class="text-muted">No contacts in this segment.</p>';
+        return;
+    }
+    
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Company</th>
+                        <th>Source</th>
+                        <th>DNC Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    contacts.forEach(contact => {
+        html += `
+            <tr>
+                <td><strong>${contact.firstName} ${contact.lastName}</strong></td>
+                <td>${contact.email || '<span class="text-muted">No email</span>'}</td>
+                <td>${contact.phone || '<span class="text-muted">No phone</span>'}</td>
+                <td>${contact.company || '<span class="text-muted">No company</span>'}</td>
+                <td><span class="badge bg-info">${formatSourceName(contact.source)}</span></td>
+                <td>
+                    ${contact.dncStatus === 'dnc_internal' ? 
+                        '<span class="badge bg-danger">DNC</span>' : 
+                        '<span class="badge bg-success">Callable</span>'
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" data-action="view-details" data-contact-id="${contact._id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    segmentContactsList.innerHTML = html;
+    
+    // Add event listeners
+    segmentContactsList.querySelectorAll('[data-action="view-details"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const contactId = this.getAttribute('data-contact-id');
+            showContactDetails(contactId);
+        });
+    });
 }
 
 function exportSegment(segmentId) {
