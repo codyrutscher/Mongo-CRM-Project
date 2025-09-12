@@ -5,7 +5,7 @@ import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
 import PaginationComponent from '../components/PaginationComponent';
 import AdvancedFilters from '../components/AdvancedFilters';
-import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds } from '../services/api';
+import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds, createSegment } from '../services/api';
 
 const CSVContacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -58,8 +58,10 @@ const CSVContacts = () => {
       if (response.data.success) {
         setContacts(response.data.data || []);
         if (response.data.pagination) {
-          setTotalPages(response.data.pagination.totalPages || 1);
-          setTotalRecords(response.data.pagination.totalRecords || 0);
+          const totalRecs = response.data.pagination.totalRecords || 0;
+          const calculatedPages = Math.ceil(totalRecs / pageSize);
+          setTotalPages(response.data.pagination.totalPages || calculatedPages);
+          setTotalRecords(totalRecs);
         }
       }
     } catch (error) {
@@ -175,7 +177,7 @@ const CSVContacts = () => {
     }
   };
 
-  const createSegmentFromSelected = () => {
+  const createSegmentFromSelected = async () => {
     if (selectedContacts.size === 0) {
       alert('Please select contacts first');
       return;
@@ -184,7 +186,30 @@ const CSVContacts = () => {
     const segmentName = prompt(`Create segment from ${selectedContacts.size} selected contacts.\n\nEnter segment name:`);
     if (!segmentName) return;
     
-    console.log('Creating segment with contacts:', Array.from(selectedContacts));
+    try {
+      setLoading(true);
+      const contactIds = Array.from(selectedContacts);
+      
+      const response = await createSegment({
+        name: segmentName,
+        description: `CSV segment with ${contactIds.length} selected contacts`,
+        contactIds: contactIds,
+        color: '#28a745',
+        icon: 'fas fa-file-csv'
+      });
+      
+      if (response.data.success) {
+        alert(`Segment "${segmentName}" created successfully with ${contactIds.length} contacts!`);
+        clearSelection();
+      } else {
+        alert(`Failed to create segment: ${response.data.error}`);
+      }
+    } catch (error) {
+      console.error('Error creating segment:', error);
+      alert('Failed to create segment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

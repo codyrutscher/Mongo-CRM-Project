@@ -2,7 +2,6 @@ import React from 'react';
 import { Pagination } from 'react-bootstrap';
 
 const PaginationComponent = ({ currentPage, totalPages, onPageChange, showInfo = true, totalRecords = 0 }) => {
-  console.log('PaginationComponent props:', { currentPage, totalPages, totalRecords });
   if (totalPages <= 1) return null;
 
   const renderPaginationItems = () => {
