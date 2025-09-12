@@ -23,21 +23,40 @@ class SegmentController {
 
   async createSegment(req, res) {
     try {
-      const segmentData = req.body;
+      const { name, description, contactIds, color, icon } = req.body;
       
-      if (!segmentData.name || !segmentData.filters) {
+      if (!name) {
         return res.status(400).json({
           success: false,
-          error: 'Name and filters are required'
+          error: 'Segment name is required'
         });
       }
+
+      if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Contact IDs are required to create a segment'
+        });
+      }
+
+      // Create segment with contact IDs filter
+      const segmentData = {
+        name,
+        description: description || `Custom segment with ${contactIds.length} selected contacts`,
+        filters: {
+          '_id': { '$in': contactIds }
+        },
+        color: color || '#6c757d',
+        icon: icon || 'fas fa-users',
+        createdBy: 'user'
+      };
 
       const segment = await segmentService.createSegment(segmentData);
       
       res.status(201).json({
         success: true,
         data: segment,
-        message: 'Segment created successfully'
+        message: `Segment created with ${contactIds.length} contacts`
       });
     } catch (error) {
       logger.error('Error creating segment:', error);

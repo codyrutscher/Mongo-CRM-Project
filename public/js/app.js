@@ -146,14 +146,7 @@ function setupEventListeners() {
     }
 
     // Segments buttons
-    const createSegmentBtn = document.getElementById('createSegmentBtn');
     const loadHubSpotListsBtn = document.getElementById('loadHubSpotListsBtn');
-    
-    if (createSegmentBtn) {
-        createSegmentBtn.addEventListener('click', function() {
-            showCreateSegmentModal();
-        });
-    }
     
     if (loadHubSpotListsBtn) {
         loadHubSpotListsBtn.addEventListener('click', function() {
@@ -1266,9 +1259,7 @@ function createSegmentFromSelected() {
         body: JSON.stringify({
             name: segmentName,
             description: `Custom segment with ${selectedIds.length} selected contacts`,
-            filters: {
-                '_id': { '$in': selectedIds }
-            },
+            contactIds: selectedIds,
             color: '#6c757d',
             icon: 'fas fa-users'
         })
