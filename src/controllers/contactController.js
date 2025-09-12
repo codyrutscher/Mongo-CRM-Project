@@ -1,6 +1,7 @@
 const Contact = require('../models/Contact');
 const searchService = require('../services/searchService');
 const fileUploadService = require('../services/fileUploadService');
+const segmentService = require('../services/segmentService');
 const logger = require('../utils/logger');
 
 class ContactController {
@@ -180,31 +181,48 @@ class ContactController {
 
       const result = await fileUploadService.processUploadedFile(req.file);
       
-      // Save contacts to database
+      // Save contacts to database (allow duplicates as requested)
       const savedContacts = [];
       const errors = [];
+      const uploadBatch = `batch_${Date.now()}`;
 
       for (const contactData of result.data) {
         try {
-          // Check for existing contact
-          const existingContact = await Contact.findOne({ email: contactData.email });
+          // Always create new contact (allow duplicates)
+          contactData.customFields = contactData.customFields || {};
+          contactData.customFields.uploadBatch = uploadBatch;
+          contactData.customFields.uploadTimestamp = new Date().toISOString();
           
-          if (existingContact) {
-            // Update existing contact
-            Object.assign(existingContact, contactData);
-            await existingContact.save();
-            savedContacts.push(existingContact);
-          } else {
-            // Create new contact
-            const contact = new Contact(contactData);
-            await contact.save();
-            savedContacts.push(contact);
-          }
+          const contact = new Contact(contactData);
+          await contact.save();
+          savedContacts.push(contact);
         } catch (error) {
           errors.push({
             contact: contactData,
             error: error.message
           });
+        }
+      }
+
+      // Create automatic segment for this upload
+      if (savedContacts.length > 0) {
+        try {
+          const segmentName = `CSV Upload - ${new Date().toLocaleDateString()} (${savedContacts.length} contacts)`;
+          const segmentData = {
+            name: segmentName,
+            description: `Contacts uploaded from CSV on ${new Date().toLocaleString()}`,
+            filters: {
+              'customFields.uploadBatch': uploadBatch
+            },
+            color: '#6f42c1',
+            icon: 'fas fa-file-csv',
+            createdBy: 'csv_upload'
+          };
+          
+          const segment = await segmentService.createSegment(segmentData);
+          logger.info(`Created automatic segment: ${segmentName}`);
+        } catch (segmentError) {
+          logger.error('Error creating automatic segment:', segmentError);
         }
       }
 

@@ -360,6 +360,11 @@ class FileUploadService {
     contact.lastSyncedAt = new Date();
     contact.status = contact.status || 'active';
     contact.lifecycleStage = contact.lifecycleStage || 'lead';
+    
+    // Add upload batch identifier for segmentation
+    contact.customFields = contact.customFields || {};
+    contact.customFields.uploadBatch = `batch_${Date.now()}`;
+    contact.customFields.uploadTimestamp = new Date().toISOString();
 
     // Basic email validation
     if (contact.email && !this.isValidEmail(contact.email)) {
