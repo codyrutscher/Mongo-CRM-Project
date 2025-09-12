@@ -68,10 +68,25 @@ app.use('/api', routes);
 
 // In production, serve React build files
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('../react-frontend/build'));
+  const buildPath = path.resolve(__dirname, '../react-frontend/build');
   
+  logger.info(`Serving React build from: ${buildPath}`);
+  logger.info(`Build directory exists: ${require('fs').existsSync(buildPath)}`);
+  
+  // Serve static files with proper MIME types
+  app.use(express.static(buildPath, {
+    setHeaders: (res, path) => {
+      if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      }
+    }
+  }));
+  
+  // Handle React routing - serve index.html for non-API routes
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../react-frontend/build', 'index.html'));
+    res.sendFile(path.join(buildPath, 'index.html'));
   });
 } else {
   // Development - just serve API
@@ -83,14 +98,6 @@ if (process.env.NODE_ENV === 'production') {
     });
   });
 }
-
-// 404 handler for API routes
-app.use('/api/*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'API route not found'
-  });
-});
 
 // Global error handler
 app.use((err, req, res, next) => {
