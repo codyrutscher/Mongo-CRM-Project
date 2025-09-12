@@ -103,10 +103,18 @@
             <a class="navbar-brand" href="#"><i class="fas fa-chart-line"></i> ProspereCRM</a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="#dashboard">Dashboard</a>
-                <a class="nav-link" href="#contacts">Contacts</a>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        Contacts
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#hubspot-contacts">🔶 HubSpot Contacts</a></li>
+                        <li><a class="dropdown-item" href="#csv-contacts">📁 CSV Contacts</a></li>
+                        <li><a class="dropdown-item" href="#sheets-contacts">📊 Google Sheets</a></li>
+                    </ul>
+                </div>
                 <a class="nav-link" href="#segments">Segments</a>
-                <a class="nav-link" href="#sync">Sync</a>
-                <a class="nav-link" href="#upload">Upload</a>
+                <a class="nav-link" href="#upload">Upload CSV</a>
             </div>
         </div>
     </nav>
@@ -160,32 +168,74 @@
                 </div>
             </div>
 
-            <!-- Recent Activity -->
+            <!-- Webhook Activity -->
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                     <div class="card">
                         <div class="card-header">
-                            <h5><i class="fas fa-clock"></i> Recent Sync Jobs</h5>
+                            <h5><i class="fas fa-bolt"></i> Real-time Webhook Activity</h5>
                         </div>
-                        <div class="card-body" id="recentSyncJobs">
-                            <p class="text-muted">Loading...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-chart-pie"></i> Contact Sources</h5>
-                        </div>
-                        <div class="card-body" id="contactSources">
-                            <p class="text-muted">Loading...</p>
+                        <div class="card-body">
+                            <p class="text-success"><i class="fas fa-check-circle"></i> Webhooks are active and syncing data in real-time</p>
+                            <small class="text-muted">Contacts are automatically synced from HubSpot as they're created or updated</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Contacts Section -->
+        <!-- HubSpot Contacts Section -->
+        <div id="hubspot-contacts" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-hubspot"></i> HubSpot Contacts</h2>
+                    <p class="text-muted">Real-time synced contacts from HubSpot with complete business intelligence</p>
+                </div>
+            </div>
+
+            <!-- HubSpot Contact Filters and List -->
+            <div id="hubspotContactsList" class="row">
+                <div class="col-12">
+                    <p class="text-muted">Loading HubSpot contacts...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSV Contacts Section -->
+        <div id="csv-contacts" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-file-csv"></i> CSV Upload Contacts</h2>
+                    <p class="text-muted">Contacts uploaded via CSV files - kept separate for campaign tracking</p>
+                </div>
+            </div>
+
+            <!-- CSV Contact List -->
+            <div id="csvContactsList" class="row">
+                <div class="col-12">
+                    <p class="text-muted">Loading CSV contacts...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Sheets Contacts Section -->
+        <div id="sheets-contacts" class="section" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="mb-4"><i class="fas fa-table"></i> Google Sheets Contacts</h2>
+                    <p class="text-muted">Contacts imported from Google Sheets</p>
+                </div>
+            </div>
+
+            <!-- Google Sheets Contact List -->
+            <div id="sheetsContactsList" class="row">
+                <div class="col-12">
+                    <p class="text-muted">Loading Google Sheets contacts...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Contacts Section (Hidden) -->
         <div id="contacts" class="section" style="display: none;">
             <div class="row">
                 <div class="col-12">

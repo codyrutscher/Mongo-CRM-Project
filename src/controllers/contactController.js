@@ -231,17 +231,24 @@ class ContactController {
 
       const result = await fileUploadService.processUploadedFile(req.file);
       
-      // Save contacts to database (allow duplicates as requested)
+      // Save contacts to database (NO deduplication - separate lists)
       const savedContacts = [];
       const errors = [];
-      const uploadBatch = `batch_${Date.now()}`;
+      const uploadBatch = `csv_batch_${Date.now()}`;
 
       for (const contactData of result.data) {
         try {
-          // Always create new contact (allow duplicates)
+          // Always create new contact (no deduplication between sources)
           contactData.customFields = contactData.customFields || {};
           contactData.customFields.uploadBatch = uploadBatch;
           contactData.customFields.uploadTimestamp = new Date().toISOString();
+          contactData.customFields.csvUploadSource = 'true';
+          
+          // Use unique email to avoid conflicts with other sources
+          if (contactData.email && !contactData.email.includes('_csv_')) {
+            contactData.customFields.originalEmail = contactData.email;
+            contactData.email = `${contactData.email.split('@')[0]}_csv_${Date.now()}@${contactData.email.split('@')[1]}`;
+          }
           
           const contact = new Contact(contactData);
           await contact.save();

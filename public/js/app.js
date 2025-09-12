@@ -1625,10 +1625,10 @@ function applyAdvancedFilters() {
         filters.source = source;
     }
     
-    // Industry filter
-    const industry = document.getElementById('industryFilter').value;
-    if (industry) {
-        filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
+    // Industry filter (from text input)
+    const industryText = document.getElementById('industryFilter').value;
+    if (industryText) {
+        filters['customFields.businessCategory'] = { $regex: industryText, $options: 'i' };
     }
     
     // Lifecycle Stage filter
@@ -1685,10 +1685,10 @@ function applyAdvancedFilters() {
         }
     }
     
-    // Industry filter
-    const industry = document.getElementById('industryFilter').value;
-    if (industry) {
-        filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
+    // Industry filter (from text input)
+    const industryText = document.getElementById('industryFilter').value;
+    if (industryText) {
+        filters['customFields.businessCategory'] = { $regex: industryText, $options: 'i' };
     }
     
     // Date filter
