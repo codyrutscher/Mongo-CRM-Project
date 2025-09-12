@@ -195,18 +195,13 @@
 
             <!-- Search and Filters -->
             <div class="row mb-4">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="input-group">
                         <input type="text" class="form-control" id="searchInput" placeholder="Search contacts...">
                         <button class="btn btn-primary" id="searchButton">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select" id="segmentFilter">
-                        <option value="">All Contacts</option>
-                    </select>
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" id="sortSelect">
@@ -229,6 +224,100 @@
                         <button type="button" class="btn btn-outline-primary" id="refreshContactsBtn">
                             <i class="fas fa-sync-alt"></i>
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Advanced Filters</h6>
+                                <button class="btn btn-sm btn-outline-secondary" id="toggleFiltersBtn">
+                                    <i class="fas fa-filter"></i> Show Filters
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body" id="advancedFilters" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">DNC Status</label>
+                                    <select class="form-select" id="dncFilter">
+                                        <option value="">All Contacts</option>
+                                        <option value="callable">✅ Callable Only (Exclude DNC)</option>
+                                        <option value="dnc_internal">🚫 DNC Only</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Contact Type</label>
+                                    <select class="form-select" id="contactTypeFilter">
+                                        <option value="">All Types</option>
+                                        <option value="Buyer">🛒 Buyer</option>
+                                        <option value="Seller">💼 Seller</option>
+                                        <option value="Buyer & Seller">🔄 Buyer & Seller</option>
+                                        <option value="CRE">🏢 Commercial Real Estate</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Location</label>
+                                    <select class="form-select" id="locationFilter">
+                                        <option value="">All Locations</option>
+                                        <option value="Texas">Texas</option>
+                                        <option value="Colorado">Colorado</option>
+                                        <option value="Nevada">Nevada</option>
+                                        <option value="California">California</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Source</label>
+                                    <select class="form-select" id="sourceFilter">
+                                        <option value="">All Sources</option>
+                                        <option value="hubspot">HubSpot</option>
+                                        <option value="csv_upload">CSV Upload</option>
+                                        <option value="google_sheets">Google Sheets</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Industry</label>
+                                    <input type="text" class="form-control" id="industryFilter" placeholder="e.g., Software, Construction">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">SIC Code</label>
+                                    <input type="text" class="form-control" id="sicCodeFilter" placeholder="e.g., 7372">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">NAICS Code</label>
+                                    <input type="text" class="form-control" id="naicsCodeFilter" placeholder="e.g., 541511">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Date Added</label>
+                                    <select class="form-select" id="dateFilter">
+                                        <option value="">All Dates</option>
+                                        <option value="today">Today</option>
+                                        <option value="week">Last 7 days</option>
+                                        <option value="month">Last 30 days</option>
+                                        <option value="quarter">Last 90 days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button class="btn btn-primary me-2" id="applyFiltersBtn">
+                                        <i class="fas fa-filter"></i> Apply Filters
+                                    </button>
+                                    <button class="btn btn-outline-secondary me-2" id="clearFiltersBtn">
+                                        <i class="fas fa-times"></i> Clear Filters
+                                    </button>
+                                    <button class="btn btn-outline-success" id="selectAllFilteredBtn" style="display: none;">
+                                        <i class="fas fa-check-square"></i> Select All Filtered Results
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

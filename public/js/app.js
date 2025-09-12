@@ -164,6 +164,28 @@ function setupEventListeners() {
         clearSelectionBtn.addEventListener('click', clearSelection);
     }
 
+    // Advanced filters
+    const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+    const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const selectAllFilteredBtn = document.getElementById('selectAllFilteredBtn');
+    
+    if (toggleFiltersBtn) {
+        toggleFiltersBtn.addEventListener('click', toggleAdvancedFilters);
+    }
+    
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', applyAdvancedFilters);
+    }
+    
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', clearAdvancedFilters);
+    }
+    
+    if (selectAllFilteredBtn) {
+        selectAllFilteredBtn.addEventListener('click', selectAllFilteredContacts);
+    }
+
     // Segment detail page buttons
     const backToSegmentsBtn = document.getElementById('backToSegmentsBtn');
     const editSegmentBtn = document.getElementById('editSegmentBtn');
@@ -1558,6 +1580,160 @@ function deleteSegmentFromIndex(segmentId) {
         console.error('Error deleting segment:', error);
         alert('Failed to delete segment');
     });
+}
+
+function toggleAdvancedFilters() {
+    const filtersDiv = document.getElementById('advancedFilters');
+    const toggleBtn = document.getElementById('toggleFiltersBtn');
+    
+    if (filtersDiv.style.display === 'none') {
+        filtersDiv.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-filter"></i> Hide Filters';
+    } else {
+        filtersDiv.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-filter"></i> Show Filters';
+    }
+}
+
+function applyAdvancedFilters() {
+    const filters = {};
+    
+    // DNC Status filter
+    const dncStatus = document.getElementById('dncFilter').value;
+    if (dncStatus) {
+        filters.dncStatus = dncStatus;
+    }
+    
+    // Contact Type filter
+    const contactType = document.getElementById('contactTypeFilter').value;
+    if (contactType) {
+        filters['customFields.contactType'] = contactType;
+    }
+    
+    // Location filter
+    const location = document.getElementById('locationFilter').value;
+    if (location) {
+        filters['address.state'] = location;
+    }
+    
+    // Source filter
+    const source = document.getElementById('sourceFilter').value;
+    if (source) {
+        filters.source = source;
+    }
+    
+    // Industry filter
+    const industry = document.getElementById('industryFilter').value;
+    if (industry) {
+        filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
+    }
+    
+    // SIC Code filter
+    const sicCode = document.getElementById('sicCodeFilter').value;
+    if (sicCode) {
+        filters['customFields.sicCode'] = sicCode;
+    }
+    
+    // NAICS Code filter
+    const naicsCode = document.getElementById('naicsCodeFilter').value;
+    if (naicsCode) {
+        filters['customFields.naicsCode'] = naicsCode;
+    }
+    
+    // Date filter
+    const dateFilter = document.getElementById('dateFilter').value;
+    if (dateFilter) {
+        const now = new Date();
+        let startDate;
+        
+        switch(dateFilter) {
+            case 'today':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                break;
+            case 'week':
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case 'month':
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case 'quarter':
+                startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                break;
+        }
+        
+        if (startDate) {
+            filters.createdAt = { $gte: startDate.toISOString() };
+        }
+    }
+    
+    console.log('Applying filters:', filters);
+    
+    // Load contacts with filters
+    loadContactsWithFilters(filters);
+}
+
+function clearAdvancedFilters() {
+    // Clear all filter inputs
+    document.getElementById('dncFilter').value = '';
+    document.getElementById('contactTypeFilter').value = '';
+    document.getElementById('locationFilter').value = '';
+    document.getElementById('sourceFilter').value = '';
+    document.getElementById('industryFilter').value = '';
+    document.getElementById('sicCodeFilter').value = '';
+    document.getElementById('naicsCodeFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    
+    // Hide select all filtered button
+    document.getElementById('selectAllFilteredBtn').style.display = 'none';
+    
+    // Load all contacts
+    loadContacts(1);
+}
+
+async function loadContactsWithFilters(filters) {
+    try {
+        showLoading(true);
+        
+        const response = await fetch(`${API_BASE}/contacts/search`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                filters: filters,
+                page: 1,
+                limit: 100
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayContacts(data.data);
+            updatePagination(data.pagination);
+            
+            // Show select all filtered button
+            const selectAllFilteredBtn = document.getElementById('selectAllFilteredBtn');
+            selectAllFilteredBtn.style.display = 'inline-block';
+            selectAllFilteredBtn.textContent = `Select All ${data.pagination.totalRecords} Filtered Results`;
+        }
+    } catch (error) {
+        console.error('Error loading filtered contacts:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function selectAllFilteredContacts() {
+    // Select all contacts currently displayed
+    const checkboxes = document.querySelectorAll('.contact-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        selectedContacts.add(checkbox.getAttribute('data-contact-id'));
+    });
+    updateSelectionUI();
+    
+    alert(`Selected ${checkboxes.length} filtered contacts. Use "Create Segment" to create a campaign-ready segment.`);
 }
 
 function showCreateSegmentModal() {
