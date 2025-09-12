@@ -1589,9 +1589,12 @@ function toggleAdvancedFilters() {
     if (filtersDiv.style.display === 'none') {
         filtersDiv.style.display = 'block';
         toggleBtn.innerHTML = '<i class="fas fa-filter"></i> Hide Filters';
+        toggleBtn.className = 'btn btn-sm btn-primary';
     } else {
         filtersDiv.style.display = 'none';
         toggleBtn.innerHTML = '<i class="fas fa-filter"></i> Show Filters';
+        toggleBtn.className = 'btn btn-sm btn-light border';
+        toggleBtn.style.cssText = 'background: white; color: #333; border-color: #ddd;';
     }
 }
 
