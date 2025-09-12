@@ -74,6 +74,8 @@ class WebhookService {
         await this.handleContactDeletion(objectId);
       } else if (subscriptionType === 'contact.propertyChange') {
         await this.handleContactUpdate(objectId, propertyName);
+      } else if (subscriptionType === 'contact.listMembershipChange') {
+        await this.handleListMembershipChange(objectId, event);
       } else {
         logger.warn(`Unknown subscription type: ${subscriptionType}`);
         // Default to contact update
@@ -186,6 +188,84 @@ class WebhookService {
     } catch (error) {
       logger.error(`Error fetching HubSpot contact ${contactId}:`, error);
       return null;
+    }
+  }
+
+  async handleListMembershipChange(contactId, event) {
+    try {
+      const listId = event.listId || event.listMembershipId;
+      const action = event.action || event.changeType; // 'added' or 'removed'
+      
+      logger.info(`🔄 List membership change: Contact ${contactId} ${action} to/from list ${listId}`);
+      
+      // Check if this is the DNC list (6199)
+      if (listId === '6199' || listId === 6199) {
+        await this.handleDNCListChange(contactId, action);
+      } else {
+        logger.info(`ℹ️  List ${listId} is not the DNC list, no special handling needed`);
+      }
+      
+    } catch (error) {
+      logger.error('Error handling list membership change:', error);
+    }
+  }
+
+  async handleDNCListChange(contactId, action) {
+    try {
+      logger.info(`🚫 DNC List change: Contact ${contactId} ${action}`);
+      
+      // Find the contact in our database
+      const existingContact = await Contact.findOne({
+        $or: [
+          { source: 'hubspot', sourceId: contactId },
+          { 'customFields.hubspotId': contactId }
+        ]
+      });
+
+      if (!existingContact) {
+        logger.warn(`❌ Contact ${contactId} not found in database for DNC update`);
+        return;
+      }
+
+      if (action === 'added' || action === 'ADDED') {
+        // Added to DNC list
+        existingContact.dncStatus = 'dnc_internal';
+        existingContact.dncDate = new Date();
+        existingContact.dncReason = 'Added to HubSpot DNC List 6199';
+        existingContact.complianceNotes = 'Contact added to DNC list via HubSpot - DO NOT CALL';
+        existingContact.customFields = existingContact.customFields || {};
+        existingContact.customFields.hubspotListId = '6199';
+        existingContact.customFields.hubspotListName = 'DNC List 6199';
+        
+        if (!existingContact.tags.includes('DNC')) {
+          existingContact.tags.push('DNC');
+        }
+        
+        await existingContact.save();
+        logger.info(`🚫 Marked contact as DNC: ${existingContact.firstName} ${existingContact.lastName}`);
+        
+      } else if (action === 'removed' || action === 'REMOVED') {
+        // Removed from DNC list
+        existingContact.dncStatus = 'callable';
+        existingContact.dncDate = null;
+        existingContact.dncReason = null;
+        existingContact.complianceNotes = 'Contact removed from DNC list - now callable';
+        
+        // Remove DNC tag
+        existingContact.tags = existingContact.tags.filter(tag => tag !== 'DNC');
+        
+        // Remove DNC list ID
+        if (existingContact.customFields) {
+          delete existingContact.customFields.hubspotListId;
+          delete existingContact.customFields.hubspotListName;
+        }
+        
+        await existingContact.save();
+        logger.info(`✅ Marked contact as callable: ${existingContact.firstName} ${existingContact.lastName}`);
+      }
+      
+    } catch (error) {
+      logger.error('Error handling DNC list change:', error);
     }
   }
 
