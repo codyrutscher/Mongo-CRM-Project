@@ -1631,13 +1631,65 @@ function applyAdvancedFilters() {
         filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
     }
     
+    // Lifecycle Stage filter
+    const lifecycle = document.getElementById('lifecycleFilter').value;
+    if (lifecycle) {
+        filters.lifecycleStage = lifecycle;
+    }
+    
+    // Lead Source filter
+    const leadSource = document.getElementById('leadSourceFilter').value;
+    if (leadSource) {
+        filters['customFields.leadSource'] = leadSource;
+    }
+    
+    // Annual Revenue filter
+    const revenue = document.getElementById('revenueFilter').value;
+    if (revenue) {
+        // Convert revenue range to numbers for filtering
+        switch(revenue) {
+            case 'under_1m':
+                filters['customFields.annualRevenue'] = { $regex: '^[0-9]{1,6}$', $options: 'i' };
+                break;
+            case '1m_5m':
+                filters['customFields.annualRevenue'] = { $regex: '^[1-4][0-9]{6}$|^5000000$', $options: 'i' };
+                break;
+            case 'over_50m':
+                filters['customFields.annualRevenue'] = { $regex: '^[5-9][0-9]{7,}$|^[0-9]{9,}$', $options: 'i' };
+                break;
+        }
+    }
+    
     // SIC Code filter
     const sicCode = document.getElementById('sicCodeFilter').value;
     if (sicCode) {
         filters['customFields.sicCode'] = sicCode;
     }
     
-    // NAICS Code filter removed - no data available
+    // Company filter
+    const company = document.getElementById('companyFilter').value;
+    if (company) {
+        filters.company = { $regex: company, $options: 'i' };
+    }
+    
+    // Website filter
+    const website = document.getElementById('websiteFilter').value;
+    if (website) {
+        if (website === 'yes') {
+            filters['customFields.website'] = { $ne: '', $exists: true };
+        } else if (website === 'no') {
+            filters.$or = [
+                { 'customFields.website': '' },
+                { 'customFields.website': { $exists: false } }
+            ];
+        }
+    }
+    
+    // Industry filter
+    const industry = document.getElementById('industryFilter').value;
+    if (industry) {
+        filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
+    }
     
     // Date filter
     const dateFilter = document.getElementById('dateFilter').value;
@@ -1658,6 +1710,9 @@ function applyAdvancedFilters() {
             case 'quarter':
                 startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
                 break;
+            case 'year':
+                startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                break;
         }
         
         if (startDate) {
@@ -1665,7 +1720,7 @@ function applyAdvancedFilters() {
         }
     }
     
-    console.log('Applying filters:', filters);
+    console.log('Applying enhanced filters:', filters);
     
     // Load contacts with filters
     loadContactsWithFilters(filters);
@@ -1677,9 +1732,13 @@ function clearAdvancedFilters() {
     document.getElementById('contactTypeFilter').value = '';
     document.getElementById('locationFilter').value = '';
     document.getElementById('sourceFilter').value = '';
+    document.getElementById('lifecycleFilter').value = '';
+    document.getElementById('leadSourceFilter').value = '';
+    document.getElementById('revenueFilter').value = '';
     document.getElementById('industryFilter').value = '';
     document.getElementById('sicCodeFilter').value = '';
-    // NAICS removed
+    document.getElementById('companyFilter').value = '';
+    document.getElementById('websiteFilter').value = '';
     document.getElementById('dateFilter').value = '';
     
     // Hide select all filtered button

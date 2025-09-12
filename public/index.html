@@ -243,60 +243,119 @@
                         <div class="card-body" id="advancedFilters" style="display: none;">
                             <div class="row">
                                 <div class="col-md-3">
-                                    <label class="form-label">DNC Status</label>
+                                    <label class="form-label">🚫 Do Not Call Status</label>
                                     <select class="form-select" id="dncFilter">
                                         <option value="">All Contacts</option>
-                                        <option value="callable">✅ Callable Only (Exclude DNC)</option>
+                                        <option value="callable">✅ Callable Only (Campaign Safe)</option>
                                         <option value="dnc_internal">🚫 DNC Only</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Contact Type</label>
+                                    <label class="form-label">👤 Contact Type</label>
                                     <select class="form-select" id="contactTypeFilter">
                                         <option value="">All Types</option>
                                         <option value="Buyer">🛒 Buyer</option>
                                         <option value="Seller">💼 Seller</option>
                                         <option value="Buyer & Seller">🔄 Buyer & Seller</option>
                                         <option value="CRE">🏢 Commercial Real Estate</option>
+                                        <option value="Lead/Prospect">📈 Lead/Prospect</option>
+                                        <option value="Client">🤝 Client</option>
+                                        <option value="Broker">🏗️ Broker</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Location</label>
+                                    <label class="form-label">📍 State/Location</label>
                                     <select class="form-select" id="locationFilter">
-                                        <option value="">All Locations</option>
+                                        <option value="">All States</option>
                                         <option value="Texas">Texas</option>
                                         <option value="Colorado">Colorado</option>
                                         <option value="Nevada">Nevada</option>
                                         <option value="California">California</option>
+                                        <option value="Florida">Florida</option>
+                                        <option value="New York">New York</option>
+                                        <option value="Arizona">Arizona</option>
+                                        <option value="Utah">Utah</option>
+                                        <option value="Washington">Washington</option>
+                                        <option value="Oregon">Oregon</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Source</label>
+                                    <label class="form-label">🔗 Data Source</label>
                                     <select class="form-select" id="sourceFilter">
                                         <option value="">All Sources</option>
-                                        <option value="hubspot">HubSpot</option>
-                                        <option value="csv_upload">CSV Upload</option>
-                                        <option value="google_sheets">Google Sheets</option>
+                                        <option value="hubspot">🔶 HubSpot</option>
+                                        <option value="csv_upload">📁 CSV Upload</option>
+                                        <option value="google_sheets">📊 Google Sheets</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="row mt-3">
                                 <div class="col-md-3">
-                                    <label class="form-label">Industry</label>
-                                    <input type="text" class="form-control" id="industryFilter" placeholder="e.g., Software, Construction">
+                                    <label class="form-label">🎯 Lifecycle Stage</label>
+                                    <select class="form-select" id="lifecycleFilter">
+                                        <option value="">All Stages</option>
+                                        <option value="lead">📈 Lead</option>
+                                        <option value="prospect">👁️ Prospect</option>
+                                        <option value="customer">👑 Customer</option>
+                                        <option value="evangelist">⭐ Evangelist</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">SIC Code</label>
-                                    <input type="text" class="form-control" id="sicCodeFilter" placeholder="e.g., 7372">
+                                    <label class="form-label">📊 Lead Source</label>
+                                    <select class="form-select" id="leadSourceFilter">
+                                        <option value="">All Lead Sources</option>
+                                        <option value="ZoomInfo">ZoomInfo</option>
+                                        <option value="Website">Website</option>
+                                        <option value="Referral">Referral</option>
+                                        <option value="Cold Email">Cold Email</option>
+                                        <option value="LinkedIn">LinkedIn</option>
+                                        <option value="Trade Show">Trade Show</option>
+                                        <option value="Advertisement">Advertisement</option>
+                                        <option value="SEO">SEO/Organic Search</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Date Added</label>
+                                    <label class="form-label">📅 Date Added</label>
                                     <select class="form-select" id="dateFilter">
                                         <option value="">All Dates</option>
                                         <option value="today">Today</option>
                                         <option value="week">Last 7 days</option>
                                         <option value="month">Last 30 days</option>
                                         <option value="quarter">Last 90 days</option>
+                                        <option value="year">Last Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">💰 Annual Revenue</label>
+                                    <select class="form-select" id="revenueFilter">
+                                        <option value="">All Revenue</option>
+                                        <option value="under_1m">Under $1M</option>
+                                        <option value="1m_5m">$1M - $5M</option>
+                                        <option value="5m_10m">$5M - $10M</option>
+                                        <option value="10m_50m">$10M - $50M</option>
+                                        <option value="over_50m">Over $50M</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">🏭 Industry/Business Category</label>
+                                    <input type="text" class="form-control" id="industryFilter" placeholder="e.g., Construction, Software, Retail">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">📊 SIC Code</label>
+                                    <input type="text" class="form-control" id="sicCodeFilter" placeholder="e.g., 7372">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">🏢 Company Name</label>
+                                    <input type="text" class="form-control" id="companyFilter" placeholder="Company name contains">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">🌐 Has Website</label>
+                                    <select class="form-select" id="websiteFilter">
+                                        <option value="">All Contacts</option>
+                                        <option value="yes">Has Website</option>
+                                        <option value="no">No Website</option>
                                     </select>
                                 </div>
                             </div>

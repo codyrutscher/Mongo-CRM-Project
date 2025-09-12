@@ -420,7 +420,9 @@ class HubSpotService {
     }
     
     // Map HubSpot DNC properties to our DNC status
-    if (props.do_not_call === 'true' || props.dnc_flag === 'true') {
+    // Check for "Do Not Call" property from workflow (boolean true/false or string)
+    if (props.do_not_call === true || props.do_not_call === 'true' || 
+        props.do_not_call === 'Yes' || props.dnc_flag === 'true') {
       return {
         status: 'dnc_internal',
         date: props.dnc_date ? new Date(props.dnc_date) : new Date(),
