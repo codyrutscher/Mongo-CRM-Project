@@ -131,10 +131,10 @@ class ExportService {
 
   convertToCSV(contacts) {
     if (!contacts || contacts.length === 0) {
-      return 'No data to export';
+      return 'First Name,Last Name,Email,Phone,Company,Job Title,Source,DNC Status,DNC Date,DNC Reason\n';
     }
 
-    // Define CSV headers
+    // Define CSV headers including DNC information
     const headers = [
       'First Name',
       'Last Name', 
@@ -150,6 +150,10 @@ class ExportService {
       'Source',
       'Lifecycle Stage',
       'Status',
+      'DNC Status',
+      'DNC Date',
+      'DNC Reason',
+      'Compliance Notes',
       'Tags',
       'Created Date',
       'Last Synced'
@@ -187,6 +191,10 @@ class ExportService {
         this.escapeCSV(contact.source || ''),
         this.escapeCSV(contact.lifecycleStage || ''),
         this.escapeCSV(contact.status || ''),
+        this.escapeCSV(contact.dncStatus || 'callable'),
+        this.escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString() : ''),
+        this.escapeCSV(contact.dncReason || ''),
+        this.escapeCSV(contact.complianceNotes || ''),
         this.escapeCSV(contact.tags?.join('; ') || ''),
         this.escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString() : ''),
         this.escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString() : '')
