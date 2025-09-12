@@ -1280,13 +1280,14 @@ function showSegmentDetails(segment) {
     loadSegmentContacts(segment._id);
 }
 
-async function loadSegmentContacts(segmentId) {
+async function loadSegmentContacts(segmentId, page = 1) {
     try {
-        const response = await fetch(`${API_BASE}/segments/${segmentId}/contacts`);
+        const response = await fetch(`${API_BASE}/segments/${segmentId}/contacts?page=${page}&limit=100`);
         const data = await response.json();
         
         if (data.success) {
             displaySegmentContacts(data.data);
+            updateSegmentPagination(data.pagination, segmentId);
         }
     } catch (error) {
         console.error('Error loading segment contacts:', error);
@@ -1354,6 +1355,50 @@ function displaySegmentContacts(contacts) {
         button.addEventListener('click', function() {
             const contactId = this.getAttribute('data-contact-id');
             showContactDetails(contactId);
+        });
+    });
+}
+
+function updateSegmentPagination(pagination, segmentId) {
+    const paginationNav = document.getElementById('segmentPagination');
+    const paginationList = paginationNav.querySelector('.pagination');
+    
+    if (pagination.total <= 1) {
+        paginationNav.style.display = 'none';
+        return;
+    }
+    
+    paginationNav.style.display = 'block';
+    let html = '';
+    
+    // Previous button
+    html += `<li class="page-item ${pagination.current === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-page="${pagination.current - 1}" data-segment-id="${segmentId}">Previous</a>
+    </li>`;
+    
+    // Page numbers
+    for (let i = Math.max(1, pagination.current - 2); i <= Math.min(pagination.total, pagination.current + 2); i++) {
+        html += `<li class="page-item ${i === pagination.current ? 'active' : ''}">
+            <a class="page-link" href="#" data-page="${i}" data-segment-id="${segmentId}">${i}</a>
+        </li>`;
+    }
+    
+    // Next button
+    html += `<li class="page-item ${pagination.current === pagination.total ? 'disabled' : ''}">
+        <a class="page-link" href="#" data-page="${pagination.current + 1}" data-segment-id="${segmentId}">Next</a>
+    </li>`;
+    
+    paginationList.innerHTML = html;
+    
+    // Add event listeners to pagination links
+    paginationList.querySelectorAll('a.page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!this.parentElement.classList.contains('disabled')) {
+                const page = parseInt(this.getAttribute('data-page'));
+                const segmentId = this.getAttribute('data-segment-id');
+                loadSegmentContacts(segmentId, page);
+            }
         });
     });
 }
