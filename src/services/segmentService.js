@@ -207,8 +207,33 @@ class SegmentService {
       const filters = segment.filters instanceof Map ? 
         Object.fromEntries(segment.filters) : 
         segment.filters.toObject ? segment.filters.toObject() : segment.filters;
-        
-      return await searchService.advancedSearch(filters, options);
+
+      // Special handling for contact ID-based segments
+      if (filters._id && filters._id.$in) {
+        // Direct MongoDB query for contact IDs
+        const contacts = await Contact.find({
+          _id: { $in: filters._id.$in }
+        })
+        .sort(options.sort || { createdAt: -1 })
+        .skip(((options.page || 1) - 1) * (options.limit || 50))
+        .limit(options.limit || 50);
+
+        const totalCount = filters._id.$in.length;
+        const totalPages = Math.ceil(totalCount / (options.limit || 50));
+
+        return {
+          contacts,
+          pagination: {
+            current: options.page || 1,
+            total: totalPages,
+            count: contacts.length,
+            totalRecords: totalCount
+          }
+        };
+      } else {
+        // Use search service for other filter types
+        return await searchService.advancedSearch(filters, options);
+      }
     } catch (error) {
       logger.error('Error fetching segment contacts:', error);
       throw error;
