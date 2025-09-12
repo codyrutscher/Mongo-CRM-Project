@@ -243,11 +243,17 @@ function showSection(sectionName) {
         case 'contacts':
             loadContacts();
             break;
+        case 'hubspot-contacts':
+            loadHubSpotContacts();
+            break;
+        case 'csv-contacts':
+            loadCSVContacts();
+            break;
+        case 'sheets-contacts':
+            loadSheetsContacts();
+            break;
         case 'segments':
             loadSegments();
-            break;
-        case 'sync':
-            loadSyncJobs();
             break;
     }
 }
@@ -1080,6 +1086,120 @@ function displayUploadResults(results) {
     }
     
     resultsDiv.innerHTML = html;
+}
+
+// Source-Specific Contact Functions
+async function loadHubSpotContacts() {
+    try {
+        console.log('Loading HubSpot contacts...');
+        showLoading(true);
+        
+        const response = await fetch(`${API_BASE}/contacts?source=hubspot&limit=100&page=1`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayContactsInContainer(data.data, 'hubspotContactsList');
+            // TODO: Add pagination for HubSpot contacts
+        }
+    } catch (error) {
+        console.error('Error loading HubSpot contacts:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadCSVContacts() {
+    try {
+        console.log('Loading CSV contacts...');
+        showLoading(true);
+        
+        const response = await fetch(`${API_BASE}/contacts?source=csv_upload&limit=100&page=1`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayContactsInContainer(data.data, 'csvContactsList');
+            // TODO: Add pagination for CSV contacts
+        }
+    } catch (error) {
+        console.error('Error loading CSV contacts:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadSheetsContacts() {
+    try {
+        console.log('Loading Google Sheets contacts...');
+        showLoading(true);
+        
+        const response = await fetch(`${API_BASE}/contacts?source=google_sheets&limit=100&page=1`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayContactsInContainer(data.data, 'sheetsContactsList');
+            // TODO: Add pagination for Google Sheets contacts
+        }
+    } catch (error) {
+        console.error('Error loading Google Sheets contacts:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayContactsInContainer(contacts, containerId) {
+    const container = document.getElementById(containerId);
+    
+    if (!contacts || contacts.length === 0) {
+        container.innerHTML = '<div class="col-12"><p class="text-muted">No contacts found from this source.</p></div>';
+        return;
+    }
+    
+    let html = '';
+    contacts.forEach(contact => {
+        const dncBadge = contact.dncStatus === 'dnc_internal' ? 
+            '<span class="badge bg-danger ms-2">DNC</span>' : 
+            '<span class="badge bg-success ms-2">Callable</span>';
+            
+        html += `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card contact-card" data-contact-id="${contact._id}">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            ${contact.firstName} ${contact.lastName}
+                            ${dncBadge}
+                        </h6>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                <i class="fas fa-envelope"></i> ${contact.email || 'No email'}<br>
+                                <i class="fas fa-phone"></i> ${contact.phone || 'No phone'}<br>
+                                <i class="fas fa-building"></i> ${contact.company || 'No company'}<br>
+                                ${contact.customFields?.contactType ? 
+                                    `<i class="fas fa-user-tag"></i> ${contact.customFields.contactType}<br>` : ''
+                                }
+                                ${contact.customFields?.businessCategory ? 
+                                    `<i class="fas fa-industry"></i> ${contact.customFields.businessCategory}<br>` : ''
+                                }
+                            </small>
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">${formatSourceName(contact.source)}</small>
+                            <span class="badge bg-${getLifecycleColor(contact.lifecycleStage)}">${contact.lifecycleStage}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Add click event listeners
+    container.querySelectorAll('.contact-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const contactId = this.getAttribute('data-contact-id');
+            showContactDetails(contactId);
+        });
+    });
 }
 
 // Segments Functions
