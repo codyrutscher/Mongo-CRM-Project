@@ -3,11 +3,21 @@ import { Card, Badge, Form } from 'react-bootstrap';
 import { formatSourceName, getLifecycleColor } from '../utils/formatters';
 
 const ContactCard = ({ contact, isSelected, onSelect, onViewDetails }) => {
+  const handleCardClick = (e) => {
+    // Don't trigger details view if clicking on checkbox
+    if (e.target.type === 'checkbox') return;
+    if (onViewDetails) {
+      onViewDetails(contact._id);
+    }
+  };
+
   return (
     <div className="col-md-6 col-lg-4 mb-3">
       <Card 
         className={`contact-card ${isSelected ? 'border-primary' : ''}`}
+        style={{ cursor: 'pointer' }}
         data-contact-id={contact._id}
+        onClick={handleCardClick}
       >
         <Card.Body>
           <div className="d-flex justify-content-between align-items-start mb-2">
@@ -17,7 +27,7 @@ const ContactCard = ({ contact, isSelected, onSelect, onViewDetails }) => {
             <Form.Check 
               type="checkbox" 
               checked={isSelected}
-              onChange={(e) => onSelect(contact._id, e.target.checked)}
+              onChange={(e) => onSelect && onSelect(contact._id, e.target.checked)}
               onClick={(e) => e.stopPropagation()}
             />
           </div>

@@ -3,38 +3,103 @@ import { Row, Col, Button, InputGroup, Form, Alert } from 'react-bootstrap';
 import ContactCard from '../components/ContactCard';
 import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
-import { getContacts, getContact } from '../services/api';
+import PaginationComponent from '../components/PaginationComponent';
+import AdvancedFilters from '../components/AdvancedFilters';
+import { getContacts, getContactsWithFilters, getContact } from '../services/api';
 
 const HubSpotContacts = () => {
   const [contacts, setContacts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('grid');
   const [selectedContacts, setSelectedContacts] = useState(new Set());
   const [showContactModal, setShowContactModal] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  
+  // Filter state
+  const [filters, setFilters] = useState({});
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortField, setSortField] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     loadContacts();
-  }, []);
+  }, [currentPage, pageSize, filters, sortField, sortOrder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadContacts = async () => {
     try {
       setLoading(true);
-      const response = await getContacts({ 
-        source: 'hubspot', 
-        limit: 100, 
-        page: 1 
-      });
+      
+      let response;
+      if (Object.keys(filters).length > 0 || searchQuery) {
+        // Use advanced search with filters
+        const searchFilters = { ...filters, source: 'hubspot' };
+        if (searchQuery) {
+          searchFilters.searchQuery = searchQuery;
+        }
+        response = await getContactsWithFilters(searchFilters, currentPage, pageSize, sortField, sortOrder);
+      } else {
+        // Use simple source-based filtering
+        response = await getContacts({ 
+          source: 'hubspot', 
+          page: currentPage,
+          limit: pageSize,
+          sort: sortField,
+          order: sortOrder
+        });
+      }
       
       if (response.data.success) {
-        setContacts(response.data.data);
+        setContacts(response.data.data || []);
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.totalPages || 1);
+          setTotalRecords(response.data.pagination.totalRecords || 0);
+        }
       }
     } catch (error) {
       console.error('Error loading HubSpot contacts:', error);
+      setContacts([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setSearchQuery('');
+    setCurrentPage(1);
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    loadContacts();
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortField(field);
+    setSortOrder(order);
+    setCurrentPage(1);
   };
 
   const handleContactSelect = (contactId, isSelected) => {
@@ -85,24 +150,6 @@ const HubSpotContacts = () => {
     console.log('Creating segment with contacts:', Array.from(selectedContacts));
   };
 
-  const filteredContacts = contacts.filter(contact =>
-    searchQuery === '' || 
-    contact.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.company?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  if (loading) {
-    return (
-      <div className="text-center">
-        <div className="spinner-border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <Row>
@@ -116,23 +163,59 @@ const HubSpotContacts = () => {
         </Col>
       </Row>
 
+      {/* Advanced Filters */}
+      <AdvancedFilters
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        isVisible={showFilters}
+        onToggleVisibility={() => setShowFilters(!showFilters)}
+      />
+
       {/* Search and Controls */}
       <Row className="mb-4">
-        <Col md={6}>
+        <Col md={4}>
           <InputGroup>
             <Form.Control
               type="text"
               placeholder="Search contacts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <Button variant="primary">
+            <Button variant="primary" onClick={handleSearch} disabled={loading}>
               <i className="fas fa-search"></i>
             </Button>
           </InputGroup>
         </Col>
-        <Col md={6}>
-          <div className="d-flex gap-2 justify-content-end">
+        <Col md={2}>
+          <Form.Select
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+          >
+            <option value={10}>10 per page</option>
+            <option value={20}>20 per page</option>
+            <option value={50}>50 per page</option>
+            <option value={100}>100 per page</option>
+          </Form.Select>
+        </Col>
+        <Col md={3}>
+          <Form.Select
+            value={`${sortField}-${sortOrder}`}
+            onChange={(e) => {
+              const [field, order] = e.target.value.split('-');
+              handleSortChange(field, order);
+            }}
+          >
+            <option value="createdAt-desc">📅 Newest First</option>
+            <option value="createdAt-asc">📅 Oldest First</option>
+            <option value="lastSyncedAt-desc">🔄 Recently Synced</option>
+            <option value="firstName-asc">🔤 Name A-Z</option>
+            <option value="firstName-desc">🔤 Name Z-A</option>
+            <option value="company-asc">🏢 Company A-Z</option>
+          </Form.Select>
+        </Col>
+        <Col md={3}>
+          <div className="d-flex gap-2">
             <div className="btn-group">
               <Button 
                 variant={viewType === 'grid' ? 'primary' : 'outline-secondary'}
@@ -147,12 +230,26 @@ const HubSpotContacts = () => {
                 <i className="fas fa-list"></i> List
               </Button>
             </div>
-            <Button variant="outline-primary" onClick={loadContacts}>
-              <i className="fas fa-sync-alt"></i>
+            <Button variant="outline-primary" onClick={loadContacts} disabled={loading}>
+              <i className={`fas fa-sync-alt ${loading ? 'fa-spin' : ''}`}></i>
             </Button>
           </div>
         </Col>
       </Row>
+
+      {/* Loading State */}
+      {loading && (
+        <Row>
+          <Col>
+            <div className="text-center py-4">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2">Loading HubSpot contacts...</p>
+            </div>
+          </Col>
+        </Row>
+      )}
 
       {/* Bulk Actions */}
       {selectedContacts.size > 0 && (
@@ -184,14 +281,41 @@ const HubSpotContacts = () => {
         </Row>
       )}
 
+      {/* Results Info */}
+      {!loading && (
+        <Row className="mb-3">
+          <Col>
+            <div className="text-muted">
+              {totalRecords > 0 ? (
+                <>
+                  Showing {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} HubSpot contacts
+                  {Object.keys(filters).length > 0 && <span className="text-primary"> (filtered)</span>}
+                </>
+              ) : (
+                'No HubSpot contacts found'
+              )}
+            </div>
+          </Col>
+        </Row>
+      )}
+
       {/* Contacts Display */}
       <Row>
         <Col>
-          {filteredContacts.length === 0 ? (
-            <p className="text-muted">No HubSpot contacts found.</p>
+          {!loading && contacts.length === 0 ? (
+            <div className="text-center py-5">
+              <i className="fas fa-inbox fa-3x text-muted mb-3"></i>
+              <h5 className="text-muted">No HubSpot contacts found</h5>
+              <p className="text-muted">
+                {Object.keys(filters).length > 0 || searchQuery 
+                  ? 'Try adjusting your search criteria or filters.'
+                  : 'No contacts have been synced from HubSpot yet.'
+                }
+              </p>
+            </div>
           ) : viewType === 'grid' ? (
             <Row>
-              {filteredContacts.map(contact => (
+              {contacts.map(contact => (
                 <ContactCard
                   key={contact._id}
                   contact={contact}
@@ -203,7 +327,7 @@ const HubSpotContacts = () => {
             </Row>
           ) : (
             <ContactTable
-              contacts={filteredContacts}
+              contacts={contacts}
               selectedContacts={selectedContacts}
               onSelect={handleContactSelect}
               onSelectAll={handleSelectAll}
@@ -213,6 +337,17 @@ const HubSpotContacts = () => {
         </Col>
       </Row>
 
+      {/* Pagination */}
+      {!loading && contacts.length > 0 && (
+        <PaginationComponent
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalRecords={totalRecords}
+        />
+      )}
+
+      {/* Contact Modal */}
       <ContactModal
         show={showContactModal}
         contact={selectedContact}

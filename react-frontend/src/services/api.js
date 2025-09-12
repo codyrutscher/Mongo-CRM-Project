@@ -19,6 +19,16 @@ export const getContacts = (params = {}) => {
   return api.get(`/contacts?${queryString}`);
 };
 
+export const getContactsWithFilters = (filters = {}, page = 1, limit = 20, sort = 'createdAt', order = 'desc') => {
+  return api.post('/contacts/search', {
+    filters,
+    page,
+    limit,
+    sort,
+    order
+  });
+};
+
 export const searchContacts = (query, page = 1, limit = 100) => 
   api.post('/contacts/search', { query, page, limit });
 
