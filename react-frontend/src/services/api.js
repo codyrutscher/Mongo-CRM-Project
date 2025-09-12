@@ -1,0 +1,65 @@
+import axios from 'axios';
+
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? '/api' 
+  : 'http://localhost:3001/api';
+
+const api = axios.create({
+  baseURL: API_BASE,
+  timeout: 30000,
+});
+
+// Dashboard
+export const getDashboardStats = () => api.get('/contacts/stats');
+export const getSyncJobs = (limit = 5) => api.get(`/sync/jobs?limit=${limit}`);
+
+// Contacts
+export const getContacts = (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return api.get(`/contacts?${queryString}`);
+};
+
+export const searchContacts = (query, page = 1, limit = 100) => 
+  api.post('/contacts/search', { query, page, limit });
+
+export const getContact = (id) => api.get(`/contacts/${id}`);
+
+export const getContactSegments = () => api.get('/contacts/segments');
+
+export const getSegmentContacts = (segment) => api.get(`/contacts/segments/${segment}`);
+
+// Sync
+export const testHubSpotConnection = () => api.post('/sync/test/hubspot');
+export const startHubSpotSync = (type) => api.post('/sync/hubspot', { type });
+export const testGoogleSheetsConnection = (spreadsheetId) => 
+  api.post('/sync/test/google-sheets', { spreadsheetId });
+export const startGoogleSheetsSync = (spreadsheetId, sheetName) => 
+  api.post('/sync/google-sheets', { spreadsheetId, sheetName });
+export const getSyncJob = (jobId) => api.get(`/sync/jobs/${jobId}`);
+
+// Upload
+export const previewCSV = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/csv/preview', formData);
+};
+
+export const uploadContacts = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/contacts/upload', formData);
+};
+
+export const getFieldOptions = () => api.get('/csv/field-options');
+
+// Segments
+export const getSegments = () => api.get('/segments');
+export const getSegment = (id) => api.get(`/segments/${id}`);
+export const createSegment = (segment) => api.post('/segments', segment);
+export const updateSegment = (id, segment) => api.put(`/segments/${id}`, segment);
+export const deleteSegment = (id) => api.delete(`/segments/${id}`);
+export const exportSegment = (id, format = 'csv') => api.get(`/segments/${id}/export?format=${format}`);
+export const getSegmentContactsById = (id, page = 1, limit = 100) => 
+  api.get(`/segments/${id}/contacts?page=${page}&limit=${limit}`);
+
+export default api;

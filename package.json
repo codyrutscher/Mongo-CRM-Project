@@ -7,8 +7,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "jest",
-    "build": "echo 'No build step required'",
-    "postinstall": "echo 'Installation complete'"
+    "build": "cd react-frontend && npm install && npm run build",
+    "postinstall": "cd react-frontend && npm install"
   },
   "keywords": ["crm", "hubspot", "google-sheets", "mongodb", "data-sync"],
   "author": "",

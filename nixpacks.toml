@@ -5,7 +5,9 @@ nixPkgs = ['nodejs-18_x', 'npm-9_x']
 cmds = ['npm ci']
 
 [phases.build]
-cmds = ['npm run build --if-present']
+cmds = [
+  'npm run build'
+]
 
 [start]
-cmd = 'npm start'
+cmd = 'NODE_ENV=production npm start'

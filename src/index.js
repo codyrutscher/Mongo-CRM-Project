@@ -4,13 +4,14 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const connectDB = require('./config/database');
 const routes = require('./routes');
 const logger = require('./utils/logger');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Connect to MongoDB
 connectDB();
@@ -58,22 +59,36 @@ app.use('/api', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
-app.use(express.static('public'));
+// Serve static files (for uploaded files, etc.)
+app.use('/uploads', express.static('uploads'));
+app.use('/exports', express.static('exports'));
 
 // API routes
 app.use('/api', routes);
 
-// Serve basic web interface
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/../public/index.html');
-});
+// In production, serve React build files
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('../react-frontend/build'));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../react-frontend/build', 'index.html'));
+  });
+} else {
+  // Development - just serve API
+  app.get('/', (req, res) => {
+    res.json({ 
+      success: true, 
+      message: 'ProspereCRM API Server',
+      frontend: 'Run React frontend on port 3000'
+    });
+  });
+}
 
-// 404 handler
-app.use('*', (req, res) => {
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
   res.status(404).json({
     success: false,
-    error: 'Route not found'
+    error: 'API route not found'
   });
 });
 
