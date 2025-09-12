@@ -13,8 +13,50 @@ class ContactController {
         sort = 'createdAt', 
         order = 'desc',
         search = '',
-        filters = {}
+        dncStatus = '',
+        contactType = '',
+        location = '',
+        source = '',
+        industry = '',
+        sicCode = '',
+        naicsCode = '',
+        dateFilter = ''
       } = req.query;
+
+      // Build filters object from query parameters
+      const filters = {};
+      
+      if (dncStatus) filters.dncStatus = dncStatus;
+      if (contactType) filters['customFields.contactType'] = contactType;
+      if (location) filters['address.state'] = location;
+      if (source) filters.source = source;
+      if (industry) filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
+      if (sicCode) filters['customFields.sicCode'] = sicCode;
+      if (naicsCode) filters['customFields.naicsCode'] = naicsCode;
+      
+      if (dateFilter) {
+        const now = new Date();
+        let startDate;
+        
+        switch(dateFilter) {
+          case 'today':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            break;
+          case 'week':
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'month':
+            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case 'quarter':
+            startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            break;
+        }
+        
+        if (startDate) {
+          filters.createdAt = { $gte: startDate };
+        }
+      }
 
       const sortObject = { [sort]: order === 'desc' ? -1 : 1 };
       const options = {

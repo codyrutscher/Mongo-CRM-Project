@@ -1698,19 +1698,24 @@ async function loadContactsWithFilters(filters) {
         showLoading(true);
         console.log('Loading contacts with filters:', filters);
         
-        // Use advanced search endpoint
-        const response = await fetch(`${API_BASE}/contacts/search`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                filters: filters,
-                page: 1,
-                limit: 100
-            })
-        });
+        // Build query string with individual filter parameters
+        const filterParams = new URLSearchParams();
+        filterParams.append('page', '1');
+        filterParams.append('limit', '100');
         
+        // Map frontend filters to backend parameters
+        if (filters.dncStatus) filterParams.append('dncStatus', filters.dncStatus);
+        if (filters['customFields.contactType']) filterParams.append('contactType', filters['customFields.contactType']);
+        if (filters['address.state']) filterParams.append('location', filters['address.state']);
+        if (filters.source) filterParams.append('source', filters.source);
+        if (filters['customFields.businessCategory']) filterParams.append('industry', filters['customFields.businessCategory'].$regex || filters['customFields.businessCategory']);
+        if (filters['customFields.sicCode']) filterParams.append('sicCode', filters['customFields.sicCode']);
+        if (filters['customFields.naicsCode']) filterParams.append('naicsCode', filters['customFields.naicsCode']);
+        if (filters.createdAt) filterParams.append('dateFilter', 'custom'); // Handle date filters
+        
+        console.log('Filter params:', filterParams.toString());
+        
+        const response = await fetch(`${API_BASE}/contacts?${filterParams.toString()}`);
         const data = await response.json();
         console.log('Filter results:', data);
         
