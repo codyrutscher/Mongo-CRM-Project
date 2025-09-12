@@ -1693,7 +1693,9 @@ function clearAdvancedFilters() {
 async function loadContactsWithFilters(filters) {
     try {
         showLoading(true);
+        console.log('Loading contacts with filters:', filters);
         
+        // Use advanced search endpoint
         const response = await fetch(`${API_BASE}/contacts/search`, {
             method: 'POST',
             headers: {
@@ -1707,18 +1709,25 @@ async function loadContactsWithFilters(filters) {
         });
         
         const data = await response.json();
+        console.log('Filter results:', data);
         
         if (data.success) {
             displayContacts(data.data);
             updatePagination(data.pagination);
             
-            // Show select all filtered button
+            // Show select all filtered button with accurate count
             const selectAllFilteredBtn = document.getElementById('selectAllFilteredBtn');
             selectAllFilteredBtn.style.display = 'inline-block';
             selectAllFilteredBtn.textContent = `Select All ${data.pagination.totalRecords} Filtered Results`;
+            
+            console.log(`✅ Filter applied: ${data.pagination.totalRecords} contacts found`);
+        } else {
+            console.error('Filter search failed:', data.error);
+            alert(`Filter failed: ${data.error}`);
         }
     } catch (error) {
         console.error('Error loading filtered contacts:', error);
+        alert('Filter failed. Please try again.');
     } finally {
         showLoading(false);
     }
