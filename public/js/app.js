@@ -1737,16 +1737,125 @@ async function loadContactsWithFilters(filters) {
     }
 }
 
-function selectAllFilteredContacts() {
-    // Select all contacts currently displayed
-    const checkboxes = document.querySelectorAll('.contact-checkbox');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = true;
-        selectedContacts.add(checkbox.getAttribute('data-contact-id'));
-    });
-    updateSelectionUI();
+async function selectAllFilteredContacts() {
+    try {
+        // Get the current filter parameters
+        const filters = getCurrentFilters();
+        console.log('Selecting all filtered contacts with filters:', filters);
+        
+        // Show loading
+        const selectAllBtn = document.getElementById('selectAllFilteredBtn');
+        const originalText = selectAllBtn.textContent;
+        selectAllBtn.disabled = true;
+        selectAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading all contacts...';
+        
+        // Fetch ALL filtered contact IDs (not just current page)
+        console.log('Fetching all filtered contacts with payload:', {
+            filters: filters,
+            page: 1,
+            limit: 50000,
+            select: '_id'
+        });
+        
+        const response = await fetch(`${API_BASE}/contacts/search`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                filters: filters,
+                page: 1,
+                limit: 50000, // Get all results
+                select: '_id' // Only get IDs for performance
+            })
+        });
+        
+        console.log('Response status:', response.status);
+        const data = await response.json();
+        console.log('All filtered contact IDs response:', data);
+        console.log('Data type:', typeof data.data);
+        console.log('Data length:', data.data ? data.data.length : 'undefined');
+        
+        if (data.success && data.data) {
+            // Clear existing selection
+            selectedContacts.clear();
+            
+            // Add all filtered contact IDs
+            data.data.forEach(contact => {
+                selectedContacts.add(contact._id || contact.id);
+            });
+            
+            // Update UI to show all checkboxes as selected
+            const checkboxes = document.querySelectorAll('.contact-checkbox');
+            checkboxes.forEach(checkbox => {
+                const contactId = checkbox.getAttribute('data-contact-id');
+                if (selectedContacts.has(contactId)) {
+                    checkbox.checked = true;
+                }
+            });
+            
+            updateSelectionUI();
+            
+            alert(`Selected ALL ${selectedContacts.size} filtered contacts across all pages!\n\nYou can now create a segment with all these contacts.`);
+        } else {
+            alert('Failed to select all filtered contacts. Please try again.');
+        }
+        
+    } catch (error) {
+        console.error('Error selecting all filtered contacts:', error);
+        alert('Failed to select all filtered contacts.');
+    } finally {
+        // Reset button
+        const selectAllBtn = document.getElementById('selectAllFilteredBtn');
+        selectAllBtn.disabled = false;
+        selectAllBtn.innerHTML = '<i class="fas fa-check-square"></i> Select All Filtered Results';
+    }
+}
+
+function getCurrentFilters() {
+    const filters = {};
     
-    alert(`Selected ${checkboxes.length} filtered contacts. Use "Create Segment" to create a campaign-ready segment.`);
+    // Get current filter values
+    const dncStatus = document.getElementById('dncFilter').value;
+    const contactType = document.getElementById('contactTypeFilter').value;
+    const location = document.getElementById('locationFilter').value;
+    const source = document.getElementById('sourceFilter').value;
+    const industry = document.getElementById('industryFilter').value;
+    const sicCode = document.getElementById('sicCodeFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+    
+    if (dncStatus) filters.dncStatus = dncStatus;
+    if (contactType) filters['customFields.contactType'] = contactType;
+    if (location) filters['address.state'] = location;
+    if (source) filters.source = source;
+    if (industry) filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
+    if (sicCode) filters['customFields.sicCode'] = sicCode;
+    
+    if (dateFilter) {
+        const now = new Date();
+        let startDate;
+        
+        switch(dateFilter) {
+            case 'today':
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                break;
+            case 'week':
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case 'month':
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                break;
+            case 'quarter':
+                startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                break;
+        }
+        
+        if (startDate) {
+            filters.createdAt = { $gte: startDate.toISOString() };
+        }
+    }
+    
+    return filters;
 }
 
 function showCreateSegmentModal() {

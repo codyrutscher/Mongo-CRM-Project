@@ -306,12 +306,25 @@ class ContactController {
     try {
       const { query, filters = {}, ...options } = req.body;
 
+      console.log('=== SEARCH CONTACTS DEBUG ===');
+      console.log('Query:', query);
+      console.log('Filters:', JSON.stringify(filters, null, 2));
+      console.log('Options:', JSON.stringify(options, null, 2));
+
       let result;
       if (query) {
+        console.log('Using text search');
         result = await searchService.textSearch(query, options);
       } else {
+        console.log('Using advanced search with filters');
         result = await searchService.advancedSearch(filters, options);
       }
+
+      console.log('Search result:', {
+        contactCount: result.contacts.length,
+        totalRecords: result.pagination.totalRecords,
+        currentPage: result.pagination.current
+      });
 
       res.json({
         success: true,
