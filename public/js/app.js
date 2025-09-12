@@ -145,14 +145,7 @@ function setupEventListeners() {
         processWithMappingBtn.addEventListener('click', processWithMapping);
     }
 
-    // Segments buttons
-    const loadHubSpotListsBtn = document.getElementById('loadHubSpotListsBtn');
-    
-    if (loadHubSpotListsBtn) {
-        loadHubSpotListsBtn.addEventListener('click', function() {
-            loadHubSpotLists();
-        });
-    }
+    // Removed HubSpot lists functionality as requested
 
     // Bulk actions
     const createSegmentFromSelectedBtn = document.getElementById('createSegmentFromSelectedBtn');
@@ -1109,11 +1102,9 @@ function displaySegments(segments) {
                         <button class="btn btn-sm btn-outline-success me-1" data-action="export" data-segment-id="${segment._id}">
                             <i class="fas fa-download"></i> Export
                         </button>
-                        ${!segment.isSystem ? `
-                            <button class="btn btn-sm btn-outline-danger" data-action="delete" data-segment-id="${segment._id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
+                        <button class="btn btn-sm btn-outline-danger" data-action="delete" data-segment-id="${segment._id}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1136,9 +1127,7 @@ function displaySegments(segments) {
                     exportSegment(segmentId);
                     break;
                 case 'delete':
-                    if (confirm('Are you sure you want to delete this segment?')) {
-                        deleteSegment(segmentId);
-                    }
+                    deleteSegmentFromIndex(segmentId);
                     break;
             }
         });
@@ -1502,6 +1491,33 @@ function deleteCurrentSegment() {
         if (data.success) {
             alert('Segment deleted successfully!');
             showSection('segments');
+            loadSegments(); // Refresh segments list
+        } else {
+            alert(`Failed to delete segment: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting segment:', error);
+        alert('Failed to delete segment');
+    });
+}
+
+function deleteSegmentFromIndex(segmentId) {
+    // Find segment name for confirmation
+    const segmentElement = document.querySelector(`[data-segment-id="${segmentId}"]`);
+    const segmentName = segmentElement ? segmentElement.querySelector('h6').textContent : 'this segment';
+    
+    const confirmDelete = confirm(`Are you sure you want to delete "${segmentName}"?\n\nThis will permanently delete the segment but not the contacts.`);
+    if (!confirmDelete) return;
+    
+    // Delete segment
+    fetch(`${API_BASE}/segments/${segmentId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Segment deleted successfully!');
             loadSegments(); // Refresh segments list
         } else {
             alert(`Failed to delete segment: ${data.error}`);
