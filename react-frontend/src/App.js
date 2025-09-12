@@ -8,14 +8,12 @@ import CSVContacts from './pages/CSVContacts';
 import SheetsContacts from './pages/SheetsContacts';
 import Segments from './pages/Segments';
 import SegmentDetails from './pages/SegmentDetails';
-import LoadingModal from './components/LoadingModal';
 import ContactModal from './components/ContactModal';
 import './App.css';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
-  const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedContact] = useState(null);
 
   return (
     <Router>
@@ -33,7 +31,7 @@ function App() {
           </Routes>
         </div>
         
-        <LoadingModal show={isLoading} />
+        {/* LoadingModal can be used by individual components */}
         <ContactModal 
           show={showContactModal} 
           contact={selectedContact}

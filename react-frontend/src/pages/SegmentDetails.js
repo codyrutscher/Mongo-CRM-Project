@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Row, Col, Card, Button, Table, Badge, Pagination } from 'react-bootstrap';
 import { getSegment, getSegmentContactsById, deleteSegment, exportSegment } from '../services/api';
-import { formatSourceName, formatDate } from '../utils/formatters';
+import { formatSourceName } from '../utils/formatters';
 
 const SegmentDetails = () => {
   const { id } = useParams();
@@ -16,7 +16,7 @@ const SegmentDetails = () => {
     if (id) {
       loadSegmentDetails();
     }
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadSegmentDetails = async () => {
     try {

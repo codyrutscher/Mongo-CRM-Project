@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Button, InputGroup, Form, Alert } from 'react-bootstrap';
+import { Row, Col, Button, InputGroup, Form, Alert } from 'react-bootstrap';
 import ContactCard from '../components/ContactCard';
 import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col } from 'react-bootstrap';
 import ContactCard from '../components/ContactCard';
-import ContactTable from '../components/ContactTable';
 import { getContacts } from '../services/api';
 
 const CSVContacts = () => {
