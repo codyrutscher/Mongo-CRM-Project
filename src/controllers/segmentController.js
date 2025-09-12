@@ -192,34 +192,38 @@ class SegmentController {
       const { id } = req.params;
       const { format = 'csv' } = req.query;
 
-      const exportData = await segmentService.getSegmentExportData(id, format);
+      // Get segment contacts directly
+      const segmentResult = await segmentService.getSegmentContacts(id, { limit: 100000 });
+      const contacts = segmentResult.contacts || [];
       
-      // Use existing export service
-      const result = format.toLowerCase() === 'excel' 
-        ? await exportService.exportToExcel({}, { 
-            contacts: exportData.contacts,
-            filename: `${exportData.segmentName.replace(/\s+/g, '_')}_export_${Date.now()}`
-          })
-        : await exportService.exportToCSV({}, { 
-            contacts: exportData.contacts,
-            filename: `${exportData.segmentName.replace(/\s+/g, '_')}_export_${Date.now()}`
-          });
+      logger.info(`Exporting segment ${id}: ${contacts.length} contacts`);
+      
+      if (contacts.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No contacts found in this segment'
+        });
+      }
 
-      res.json({
-        success: true,
-        data: {
-          filename: result.filename,
-          recordCount: result.recordCount,
-          format: result.format,
-          downloadUrl: `/api/export/download/${result.filename}`
-        },
-        message: `${exportData.segmentName} exported: ${result.recordCount} contacts`
-      });
+      // Generate CSV content directly
+      const csvContent = exportService.convertToCSV(contacts);
+      
+      // Set response headers for file download
+      const filename = `segment_export_${Date.now()}.csv`;
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', Buffer.byteLength(csvContent, 'utf8'));
+      
+      // Send CSV content directly
+      res.send(csvContent);
+      
+      logger.info(`Exported ${contacts.length} contacts to CSV`);
+      
     } catch (error) {
       logger.error('Error exporting segment:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to export segment'
+        error: 'Failed to export segment: ' + error.message
       });
     }
   }
