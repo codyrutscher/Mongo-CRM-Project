@@ -30,9 +30,12 @@ class ContactController {
       if (contactType) filters['customFields.contactType'] = contactType;
       if (location) filters['address.state'] = location;
       if (source) filters.source = source;
-      if (industry) filters['customFields.businessCategory'] = { $regex: industry, $options: 'i' };
-      if (sicCode) filters['customFields.sicCode'] = sicCode;
-      if (naicsCode) filters['customFields.naicsCode'] = naicsCode;
+      if (industry) {
+        filters['customFields.businessCategory'] = new RegExp(industry, 'i');
+      }
+      if (sicCode) {
+        filters['customFields.sicCode'] = sicCode;
+      }
       
       if (dateFilter) {
         const now = new Date();
