@@ -1637,11 +1637,7 @@ function applyAdvancedFilters() {
         filters['customFields.sicCode'] = sicCode;
     }
     
-    // NAICS Code filter
-    const naicsCode = document.getElementById('naicsCodeFilter').value;
-    if (naicsCode) {
-        filters['customFields.naicsCode'] = naicsCode;
-    }
+    // NAICS Code filter removed - no data available
     
     // Date filter
     const dateFilter = document.getElementById('dateFilter').value;
@@ -1683,7 +1679,7 @@ function clearAdvancedFilters() {
     document.getElementById('sourceFilter').value = '';
     document.getElementById('industryFilter').value = '';
     document.getElementById('sicCodeFilter').value = '';
-    document.getElementById('naicsCodeFilter').value = '';
+    // NAICS removed
     document.getElementById('dateFilter').value = '';
     
     // Hide select all filtered button

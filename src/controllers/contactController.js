@@ -67,11 +67,16 @@ class ContactController {
 
       let result;
       
+      console.log('Controller filters built:', filters);
+      console.log('Filter count:', Object.keys(filters).length);
+      
       if (search) {
         result = await searchService.textSearch(search, options);
       } else if (Object.keys(filters).length > 0) {
+        console.log('Using advanced search with filters');
         result = await searchService.advancedSearch(filters, options);
       } else {
+        console.log('Using search with no filters');
         result = await searchService.searchContacts({}, options);
       }
 
