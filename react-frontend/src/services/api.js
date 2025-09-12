@@ -29,6 +29,15 @@ export const getContactsWithFilters = (filters = {}, page = 1, limit = 20, sort 
   });
 };
 
+export const getAllFilteredContactIds = (filters = {}) => {
+  return api.post('/contacts/search', {
+    filters,
+    page: 1,
+    limit: 50000,
+    select: '_id'
+  });
+};
+
 export const searchContacts = (query, page = 1, limit = 100) => 
   api.post('/contacts/search', { query, page, limit });
 

@@ -35,6 +35,8 @@ const ContactTable = ({ contacts, selectedContacts, onSelect, onViewDetails, onS
               <td>
                 <Form.Check 
                   type="checkbox"
+                  className="contact-checkbox"
+                  data-contact-id={contact._id}
                   checked={selectedContacts.has(contact._id)}
                   onChange={(e) => onSelect(contact._id, e.target.checked)}
                 />

@@ -5,7 +5,7 @@ import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
 import PaginationComponent from '../components/PaginationComponent';
 import AdvancedFilters from '../components/AdvancedFilters';
-import { getContacts, getContactsWithFilters, getContact } from '../services/api';
+import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds } from '../services/api';
 
 const CSVContacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -138,6 +138,43 @@ const CSVContacts = () => {
     setSelectedContacts(new Set());
   };
 
+  const selectAllFilteredResults = async () => {
+    if (Object.keys(filters).length === 0 && !searchQuery) {
+      alert('Please apply filters first to select all filtered results');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const searchFilters = { ...filters, source: 'csv_upload' };
+      if (searchQuery) {
+        searchFilters.searchQuery = searchQuery;
+      }
+      
+      const response = await getAllFilteredContactIds(searchFilters);
+      
+      if (response.data.success) {
+        const allContactIds = response.data.data.map(contact => contact._id);
+        setSelectedContacts(new Set(allContactIds));
+        
+        const checkboxes = document.querySelectorAll('.contact-checkbox');
+        checkboxes.forEach(checkbox => {
+          const contactId = checkbox.getAttribute('data-contact-id');
+          if (allContactIds.includes(contactId)) {
+            checkbox.checked = true;
+          }
+        });
+        
+        alert(`Selected ALL ${allContactIds.length} filtered contacts across all pages!`);
+      }
+    } catch (error) {
+      console.error('Error selecting all filtered contacts:', error);
+      alert('Failed to select all filtered contacts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const createSegmentFromSelected = () => {
     if (selectedContacts.size === 0) {
       alert('Please select contacts first');
@@ -250,6 +287,33 @@ const CSVContacts = () => {
         </Row>
       )}
 
+      {/* Select All Filtered Results Button */}
+      {(Object.keys(filters).length > 0 || searchQuery) && !loading && (
+        <Row className="mb-3">
+          <Col>
+            <div className="d-flex gap-2">
+              <Button 
+                variant="outline-success" 
+                size="sm"
+                onClick={selectAllFilteredResults}
+                disabled={loading}
+              >
+                <i className="fas fa-check-square"></i> Select All {totalRecords} Filtered Results
+              </Button>
+              {selectedContacts.size > 0 && (
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm"
+                  onClick={clearSelection}
+                >
+                  <i className="fas fa-times"></i> Clear Selection
+                </Button>
+              )}
+            </div>
+          </Col>
+        </Row>
+      )}
+
       {/* Bulk Actions */}
       {selectedContacts.size > 0 && (
         <Row className="mb-3">
@@ -257,6 +321,11 @@ const CSVContacts = () => {
             <Alert variant="info" className="d-flex justify-content-between align-items-center">
               <div>
                 <span>{selectedContacts.size} contacts selected</span>
+                {selectedContacts.size > contacts.length && (
+                  <small className="text-muted d-block">
+                    (includes contacts from other pages)
+                  </small>
+                )}
               </div>
               <div>
                 <Button 

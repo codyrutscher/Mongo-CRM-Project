@@ -26,6 +26,8 @@ const ContactCard = ({ contact, isSelected, onSelect, onViewDetails }) => {
             </Card.Title>
             <Form.Check 
               type="checkbox" 
+              className="contact-checkbox"
+              data-contact-id={contact._id}
               checked={isSelected}
               onChange={(e) => onSelect && onSelect(contact._id, e.target.checked)}
               onClick={(e) => e.stopPropagation()}
