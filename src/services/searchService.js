@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 class SearchService {
   constructor() {
     this.defaultPageSize = 50;
-    this.maxPageSize = 1000;
+    this.maxPageSize = 50000; // Increased for bulk operations
   }
 
   async searchContacts(query = {}, options = {}) {
