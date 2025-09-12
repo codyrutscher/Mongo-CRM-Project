@@ -15,20 +15,21 @@ class HubSpotService {
     try {
       const params = {
         properties: [
-          'firstname',
-          'lastname', 
-          'email',
-          'phone',
-          'company',
-          'jobtitle',
-          'address',
-          'city',
-          'state',
-          'zip',
-          'country',
-          'lifecyclestage',
-          'createdate',
-          'lastmodifieddate'
+          // Basic contact info
+          'firstname', 'lastname', 'email', 'phone', 'company', 'jobtitle',
+          'address', 'city', 'state', 'zip', 'country', 'lifecyclestage',
+          'createdate', 'lastmodifieddate',
+          
+          // Business and industry fields
+          'business_category___industry_of_interest', 'annualrevenue', 'industry',
+          'account_type', 'contact_type', 'broker', 'lead_source',
+          'buyer_status', 'seller_status', 'interested_in',
+          'website', 'linkedin_profile', 'year_established',
+          'currently_own_a_business', 'legal_organization_type',
+          'primary_investor_type', 'buying_role', 'motivation_for_buying',
+          
+          // DNC and compliance
+          'do_not_call', 'dnc_flag', 'optout'
         ].join(',')
       };
 
@@ -206,14 +207,19 @@ class HubSpotService {
       const params = {
         count: limit,
         property: [
+          // Basic contact info
           'firstname', 'lastname', 'email', 'phone', 'company', 'jobtitle',
           'address', 'city', 'state', 'zip', 'country', 'lifecyclestage',
           'createdate', 'lastmodifieddate',
-          // DNC and compliance properties
-          'do_not_call', 'dnc_flag', 'dnc_date', 'dnc_reason',
-          'optout', 'optout_date', 'federal_dnc', 'federal_dnc_date',
-          'state_dnc', 'state_dnc_date', 'wireless_dnc', 'wireless_dnc_date',
-          'compliance_notes'
+          
+          // Business and industry fields  
+          'business_category___industry_of_interest', 'annualrevenue', 'industry',
+          'account_type', 'contact_type', 'broker', 'lead_source',
+          'buyer_status', 'seller_status', 'interested_in',
+          'website', 'linkedin_profile', 'year_established',
+          
+          // DNC and compliance
+          'do_not_call', 'dnc_flag', 'optout'
         ]
       };
 
@@ -313,14 +319,19 @@ class HubSpotService {
         params: {
           limit: 100,
           properties: [
+            // Basic contact info
             'firstname', 'lastname', 'email', 'phone', 'company', 'jobtitle',
             'address', 'city', 'state', 'zip', 'country', 'lifecyclestage',
             'createdate', 'lastmodifieddate',
-            // DNC and compliance properties
-            'do_not_call', 'dnc_flag', 'dnc_date', 'dnc_reason',
-            'optout', 'optout_date', 'federal_dnc', 'federal_dnc_date',
-            'state_dnc', 'state_dnc_date', 'wireless_dnc', 'wireless_dnc_date',
-            'compliance_notes'
+            
+            // Business and industry fields
+            'business_category___industry_of_interest', 'annualrevenue', 'industry',
+            'account_type', 'contact_type', 'broker', 'lead_source',
+            'buyer_status', 'seller_status', 'interested_in',
+            'website', 'linkedin_profile', 'year_established',
+            
+            // DNC and compliance
+            'do_not_call', 'dnc_flag', 'optout'
           ].join(','),
           filters: JSON.stringify([{
             propertyName: 'lastmodifieddate',
@@ -368,6 +379,28 @@ class HubSpotService {
         hubspotId: hubspotContact.id,
         createDate: props.createdate,
         lastModifiedDate: props.lastmodifieddate,
+        
+        // Business fields
+        businessCategory: props.business_category___industry_of_interest || '',
+        industry: props.industry || '',
+        annualRevenue: props.annualrevenue || '',
+        accountType: props.account_type || '',
+        contactType: props.contact_type || '',
+        broker: props.broker || '',
+        leadSource: props.lead_source || '',
+        buyerStatus: props.buyer_status || '',
+        sellerStatus: props.seller_status || '',
+        interestedIn: props.interested_in || '',
+        website: props.website || '',
+        linkedinProfile: props.linkedin_profile || '',
+        yearEstablished: props.year_established || '',
+        currentlyOwnBusiness: props.currently_own_a_business || '',
+        legalOrgType: props.legal_organization_type || '',
+        primaryInvestorType: props.primary_investor_type || '',
+        buyingRole: props.buying_role || '',
+        motivationForBuying: props.motivation_for_buying || '',
+        
+        // DNC fields
         hubspotDncFlag: props.dnc_flag || '',
         hubspotDoNotCall: props.do_not_call || '',
         hubspotMarketingOptOut: props.optout || ''
