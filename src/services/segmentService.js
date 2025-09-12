@@ -134,9 +134,14 @@ class SegmentService {
         icon: segmentData.icon || 'fas fa-users'
       });
 
-      // Calculate initial contact count
-      const count = await this.getSegmentCount(segmentData.filters);
-      segment.contactCount = count;
+      // For contact ID filters, count is the number of IDs
+      if (segmentData.filters && segmentData.filters._id && segmentData.filters._id.$in) {
+        segment.contactCount = segmentData.filters._id.$in.length;
+      } else {
+        // Calculate contact count for other filter types
+        const count = await this.getSegmentCount(segmentData.filters);
+        segment.contactCount = count;
+      }
 
       await segment.save();
       logger.info(`Created custom segment: ${segment.name}`);
