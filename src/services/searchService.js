@@ -156,6 +156,10 @@ class SearchService {
           }
           break;
 
+        case 'dncStatus':
+          query.dncStatus = value;
+          break;
+
         case 'customFields':
           Object.keys(value).forEach(fieldName => {
             const fieldValue = value[fieldName];
@@ -164,9 +168,15 @@ class SearchService {
           break;
 
         default:
-          // Handle custom field searches
+          // Handle custom field searches and other direct field matches
           if (key.startsWith('customFields.')) {
-            query[key] = { $regex: value, $options: 'i' };
+            if (typeof value === 'object' && value.$regex) {
+              query[key] = value; // Keep regex objects as-is
+            } else {
+              query[key] = value; // Direct match for exact values
+            }
+          } else {
+            query[key] = value; // Direct field matches (like address.state)
           }
           break;
       }
