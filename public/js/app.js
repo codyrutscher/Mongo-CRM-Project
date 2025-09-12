@@ -1159,10 +1159,14 @@ function setupContactEventListeners() {
             e.stopPropagation();
             const contactId = this.getAttribute('data-contact-id');
             
+            console.log('Checkbox changed for contact:', contactId, 'Checked:', this.checked);
+            
             if (this.checked) {
                 selectedContacts.add(contactId);
+                console.log('Added to selection. Total selected:', selectedContacts.size);
             } else {
                 selectedContacts.delete(contactId);
+                console.log('Removed from selection. Total selected:', selectedContacts.size);
             }
             
             updateSelectionUI();
@@ -1240,8 +1244,12 @@ function clearSelection() {
 }
 
 function createSegmentFromSelected() {
+    console.log('createSegmentFromSelected called');
+    console.log('selectedContacts.size:', selectedContacts.size);
+    console.log('selectedContacts:', Array.from(selectedContacts));
+    
     if (selectedContacts.size === 0) {
-        alert('Please select contacts first');
+        alert('Please select contacts first by checking the boxes next to contacts');
         return;
     }
     
@@ -1249,6 +1257,9 @@ function createSegmentFromSelected() {
     if (!segmentName) return;
     
     const selectedIds = Array.from(selectedContacts);
+    
+    console.log('Creating segment with contact IDs:', selectedIds);
+    console.log('Selected contacts count:', selectedIds.length);
     
     // Create segment from selected contact IDs
     fetch(`${API_BASE}/segments`, {
