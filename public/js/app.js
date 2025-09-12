@@ -177,6 +177,42 @@ function setupEventListeners() {
     if (clearSelectionBtn) {
         clearSelectionBtn.addEventListener('click', clearSelection);
     }
+
+    // Segment detail page buttons
+    const backToSegmentsBtn = document.getElementById('backToSegmentsBtn');
+    const editSegmentBtn = document.getElementById('editSegmentBtn');
+    const exportSegmentBtn = document.getElementById('exportSegmentBtn');
+    const deleteSegmentBtn = document.getElementById('deleteSegmentBtn');
+    
+    if (backToSegmentsBtn) {
+        backToSegmentsBtn.addEventListener('click', function() {
+            showSection('segments');
+        });
+    }
+    
+    if (editSegmentBtn) {
+        editSegmentBtn.addEventListener('click', function() {
+            if (currentSegmentDetails) {
+                editCurrentSegment();
+            }
+        });
+    }
+    
+    if (exportSegmentBtn) {
+        exportSegmentBtn.addEventListener('click', function() {
+            if (currentSegmentDetails) {
+                exportSegment(currentSegmentDetails._id);
+            }
+        });
+    }
+    
+    if (deleteSegmentBtn) {
+        deleteSegmentBtn.addEventListener('click', function() {
+            if (currentSegmentDetails) {
+                deleteCurrentSegment();
+            }
+        });
+    }
 }
 
 function showSection(sectionName) {
@@ -1405,6 +1441,74 @@ function updateSegmentPagination(pagination, segmentId) {
 
 function exportSegment(segmentId) {
     window.open(`${API_BASE}/segments/${segmentId}/export?format=csv`, '_blank');
+}
+
+function editCurrentSegment() {
+    if (!currentSegmentDetails) return;
+    
+    const newName = prompt('Edit segment name:', currentSegmentDetails.name);
+    if (!newName || newName === currentSegmentDetails.name) return;
+    
+    const newDescription = prompt('Edit segment description:', currentSegmentDetails.description);
+    if (newDescription === null) return;
+    
+    // Update segment
+    fetch(`${API_BASE}/segments/${currentSegmentDetails._id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name: newName,
+            description: newDescription
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Segment updated successfully!');
+            currentSegmentDetails.name = newName;
+            currentSegmentDetails.description = newDescription;
+            showSegmentDetails(currentSegmentDetails);
+        } else {
+            alert(`Failed to update segment: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating segment:', error);
+        alert('Failed to update segment');
+    });
+}
+
+function deleteCurrentSegment() {
+    if (!currentSegmentDetails) return;
+    
+    if (currentSegmentDetails.isSystem) {
+        alert('Cannot delete system segments');
+        return;
+    }
+    
+    const confirmDelete = confirm(`Are you sure you want to delete the segment "${currentSegmentDetails.name}"?\n\nThis will permanently delete the segment but not the contacts.`);
+    if (!confirmDelete) return;
+    
+    // Delete segment
+    fetch(`${API_BASE}/segments/${currentSegmentDetails._id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Segment deleted successfully!');
+            showSection('segments');
+            loadSegments(); // Refresh segments list
+        } else {
+            alert(`Failed to delete segment: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting segment:', error);
+        alert('Failed to delete segment');
+    });
 }
 
 function showCreateSegmentModal() {
