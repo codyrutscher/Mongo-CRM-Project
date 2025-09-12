@@ -157,7 +157,12 @@ class SearchService {
           break;
 
         case 'dncStatus':
-          query.dncStatus = value;
+          if (value === 'callable') {
+            // Callable includes both 'callable' and null/undefined (not on DNC list)
+            query.dncStatus = { $ne: 'dnc_internal' };
+          } else {
+            query.dncStatus = value;
+          }
           break;
 
         case 'customFields':
