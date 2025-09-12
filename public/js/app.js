@@ -1686,10 +1686,7 @@ function applyAdvancedFilters() {
     }
     
     // Industry filter (from text input)
-    const industryText = document.getElementById('industryFilter').value;
-    if (industryText) {
-        filters['customFields.businessCategory'] = { $regex: industryText, $options: 'i' };
-    }
+   
     
     // Date filter
     const dateFilter = document.getElementById('dateFilter').value;

@@ -17,8 +17,8 @@ async function fastHubSpotFullSync() {
     const currentCount = await Contact.countDocuments({ source: 'hubspot' });
     console.log(`📊 Current HubSpot contacts in database: ${currentCount}`);
     
-    // Fetch ALL contacts from HubSpot with business fields
-    console.log('📄 Fetching ALL HubSpot contacts with business fields...');
+    // Fetch ALL contacts from HubSpot with business fields AND DNC status
+    console.log('📄 Fetching ALL HubSpot contacts with business fields and DNC status...');
     const allHubSpotContacts = await hubspotService.getAllContacts();
     console.log(`📈 Total contacts in HubSpot: ${allHubSpotContacts.length}`);
     
