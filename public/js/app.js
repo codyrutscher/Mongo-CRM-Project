@@ -1431,7 +1431,38 @@ function updateSegmentPagination(pagination, segmentId) {
 }
 
 function exportSegment(segmentId) {
-    window.open(`${API_BASE}/segments/${segmentId}/export?format=csv`, '_blank');
+    console.log('Exporting segment:', segmentId);
+    
+    // Show loading message
+    const exportUrl = `${API_BASE}/segments/${segmentId}/export?format=csv`;
+    console.log('Export URL:', exportUrl);
+    
+    // Try to download the file
+    fetch(exportUrl)
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error(`Export failed: ${response.status}`);
+        })
+        .then(blob => {
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `segment_${segmentId}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            console.log('Export completed successfully');
+        })
+        .catch(error => {
+            console.error('Export failed:', error);
+            alert('Export failed. Please try again.');
+        });
 }
 
 function editCurrentSegment() {

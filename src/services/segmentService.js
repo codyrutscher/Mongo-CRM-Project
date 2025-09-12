@@ -183,8 +183,13 @@ class SegmentService {
         throw new Error('Segment not found');
       }
 
+      // Handle both Map and Object types for filters
+      const filters = segment.filters instanceof Map ? 
+        Object.fromEntries(segment.filters) : 
+        segment.filters.toObject ? segment.filters.toObject() : segment.filters;
+
       // Update contact count
-      const count = await this.getSegmentCount(segment.filters.toObject());
+      const count = await this.getSegmentCount(filters);
       segment.contactCount = count;
       segment.lastCountUpdate = new Date();
       await segment.save();
