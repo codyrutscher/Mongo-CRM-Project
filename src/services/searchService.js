@@ -177,11 +177,24 @@ class SearchService {
           if (key.startsWith('customFields.')) {
             if (typeof value === 'object' && value.$regex) {
               query[key] = value; // Keep regex objects as-is
+            } else if (typeof value === 'string' && value.trim() !== '') {
+              // Use regex for partial matching on custom fields
+              query[key] = { $regex: value, $options: 'i' };
+            }
+          } else if (key.startsWith('address.')) {
+            // Handle address fields with regex for partial matching
+            if (typeof value === 'string' && value.trim() !== '') {
+              query[key] = { $regex: value, $options: 'i' };
+            }
+          } else if (typeof value === 'string' && value.trim() !== '') {
+            // Handle other string fields
+            if (['firstName', 'lastName', 'jobTitle'].includes(key)) {
+              query[key] = { $regex: value, $options: 'i' };
             } else {
               query[key] = value; // Direct match for exact values
             }
-          } else {
-            query[key] = value; // Direct field matches (like address.state)
+          } else if (value !== '' && value !== null && value !== undefined) {
+            query[key] = value; // Direct field matches for non-string values
           }
           break;
       }

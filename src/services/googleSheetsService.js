@@ -15,17 +15,25 @@ class GoogleSheetsService {
         return;
       }
 
+      // Clean up the private key - handle both escaped and unescaped newlines
+      let privateKey = process.env.GOOGLE_PRIVATE_KEY;
+      if (privateKey.includes('\\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
+
       this.auth = new google.auth.JWT(
         process.env.GOOGLE_CLIENT_EMAIL,
         null,
-        process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        privateKey,
         ['https://www.googleapis.com/auth/spreadsheets.readonly']
       );
 
       this.sheets = google.sheets({ version: 'v4', auth: this.auth });
-      logger.info('Google Sheets service initialized');
+      logger.info('Google Sheets service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize Google Sheets auth:', error);
+      this.auth = null;
+      this.sheets = null;
     }
   }
 
@@ -119,6 +127,7 @@ class GoogleSheetsService {
           case 'first name':
           case 'firstname':
           case 'fname':
+          case 'normalized first name':
             contact.firstName = value.trim();
             break;
           case 'last name':
@@ -128,15 +137,20 @@ class GoogleSheetsService {
             break;
           case 'email':
           case 'email address':
+          case 'final email':
             contact.email = value.trim().toLowerCase();
             break;
           case 'phone':
           case 'phone number':
           case 'mobile':
+          case 'final_phone_number':
+          case 'final phone number':
             contact.phone = value.trim();
             break;
           case 'company':
           case 'organization':
+          case 'final company name':
+          case 'final_company_name':
             contact.company = value.trim();
             break;
           case 'job title':
@@ -151,11 +165,15 @@ class GoogleSheetsService {
             contact.address.street = value.trim();
             break;
           case 'city':
+          case 'final_city':
+          case 'final city':
             contact.address = contact.address || {};
             contact.address.city = value.trim();
             break;
           case 'state':
           case 'province':
+          case 'final_state':
+          case 'final state':
             contact.address = contact.address || {};
             contact.address.state = value.trim();
             break;

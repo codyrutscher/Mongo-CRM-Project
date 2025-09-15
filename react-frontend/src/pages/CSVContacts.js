@@ -4,7 +4,7 @@ import ContactCard from '../components/ContactCard';
 import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
 import PaginationComponent from '../components/PaginationComponent';
-import AdvancedFilters from '../components/AdvancedFilters';
+import CSVFilters from '../components/CSVFilters';
 import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds, createSegment } from '../services/api';
 
 const CSVContacts = () => {
@@ -225,8 +225,8 @@ const CSVContacts = () => {
         </Col>
       </Row>
 
-      {/* Advanced Filters */}
-      <AdvancedFilters
+      {/* CSV Filters */}
+      <CSVFilters
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
         isVisible={showFilters}

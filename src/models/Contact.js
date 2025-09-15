@@ -132,7 +132,7 @@ contactSchema.index({ source: 1, sourceId: 1 }, { unique: true });
 contactSchema.index({ company: 1, createdAt: -1 });
 contactSchema.index({ tags: 1 });
 contactSchema.index({ status: 1, lifecycleStage: 1 });
-contactSchema.index({ email: 1 }, { sparse: true, unique: true });
+contactSchema.index({ email: 1, source: 1 }, { sparse: true, unique: true });
 
 // Text index for search functionality
 contactSchema.index({

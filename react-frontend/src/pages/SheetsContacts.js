@@ -4,7 +4,7 @@ import ContactCard from '../components/ContactCard';
 import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
 import PaginationComponent from '../components/PaginationComponent';
-import AdvancedFilters from '../components/AdvancedFilters';
+import SheetsFilters from '../components/SheetsFilters';
 import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds, createSegment } from '../services/api';
 
 const SheetsContacts = () => {
@@ -225,8 +225,8 @@ const SheetsContacts = () => {
         </Col>
       </Row>
 
-      {/* Advanced Filters */}
-      <AdvancedFilters
+      {/* Google Sheets Filters */}
+      <SheetsFilters
         onFilterChange={handleFilterChange}
         onClearFilters={handleClearFilters}
         isVisible={showFilters}
