@@ -64,7 +64,7 @@ class ExportService {
   async exportBySegment(segment, format = 'csv') {
     try {
       const result = await searchService.getContactsBySegment(segment, { 
-        limit: 100000 // Large limit to get all contacts
+        limit: Number.MAX_SAFE_INTEGER // No limit - export all contacts
       });
       
       const exportOptions = {
@@ -123,7 +123,7 @@ class ExportService {
     const query = searchService.buildFilterQuery(filters);
     const contacts = await Contact.find(query)
       .sort({ createdAt: -1 })
-      .limit(options.limit || 100000)
+      .limit(options.limit || Number.MAX_SAFE_INTEGER) // No limit for exports
       .lean();
 
     return contacts;

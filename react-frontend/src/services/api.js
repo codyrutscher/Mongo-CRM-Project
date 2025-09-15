@@ -33,7 +33,7 @@ export const getAllFilteredContactIds = (filters = {}) => {
   return api.post('/contacts/search', {
     filters,
     page: 1,
-    limit: 50000,
+    limit: Number.MAX_SAFE_INTEGER, // No limit - get all results
     select: '_id'
   });
 };

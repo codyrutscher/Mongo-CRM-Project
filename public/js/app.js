@@ -1929,7 +1929,7 @@ async function selectAllFilteredContacts() {
         console.log('Fetching all filtered contacts with payload:', {
             filters: filters,
             page: 1,
-            limit: 50000,
+            limit: Number.MAX_SAFE_INTEGER, // No limit
             select: '_id'
         });
         
@@ -1941,7 +1941,7 @@ async function selectAllFilteredContacts() {
             body: JSON.stringify({
                 filters: filters,
                 page: 1,
-                limit: 50000, // Get all results
+                limit: Number.MAX_SAFE_INTEGER, // No limit - get all results
                 select: '_id' // Only get IDs for performance
             })
         });
