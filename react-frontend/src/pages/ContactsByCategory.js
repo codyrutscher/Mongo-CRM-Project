@@ -26,19 +26,19 @@ const ContactsByCategory = () => {
   const categoryInfo = {
     clean: {
       title: "Clean Contacts",
-      description: "Contacts with complete information: First Name, Last Name, Email, Phone, and Company",
+      description: "Contacts with complete information: First Name, Last Name, Email, Phone, and Company from all sources (CSV, Google Sheets, HubSpot)",
       icon: "fas fa-check-circle",
       color: "success"
     },
     "email-only": {
       title: "Total Contacts with Email Only",
-      description: "All contacts that have an email address",
+      description: "Contacts that have an email address but no phone number",
       icon: "fas fa-envelope",
       color: "info"
     },
     "phone-only": {
-      title: "Total Contacts with Phone Number Only",
-      description: "All contacts that have a phone number",
+      title: "Total Contacts with Phone Only",
+      description: "Contacts that have a phone number but no email address",
       icon: "fas fa-phone",
       color: "warning"
     }

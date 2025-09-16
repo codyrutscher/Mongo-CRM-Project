@@ -382,13 +382,23 @@ class SearchService {
           phone: { $exists: true, $ne: '', $ne: null },
           company: { $exists: true, $ne: '', $ne: null }
         }),
-        // Total Contacts with Email Only
+        // Total Contacts with Email Only (has email but no phone)
         Contact.countDocuments({
-          email: { $exists: true, $ne: '', $ne: null }
+          email: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { phone: { $exists: false } },
+            { phone: '' },
+            { phone: null }
+          ]
         }),
-        // Total Contacts with Phone Number Only
+        // Total Contacts with Phone Only (has phone but no email)
         Contact.countDocuments({
-          phone: { $exists: true, $ne: '', $ne: null }
+          phone: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { email: { $exists: false } },
+            { email: '' },
+            { email: null }
+          ]
         })
       ]);
 

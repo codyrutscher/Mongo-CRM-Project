@@ -436,12 +436,22 @@ class ContactController {
           break;
         case 'email-only':
           filter = {
-            email: { $exists: true, $ne: '', $ne: null }
+            email: { $exists: true, $ne: '', $ne: null },
+            $or: [
+              { phone: { $exists: false } },
+              { phone: '' },
+              { phone: null }
+            ]
           };
           break;
         case 'phone-only':
           filter = {
-            phone: { $exists: true, $ne: '', $ne: null }
+            phone: { $exists: true, $ne: '', $ne: null },
+            $or: [
+              { email: { $exists: false } },
+              { email: '' },
+              { email: null }
+            ]
           };
           break;
         default:

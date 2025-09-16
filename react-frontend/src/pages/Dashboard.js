@@ -132,6 +132,7 @@ const Dashboard = () => {
               <i className="fas fa-envelope fa-2x mb-2"></i>
               <h3>{stats.emailOnlyContacts || 0}</h3>
               <p>Total Contacts with Email Only</p>
+              <small>Email but no phone number</small>
             </Card.Body>
           </Card>
         </Col>
@@ -140,7 +141,8 @@ const Dashboard = () => {
             <Card.Body className="text-center">
               <i className="fas fa-phone fa-2x mb-2"></i>
               <h3>{stats.phoneOnlyContacts || 0}</h3>
-              <p>Total Contacts with Phone Number Only</p>
+              <p>Total Contacts with Phone Only</p>
+              <small>Phone but no email address</small>
             </Card.Body>
           </Card>
         </Col>
