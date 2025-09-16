@@ -357,6 +357,16 @@ class SegmentController {
 
         // Convert batch to CSV and stream
         for (const contact of contacts) {
+          // Convert to plain object if it's a Mongoose document
+          const contactObj = contact.toObject ? contact.toObject() : contact;
+          
+          // For CSV contacts, use original email if available
+          let displayEmail = contactObj.email || '';
+          if (contactObj.source && contactObj.source.startsWith('csv_') && 
+              contactObj.customFields && contactObj.customFields.originalEmail) {
+            displayEmail = contactObj.customFields.originalEmail;
+          }
+
           const escapeCSV = (value) => {
             if (value === null || value === undefined) return '';
             const stringValue = String(value);
@@ -367,27 +377,27 @@ class SegmentController {
           };
 
           const row = [
-            escapeCSV(contact.firstName || ''),
-            escapeCSV(contact.lastName || ''),
-            escapeCSV(contact.email || ''),
-            escapeCSV(contact.phone || ''),
-            escapeCSV(contact.company || ''),
-            escapeCSV(contact.jobTitle || ''),
-            escapeCSV(contact.address?.street || ''),
-            escapeCSV(contact.address?.city || ''),
-            escapeCSV(contact.address?.state || ''),
-            escapeCSV(contact.address?.zipCode || ''),
-            escapeCSV(contact.address?.country || ''),
-            escapeCSV(contact.source || ''),
-            escapeCSV(contact.lifecycleStage || ''),
-            escapeCSV(contact.status || ''),
-            escapeCSV(contact.dncStatus || 'callable'),
-            escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString() : ''),
-            escapeCSV(contact.dncReason || ''),
-            escapeCSV(contact.complianceNotes || ''),
-            escapeCSV(contact.tags?.join('; ') || ''),
-            escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString() : ''),
-            escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString() : '')
+            escapeCSV(contactObj.firstName || ''),
+            escapeCSV(contactObj.lastName || ''),
+            escapeCSV(displayEmail),
+            escapeCSV(contactObj.phone || ''),
+            escapeCSV(contactObj.company || ''),
+            escapeCSV(contactObj.jobTitle || ''),
+            escapeCSV(contactObj.address?.street || ''),
+            escapeCSV(contactObj.address?.city || ''),
+            escapeCSV(contactObj.address?.state || ''),
+            escapeCSV(contactObj.address?.zipCode || ''),
+            escapeCSV(contactObj.address?.country || ''),
+            escapeCSV(contactObj.source || ''),
+            escapeCSV(contactObj.lifecycleStage || ''),
+            escapeCSV(contactObj.status || ''),
+            escapeCSV(contactObj.dncStatus || 'callable'),
+            escapeCSV(contactObj.dncDate ? new Date(contactObj.dncDate).toISOString() : ''),
+            escapeCSV(contactObj.dncReason || ''),
+            escapeCSV(contactObj.complianceNotes || ''),
+            escapeCSV(contactObj.tags?.join('; ') || ''),
+            escapeCSV(contactObj.createdAt ? new Date(contactObj.createdAt).toISOString() : ''),
+            escapeCSV(contactObj.lastSyncedAt ? new Date(contactObj.lastSyncedAt).toISOString() : '')
           ];
 
           res.write(row.join(',') + '\n');
@@ -485,6 +495,16 @@ class SegmentController {
       
       // Stream contacts
       for (const contact of contacts) {
+        // Convert to plain object if it's a Mongoose document
+        const contactObj = contact.toObject ? contact.toObject() : contact;
+        
+        // For CSV contacts, use original email if available
+        let displayEmail = contactObj.email || '';
+        if (contactObj.source && contactObj.source.startsWith('csv_') && 
+            contactObj.customFields && contactObj.customFields.originalEmail) {
+          displayEmail = contactObj.customFields.originalEmail;
+        }
+
         const escapeCSV = (value) => {
           if (value === null || value === undefined) return '';
           const stringValue = String(value);
@@ -495,27 +515,27 @@ class SegmentController {
         };
 
         const row = [
-          escapeCSV(contact.firstName || ''),
-          escapeCSV(contact.lastName || ''),
-          escapeCSV(contact.email || ''),
-          escapeCSV(contact.phone || ''),
-          escapeCSV(contact.company || ''),
-          escapeCSV(contact.jobTitle || ''),
-          escapeCSV(contact.address?.street || ''),
-          escapeCSV(contact.address?.city || ''),
-          escapeCSV(contact.address?.state || ''),
-          escapeCSV(contact.address?.zipCode || ''),
-          escapeCSV(contact.address?.country || ''),
-          escapeCSV(contact.source || ''),
-          escapeCSV(contact.lifecycleStage || ''),
-          escapeCSV(contact.status || ''),
-          escapeCSV(contact.dncStatus || 'callable'),
-          escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString() : ''),
-          escapeCSV(contact.dncReason || ''),
-          escapeCSV(contact.complianceNotes || ''),
-          escapeCSV(contact.tags?.join('; ') || ''),
-          escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString() : ''),
-          escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString() : '')
+          escapeCSV(contactObj.firstName || ''),
+          escapeCSV(contactObj.lastName || ''),
+          escapeCSV(displayEmail),
+          escapeCSV(contactObj.phone || ''),
+          escapeCSV(contactObj.company || ''),
+          escapeCSV(contactObj.jobTitle || ''),
+          escapeCSV(contactObj.address?.street || ''),
+          escapeCSV(contactObj.address?.city || ''),
+          escapeCSV(contactObj.address?.state || ''),
+          escapeCSV(contactObj.address?.zipCode || ''),
+          escapeCSV(contactObj.address?.country || ''),
+          escapeCSV(contactObj.source || ''),
+          escapeCSV(contactObj.lifecycleStage || ''),
+          escapeCSV(contactObj.status || ''),
+          escapeCSV(contactObj.dncStatus || 'callable'),
+          escapeCSV(contactObj.dncDate ? new Date(contactObj.dncDate).toISOString() : ''),
+          escapeCSV(contactObj.dncReason || ''),
+          escapeCSV(contactObj.complianceNotes || ''),
+          escapeCSV(contactObj.tags?.join('; ') || ''),
+          escapeCSV(contactObj.createdAt ? new Date(contactObj.createdAt).toISOString() : ''),
+          escapeCSV(contactObj.lastSyncedAt ? new Date(contactObj.lastSyncedAt).toISOString() : '')
         ];
 
         res.write(row.join(',') + '\n');

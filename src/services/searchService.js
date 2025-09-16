@@ -39,12 +39,27 @@ class SearchService {
         Contact.countDocuments(query),
       ]);
 
+      // Post-process contacts to fix CSV email display
+      const processedContacts = contacts.map(contact => {
+        // Convert to plain object if it's a Mongoose document
+        const contactObj = contact.toObject ? contact.toObject() : contact;
+        
+        // For CSV contacts, show original email if available
+        if (contactObj.source && contactObj.source.startsWith('csv_') && 
+            contactObj.customFields && contactObj.customFields.originalEmail) {
+          contactObj.displayEmail = contactObj.customFields.originalEmail;
+          contactObj.email = contactObj.customFields.originalEmail;
+        }
+        
+        return contactObj;
+      });
+
       return {
-        contacts,
+        contacts: processedContacts,
         pagination: {
           current: page,
           total: Math.ceil(total / actualLimit),
-          count: contacts.length,
+          count: processedContacts.length,
           totalRecords: total,
         },
       };

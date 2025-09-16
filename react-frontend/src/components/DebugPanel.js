@@ -273,14 +273,47 @@ const DebugPanel = () => {
         try {
           console.log('Testing segment export...');
           const exportResponse = await fetch(`/api/segments/${segmentId}/export?format=csv`);
-          const exportData = await exportResponse.json();
-          debugResults.tests.push({
-            name: 'Segment Export',
-            success: exportResponse.ok,
-            status: exportResponse.status,
-            data: exportData,
-            error: exportResponse.ok ? null : exportData.error
-          });
+          
+          // Check content type to determine if it's JSON (chunking info) or CSV (direct download)
+          const contentType = exportResponse.headers.get('content-type');
+          
+          if (contentType && contentType.includes('application/json')) {
+            // It's a JSON response (probably chunking info)
+            const exportData = await exportResponse.json();
+            debugResults.tests.push({
+              name: 'Segment Export',
+              success: exportResponse.ok,
+              status: exportResponse.status,
+              data: exportData,
+              error: exportResponse.ok ? null : exportData.error
+            });
+          } else if (contentType && contentType.includes('text/csv')) {
+            // It's a CSV file - check if it's valid
+            const csvText = await exportResponse.text();
+            const isValidCSV = csvText.length > 0 && !csvText.startsWith('{') && csvText.includes(',');
+            debugResults.tests.push({
+              name: 'Segment Export',
+              success: exportResponse.ok && isValidCSV,
+              status: exportResponse.status,
+              data: { 
+                type: 'CSV Download',
+                size: csvText.length,
+                preview: csvText.substring(0, 200) + (csvText.length > 200 ? '...' : ''),
+                isValid: isValidCSV
+              },
+              error: !isValidCSV ? 'CSV appears to be malformed or empty' : null
+            });
+          } else {
+            // Unknown content type
+            const responseText = await exportResponse.text();
+            debugResults.tests.push({
+              name: 'Segment Export',
+              success: false,
+              status: exportResponse.status,
+              data: { contentType, preview: responseText.substring(0, 200) },
+              error: `Unexpected content type: ${contentType}`
+            });
+          }
         } catch (error) {
           debugResults.tests.push({
             name: 'Segment Export',
