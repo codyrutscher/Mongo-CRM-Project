@@ -1,11 +1,17 @@
 export const formatSourceName = (source) => {
   const names = {
     'hubspot': 'HubSpot',
-    'google_sheets': 'Google Sheets',
+    'google_sheets': 'C17 Leads',
     'csv_upload': 'CSV Upload',
     'excel_upload': 'Excel Upload',
     'manual': 'Manual Entry'
   };
+  
+  // Handle individual CSV upload sources
+  if (source && source.startsWith('csv_')) {
+    return source.replace('csv_', '').replace(/_/g, ' ');
+  }
+  
   return names[source] || source;
 };
 

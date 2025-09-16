@@ -229,7 +229,12 @@ class ContactController {
         });
       }
 
-      const result = await fileUploadService.processUploadedFile(req.file);
+      // Get source name from request body or use filename
+      const sourceName = req.body.sourceName || req.file.originalname.replace(/\.[^/.]+$/, "");
+      const cleanSourceName = sourceName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+      const source = `csv_${cleanSourceName}`;
+
+      const result = await fileUploadService.processUploadedFile(req.file, source);
       
       // Save contacts to database (NO deduplication - separate lists)
       const savedContacts = [];
@@ -243,6 +248,13 @@ class ContactController {
           contactData.customFields.uploadBatch = uploadBatch;
           contactData.customFields.uploadTimestamp = new Date().toISOString();
           contactData.customFields.csvUploadSource = 'true';
+          
+          // Set source metadata
+          contactData.sourceMetadata = {
+            uploadName: sourceName,
+            fileName: req.file.originalname,
+            uploadDate: new Date()
+          };
           
           // Use unique email to avoid conflicts with other sources
           if (contactData.email && !contactData.email.includes('_csv_')) {
@@ -264,16 +276,16 @@ class ContactController {
       // Create automatic segment for this upload
       if (savedContacts.length > 0) {
         try {
-          const segmentName = `CSV Upload - ${new Date().toLocaleDateString()} (${savedContacts.length} contacts)`;
+          const segmentName = `${sourceName} - ${new Date().toLocaleDateString()} (${savedContacts.length} contacts)`;
           const segmentData = {
             name: segmentName,
-            description: `Contacts uploaded from CSV on ${new Date().toLocaleString()}`,
+            description: `Contacts uploaded from ${sourceName} on ${new Date().toLocaleString()}`,
             filters: {
               'customFields.uploadBatch': uploadBatch
             },
             color: '#6f42c1',
             icon: 'fas fa-file-csv',
-            createdBy: 'csv_upload'
+            createdBy: source
           };
           
           const segment = await segmentService.createSegment(segmentData);
@@ -401,6 +413,70 @@ class ContactController {
       res.status(500).json({
         success: false,
         error: 'Failed to fetch statistics'
+      });
+    }
+  }
+
+  async getContactsByCategory(req, res) {
+    try {
+      const { category } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+      
+      let filter = {};
+      
+      switch (category) {
+        case 'clean':
+          filter = {
+            firstName: { $exists: true, $ne: '', $ne: null },
+            lastName: { $exists: true, $ne: '', $ne: null },
+            email: { $exists: true, $ne: '', $ne: null },
+            phone: { $exists: true, $ne: '', $ne: null },
+            company: { $exists: true, $ne: '', $ne: null }
+          };
+          break;
+        case 'email-only':
+          filter = {
+            email: { $exists: true, $ne: '', $ne: null }
+          };
+          break;
+        case 'phone-only':
+          filter = {
+            phone: { $exists: true, $ne: '', $ne: null }
+          };
+          break;
+        default:
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid category'
+          });
+      }
+
+      const contacts = await Contact.find(filter)
+        .sort({ createdAt: -1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .exec();
+
+      const total = await Contact.countDocuments(filter);
+
+      res.json({
+        success: true,
+        data: {
+          contacts,
+          pagination: {
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalRecords: total,
+            hasNext: page < Math.ceil(total / limit),
+            hasPrev: page > 1
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('Error in getContactsByCategory:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
       });
     }
   }

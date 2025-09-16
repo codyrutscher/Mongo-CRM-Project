@@ -47,6 +47,9 @@ export const getContactSegments = () => api.get('/contacts/segments');
 
 export const getSegmentContacts = (segment) => api.get(`/contacts/segments/${segment}`);
 
+export const getContactsByCategory = (category, page = 1, limit = 20) => 
+  api.get(`/contacts/category/${category}?page=${page}&limit=${limit}`);
+
 // Sync
 export const testHubSpotConnection = () => api.post('/sync/test/hubspot');
 export const startHubSpotSync = (type) => api.post('/sync/hubspot', { type });
@@ -63,10 +66,12 @@ export const previewCSV = (file) => {
   return api.post('/csv/preview', formData);
 };
 
-export const uploadContacts = (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  return api.post('/contacts/upload', formData);
+export const uploadContacts = (formData) => {
+  return api.post('/contacts/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 };
 
 export const getFieldOptions = () => api.get('/csv/field-options');

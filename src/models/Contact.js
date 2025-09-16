@@ -51,13 +51,19 @@ const contactSchema = new mongoose.Schema({
   // Source information
   source: {
     type: String,
-    enum: ['hubspot', 'google_sheets', 'csv_upload', 'excel_upload', 'manual'],
     required: true,
     index: true
   },
   sourceId: {
     type: String,
     index: true
+  },
+  
+  // Additional source metadata
+  sourceMetadata: {
+    uploadName: String,
+    fileName: String,
+    uploadDate: Date
   },
   
   // Custom fields for flexibility

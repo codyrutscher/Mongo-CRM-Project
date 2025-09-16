@@ -193,7 +193,7 @@ class SegmentController {
       const { format = 'csv' } = req.query;
 
       // Get segment contacts directly
-      const segmentResult = await segmentService.getSegmentContacts(id, { limit: 100000 });
+      const segmentResult = await segmentService.getSegmentContacts(id, { limit: Number.MAX_SAFE_INTEGER });
       const contacts = segmentResult.contacts || [];
       
       logger.info(`Exporting segment ${id}: ${contacts.length} contacts`);

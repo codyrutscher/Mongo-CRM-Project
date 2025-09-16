@@ -77,6 +77,8 @@ class SearchService {
         case 'source':
           if (Array.isArray(value)) {
             query.source = { $in: value };
+          } else if (typeof value === 'object' && value.$regex) {
+            query.source = value;
           } else {
             query.source = value;
           }
@@ -233,7 +235,7 @@ class SearchService {
           source: 'google_sheets'
         },
         'uploaded_contacts': {
-          source: { $in: ['csv_upload', 'excel_upload'] }
+          source: { $regex: '^csv_' }
         },
         'inactive': {
           status: 'inactive'
@@ -340,7 +342,10 @@ class SearchService {
         bySource,
         byLifecycleStage,
         byStatus,
-        recentActivity
+        recentActivity,
+        cleanContacts,
+        emailOnlyContacts,
+        phoneOnlyContacts
       ] = await Promise.all([
         Contact.countDocuments(),
         Contact.aggregate([
@@ -368,7 +373,23 @@ class SearchService {
           },
           { $sort: { _id: -1 } },
           { $limit: 30 }
-        ])
+        ]),
+        // Clean Contacts: Must have First Name, Last Name, Email, Phone, and Company
+        Contact.countDocuments({
+          firstName: { $exists: true, $ne: '', $ne: null },
+          lastName: { $exists: true, $ne: '', $ne: null },
+          email: { $exists: true, $ne: '', $ne: null },
+          phone: { $exists: true, $ne: '', $ne: null },
+          company: { $exists: true, $ne: '', $ne: null }
+        }),
+        // Total Contacts with Email Only
+        Contact.countDocuments({
+          email: { $exists: true, $ne: '', $ne: null }
+        }),
+        // Total Contacts with Phone Number Only
+        Contact.countDocuments({
+          phone: { $exists: true, $ne: '', $ne: null }
+        })
       ]);
 
       return {
@@ -385,7 +406,11 @@ class SearchService {
           acc[item._id] = item.count;
           return acc;
         }, {}),
-        recentActivity: recentActivity
+        recentActivity: recentActivity,
+        // New dashboard stats
+        cleanContacts,
+        emailOnlyContacts,
+        phoneOnlyContacts
       };
     } catch (error) {
       logger.error('Error getting contact stats:', error);

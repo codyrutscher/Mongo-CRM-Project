@@ -33,7 +33,7 @@ class FileUploadService {
     return errors;
   }
 
-  async parseCSVFile(filePath) {
+  async parseCSVFile(filePath, source = 'csv_upload') {
     return new Promise((resolve, reject) => {
       const results = [];
       const errors = [];
@@ -80,7 +80,7 @@ class FileUploadService {
               logger.debug(`Row ${totalRows} object keys:`, Object.keys(rowObj));
             }
             
-            const transformedRow = this.transformRowData(rowObj, 'csv_upload');
+            const transformedRow = this.transformRowData(rowObj, source || 'csv_upload');
             if (transformedRow) {
               results.push(transformedRow);
             }
@@ -113,7 +113,7 @@ class FileUploadService {
     });
   }
 
-  async parseExcelFile(filePath) {
+  async parseExcelFile(filePath, source = 'excel_upload') {
     try {
       const workbook = xlsx.readFile(filePath);
       const allData = [];
@@ -143,7 +143,7 @@ class FileUploadService {
                 }
               });
 
-              const transformedRow = this.transformRowData(rowObj, 'excel_upload');
+              const transformedRow = this.transformRowData(rowObj, source);
               if (transformedRow) {
                 transformedRow.customFields = transformedRow.customFields || {};
                 transformedRow.customFields.sheetName = sheetName;
@@ -390,15 +390,15 @@ class FileUploadService {
     }
   }
 
-  async processUploadedFile(file) {
+  async processUploadedFile(file, source = 'csv_upload') {
     const filePath = file.path;
     let result;
 
     try {
       if (file.mimetype === 'text/csv') {
-        result = await this.parseCSVFile(filePath);
+        result = await this.parseCSVFile(filePath, source);
       } else {
-        result = await this.parseExcelFile(filePath);
+        result = await this.parseExcelFile(filePath, source);
       }
 
       return result;

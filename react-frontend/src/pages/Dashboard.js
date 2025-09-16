@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { getDashboardStats, getSyncJobs } from '../services/api';
 import { formatSourceName, formatDate } from '../utils/formatters';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total: 0,
     byLifecycleStage: {},
-    bySource: {}
+    bySource: {},
+    cleanContacts: 0,
+    emailOnlyContacts: 0,
+    phoneOnlyContacts: 0
   });
   const [syncJobs, setSyncJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +108,7 @@ const Dashboard = () => {
       {/* Stats Cards */}
       <Row className="mb-4">
         <Col md={3}>
-          <Card className="stats-card text-white">
+          <Card className="stats-card text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/hubspot-contacts')}>
             <Card.Body className="text-center">
               <i className="fas fa-users fa-2x mb-2"></i>
               <h3>{stats.total}</h3>
@@ -112,29 +117,30 @@ const Dashboard = () => {
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="bg-success text-white">
+          <Card className="bg-success text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/contacts/category/clean')}>
             <Card.Body className="text-center">
-              <i className="fas fa-user-plus fa-2x mb-2"></i>
-              <h3>{stats.byLifecycleStage.lead || 0}</h3>
-              <p>New Leads</p>
+              <i className="fas fa-check-circle fa-2x mb-2"></i>
+              <h3>{stats.cleanContacts || 0}</h3>
+              <p>Clean Contacts</p>
+              <small>Complete: Name, Email, Phone, Company</small>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="bg-info text-white">
+          <Card className="bg-info text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/contacts/category/email-only')}>
             <Card.Body className="text-center">
-              <i className="fas fa-handshake fa-2x mb-2"></i>
-              <h3>{stats.byLifecycleStage.customer || 0}</h3>
-              <p>Customers</p>
+              <i className="fas fa-envelope fa-2x mb-2"></i>
+              <h3>{stats.emailOnlyContacts || 0}</h3>
+              <p>Total Contacts with Email Only</p>
             </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="bg-warning text-white">
+          <Card className="bg-warning text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/contacts/category/phone-only')}>
             <Card.Body className="text-center">
-              <i className="fas fa-eye fa-2x mb-2"></i>
-              <h3>{stats.byLifecycleStage.prospect || 0}</h3>
-              <p>Prospects</p>
+              <i className="fas fa-phone fa-2x mb-2"></i>
+              <h3>{stats.phoneOnlyContacts || 0}</h3>
+              <p>Total Contacts with Phone Number Only</p>
             </Card.Body>
           </Card>
         </Col>

@@ -5,6 +5,7 @@ import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
 import PaginationComponent from '../components/PaginationComponent';
 import CSVFilters from '../components/CSVFilters';
+import CSVUpload from '../components/CSVUpload';
 import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds, createSegment } from '../services/api';
 
 const CSVContacts = () => {
@@ -38,16 +39,19 @@ const CSVContacts = () => {
       
       let response;
       if (Object.keys(filters).length > 0 || searchQuery) {
-        // Use advanced search with filters
-        const searchFilters = { ...filters, source: 'csv_upload' };
+        // Use advanced search with filters - include all CSV sources
+        const searchFilters = { ...filters };
+        if (!searchFilters.source) {
+          searchFilters.source = { $regex: '^csv_' };
+        }
         if (searchQuery) {
           searchFilters.searchQuery = searchQuery;
         }
         response = await getContactsWithFilters(searchFilters, currentPage, pageSize, sortField, sortOrder);
       } else {
-        // Use simple source-based filtering
+        // Use simple source-based filtering - include all CSV sources
         response = await getContacts({ 
-          source: 'csv_upload', 
+          source: { $regex: '^csv_' }, 
           page: currentPage,
           limit: pageSize,
           sort: sortField,
@@ -212,6 +216,11 @@ const CSVContacts = () => {
     }
   };
 
+  const handleUploadComplete = (result) => {
+    // Refresh the contacts list after successful upload
+    loadContacts();
+  };
+
   return (
     <div>
       <Row>
@@ -220,10 +229,13 @@ const CSVContacts = () => {
             <i className="fas fa-file-csv"></i> CSV Upload Contacts
           </h2>
           <p className="text-muted">
-            Contacts uploaded via CSV files - kept separate for campaign tracking
+            Contacts uploaded via CSV files - each upload is tracked separately for campaign analysis
           </p>
         </Col>
       </Row>
+
+      {/* CSV Upload Component */}
+      <CSVUpload onUploadComplete={handleUploadComplete} />
 
       {/* CSV Filters */}
       <CSVFilters

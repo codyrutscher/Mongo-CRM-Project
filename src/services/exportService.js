@@ -93,9 +93,9 @@ class ExportService {
     try {
       let result;
       if (query) {
-        result = await searchService.textSearch(query, { limit: 100000 });
+        result = await searchService.textSearch(query, { limit: Number.MAX_SAFE_INTEGER });
       } else {
-        result = await searchService.advancedSearch(filters, { limit: 100000 });
+        result = await searchService.advancedSearch(filters, { limit: Number.MAX_SAFE_INTEGER });
       }
 
       const exportOptions = {

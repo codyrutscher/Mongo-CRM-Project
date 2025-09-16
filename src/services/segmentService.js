@@ -339,7 +339,7 @@ class SegmentService {
       }
 
       const filters = segment.filters.toObject();
-      const contacts = await searchService.advancedSearch(filters, { limit: 100000 });
+      const contacts = await searchService.advancedSearch(filters, { limit: Number.MAX_SAFE_INTEGER });
 
       return {
         segmentName: segment.name,
