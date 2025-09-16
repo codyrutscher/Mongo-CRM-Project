@@ -196,6 +196,14 @@ class SegmentController {
       const { id } = req.params;
       const { format = 'csv', chunk } = req.query;
 
+      // Enhanced debugging
+      logger.info(`=== SEGMENT EXPORT DEBUG START ===`);
+      logger.info(`Segment ID: ${id}`);
+      logger.info(`Format: ${format}`);
+      logger.info(`Chunk: ${chunk}`);
+      logger.info(`Request headers:`, req.headers);
+      logger.info(`Request query:`, req.query);
+
       // Get segment info first
       logger.info(`Getting segment ${id} for export`);
       const segment = await segmentService.getSegmentById(id);
@@ -207,11 +215,14 @@ class SegmentController {
         });
       }
 
-      logger.info(`Segment found: ${segment.name}, filters:`, segment.filters);
+      logger.info(`Segment found: ${segment.name}`);
+      logger.info(`Segment filters:`, JSON.stringify(segment.filters, null, 2));
+      logger.info(`Segment type: ${typeof segment.filters}`);
 
       // Get total count first
+      logger.info(`Calculating segment contact count...`);
       const totalCount = await segmentService.getSegmentCount(segment.filters);
-      logger.info(`Starting export for segment ${id}: ${totalCount} total contacts`);
+      logger.info(`Segment contact count: ${totalCount}`);
 
       if (totalCount === 0) {
         return res.status(400).json({

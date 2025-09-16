@@ -214,33 +214,56 @@ class ContactController {
 
   async uploadContacts(req, res) {
     try {
+      logger.info(`=== CSV UPLOAD DEBUG START ===`);
+      logger.info(`Request body:`, req.body);
+      logger.info(`Request file:`, req.file ? {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path
+      } : 'NO FILE');
+
       if (!req.file) {
+        logger.error('No file uploaded in request');
         return res.status(400).json({
           success: false,
           error: 'No file uploaded'
         });
       }
 
+      logger.info(`File validation starting...`);
       const validationErrors = fileUploadService.validateFile(req.file);
       if (validationErrors.length > 0) {
+        logger.error(`File validation failed:`, validationErrors);
         return res.status(400).json({
           success: false,
           error: validationErrors.join(', ')
         });
       }
+      logger.info(`File validation passed`);
 
       // Get source name from request body or use filename
       const sourceName = req.body.sourceName || req.file.originalname.replace(/\.[^/.]+$/, "");
       const cleanSourceName = sourceName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
       const source = `csv_${cleanSourceName}`;
 
+      logger.info(`Source name: "${sourceName}" -> Clean: "${cleanSourceName}" -> Final: "${source}"`);
+
+      logger.info(`Starting file processing...`);
       const result = await fileUploadService.processUploadedFile(req.file, source);
+      logger.info(`File processing completed. Result:`, {
+        dataCount: result.data?.length || 0,
+        errorCount: result.errors?.length || 0
+      });
       
       // Save contacts to database (NO deduplication - separate lists)
       const savedContacts = [];
       const errors = [];
       const uploadBatch = `csv_batch_${Date.now()}`;
 
+      logger.info(`Processing ${result.data.length} contacts for database save...`);
+      let processedCount = 0;
+      
       for (const contactData of result.data) {
         try {
           // Always create new contact (no deduplication between sources)
@@ -262,10 +285,27 @@ class ContactController {
             contactData.email = `${contactData.email.split('@')[0]}_csv_${Date.now()}@${contactData.email.split('@')[1]}`;
           }
           
+          if (processedCount < 3) {
+            logger.info(`Sample contact ${processedCount + 1}:`, {
+              firstName: contactData.firstName,
+              lastName: contactData.lastName,
+              email: contactData.email,
+              phone: contactData.phone,
+              company: contactData.company,
+              source: contactData.source
+            });
+          }
+          
           const contact = new Contact(contactData);
           await contact.save();
           savedContacts.push(contact);
+          processedCount++;
+          
+          if (processedCount % 100 === 0) {
+            logger.info(`Saved ${processedCount}/${result.data.length} contacts...`);
+          }
         } catch (error) {
+          logger.error(`Error saving contact ${processedCount + 1}:`, error.message);
           errors.push({
             contact: contactData,
             error: error.message
@@ -450,6 +490,22 @@ class ContactController {
         company: { $exists: true, $ne: '', $ne: null }
       });
       logger.info(`Clean contacts (all fields): ${cleanTotal}`);
+
+      // Test what happens if we check for actual company data
+      const cleanWithRealCompany = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null },
+        lastName: { $exists: true, $ne: '', $ne: null },
+        email: { $exists: true, $ne: '', $ne: null },
+        phone: { $exists: true, $ne: '', $ne: null },
+        company: { $exists: true, $ne: '', $ne: null, $regex: /.+/ }
+      });
+      logger.info(`Clean contacts with actual company data: ${cleanWithRealCompany}`);
+
+      // Check how many have empty company
+      const emptyCompany = await Contact.countDocuments({
+        company: ""
+      });
+      logger.info(`Contacts with empty company string: ${emptyCompany}`);
 
       // Test email only query
       const emailOnlyTotal = await Contact.countDocuments({

@@ -404,13 +404,28 @@ class FileUploadService {
     let result;
 
     try {
+      logger.info(`=== FILE UPLOAD SERVICE DEBUG ===`);
+      logger.info(`File path: ${filePath}`);
+      logger.info(`File mimetype: ${file.mimetype}`);
+      logger.info(`Source: ${source}`);
+
       if (file.mimetype === 'text/csv') {
+        logger.info(`Processing as CSV file...`);
         result = await this.parseCSVFile(filePath, source);
       } else {
+        logger.info(`Processing as Excel file...`);
         result = await this.parseExcelFile(filePath, source);
       }
 
+      logger.info(`File processing result:`, {
+        dataRows: result.data?.length || 0,
+        errorRows: result.errors?.length || 0
+      });
+
       return result;
+    } catch (error) {
+      logger.error(`Error in processUploadedFile:`, error);
+      throw error;
     } finally {
       // Clean up uploaded file
       await this.cleanupFile(filePath);

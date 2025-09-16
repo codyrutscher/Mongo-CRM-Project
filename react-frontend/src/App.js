@@ -10,6 +10,7 @@ import SheetsContacts from "./pages/SheetsContacts";
 import ContactsByCategory from "./pages/ContactsByCategory";
 import CategorySourceIndex from "./pages/CategorySourceIndex";
 import DebugAPI from "./pages/DebugAPI";
+import DebugPanel from "./components/DebugPanel";
 import Segments from "./pages/Segments";
 import SegmentDetails from "./pages/SegmentDetails";
 import ContactModal from "./components/ContactModal";
@@ -34,6 +35,7 @@ function App() {
             <Route path="/contacts/category/:category" element={<CategorySourceIndex />} />
             <Route path="/contacts/category/:category/source/:source" element={<ContactsByCategory />} />
             <Route path="/debug" element={<DebugAPI />} />
+            <Route path="/debug-panel" element={<DebugPanel />} />
             <Route path="/segments" element={<Segments />} />
             <Route path="/segment-details/:id" element={<SegmentDetails />} />
           </Routes>
