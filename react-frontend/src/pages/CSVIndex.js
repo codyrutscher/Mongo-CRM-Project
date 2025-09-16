@@ -16,9 +16,12 @@ const CSVIndex = () => {
   const loadCSVUploads = async () => {
     try {
       setLoading(true);
+      console.log('CSVIndex: Loading CSV uploads...');
       const response = await getCSVUploads();
+      console.log('CSVIndex: API response:', response.data);
       if (response.data.success) {
         setCsvUploads(response.data.data || []);
+        console.log('CSVIndex: Loaded', response.data.data?.length, 'CSV uploads');
       }
     } catch (error) {
       console.error('Error loading CSV uploads:', error);

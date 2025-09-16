@@ -104,14 +104,14 @@ const CSVUpload = ({ onUploadComplete }) => {
           </Alert>
         )}
 
-        {uploadResult && (
+        {uploadResult && uploadResult.data && uploadResult.data.stats && (
           <Alert variant="success" dismissible onClose={() => setUploadResult(null)}>
             <strong>Upload Successful!</strong>
             <ul className="mb-0 mt-2">
-              <li>Total Processed: {uploadResult.stats.totalProcessed}</li>
-              <li>Successfully Saved: {uploadResult.stats.successful}</li>
-              {uploadResult.stats.errors > 0 && (
-                <li>Errors: {uploadResult.stats.errors}</li>
+              <li>Total Processed: {uploadResult.data.stats.totalProcessed}</li>
+              <li>Successfully Saved: {uploadResult.data.stats.successful}</li>
+              {uploadResult.data.stats.errors > 0 && (
+                <li>Errors: {uploadResult.data.stats.errors}</li>
               )}
             </ul>
           </Alert>

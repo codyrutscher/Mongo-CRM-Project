@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Row, Col, Button, Alert } from "react-bootstrap";
+import { Row, Col, Button } from "react-bootstrap";
 import ContactCard from "../components/ContactCard";
 import ContactTable from "../components/ContactTable";
 import ContactModal from "../components/ContactModal";
@@ -51,12 +51,7 @@ const ContactsByCategory = () => {
     color: "secondary"
   };
 
-  useEffect(() => {
-    console.log('ContactsByCategory: Loading category:', category);
-    loadContacts();
-  }, [category, currentPage, pageSize]);
-
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
       setLoading(true);
       console.log('ContactsByCategory: Fetching contacts for category:', category);
@@ -77,7 +72,12 @@ const ContactsByCategory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [category, currentPage, pageSize]);
+
+  useEffect(() => {
+    console.log('ContactsByCategory: Loading category:', category);
+    loadContacts();
+  }, [category, loadContacts]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
