@@ -739,7 +739,7 @@ class ContactController {
             lastName: { $exists: true, $ne: '', $ne: null },
             email: { $exists: true, $ne: '', $ne: null },
             phone: { $exists: true, $ne: '', $ne: null },
-            company: { $exists: true, $ne: '', $ne: null }
+            company: { $exists: true, $ne: '', $ne: null, $regex: /.{2,}/ } // At least 2 characters
           };
           break;
         case 'email-only':

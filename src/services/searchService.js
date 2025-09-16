@@ -394,32 +394,32 @@ class SearchService {
           { $sort: { _id: -1 } },
           { $limit: 30 },
         ]),
-        // Clean Contacts - HubSpot
+        // Clean Contacts - HubSpot (with meaningful company data)
         Contact.countDocuments({
           source: "hubspot",
           firstName: { $exists: true, $ne: "", $ne: null },
           lastName: { $exists: true, $ne: "", $ne: null },
           email: { $exists: true, $ne: "", $ne: null },
           phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null },
+          company: { $exists: true, $ne: "", $ne: null, $regex: /.{2,}/ }, // At least 2 characters
         }),
-        // Clean Contacts - Google Sheets
+        // Clean Contacts - Google Sheets (with meaningful company data)
         Contact.countDocuments({
           source: "google_sheets",
           firstName: { $exists: true, $ne: "", $ne: null },
           lastName: { $exists: true, $ne: "", $ne: null },
           email: { $exists: true, $ne: "", $ne: null },
           phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null },
+          company: { $exists: true, $ne: "", $ne: null, $regex: /.{2,}/ }, // At least 2 characters
         }),
-        // Clean Contacts - CSV
+        // Clean Contacts - CSV (with meaningful company data)
         Contact.countDocuments({
           source: { $regex: "^csv_" },
           firstName: { $exists: true, $ne: "", $ne: null },
           lastName: { $exists: true, $ne: "", $ne: null },
           email: { $exists: true, $ne: "", $ne: null },
           phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null },
+          company: { $exists: true, $ne: "", $ne: null, $regex: /.{2,}/ }, // At least 2 characters
         }),
         // Email Only - HubSpot
         Contact.countDocuments({
