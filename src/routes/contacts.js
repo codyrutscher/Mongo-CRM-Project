@@ -16,6 +16,9 @@ router.get('/stats', contactController.getContactStats);
 // Get contacts by category (for dashboard drill-down)
 router.get('/category/:category', contactController.getContactsByCategory);
 
+// Get CSV uploads summary
+router.get('/csv-uploads', contactController.getCSVUploads);
+
 // Get available segments
 router.get('/segments', contactController.getSegments);
 

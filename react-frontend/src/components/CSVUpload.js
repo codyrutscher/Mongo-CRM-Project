@@ -47,7 +47,15 @@ const CSVUpload = ({ onUploadComplete }) => {
       formData.append('file', file);
       formData.append('sourceName', sourceName.trim());
 
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
       const response = await uploadContacts(formData);
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
 
       if (response.data.success) {
         setUploadResult(response.data);
@@ -66,10 +74,10 @@ const CSVUpload = ({ onUploadComplete }) => {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      setError(error.response?.data?.error || 'Upload failed');
+      setError(error.response?.data?.error || 'Upload failed. Please check your file format and try again.');
     } finally {
       setUploading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 

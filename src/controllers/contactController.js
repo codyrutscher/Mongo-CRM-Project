@@ -491,6 +491,53 @@ class ContactController {
     }
   }
 
+  async getCSVUploads(req, res) {
+    try {
+      // Get all unique CSV sources with their metadata
+      const csvSources = await Contact.aggregate([
+        {
+          $match: {
+            source: { $regex: '^csv_' }
+          }
+        },
+        {
+          $group: {
+            _id: '$source',
+            contactCount: { $sum: 1 },
+            uploadDate: { $min: '$createdAt' },
+            lastContact: { $max: '$createdAt' },
+            fileName: { $first: '$sourceMetadata.fileName' },
+            uploadName: { $first: '$sourceMetadata.uploadName' }
+          }
+        },
+        {
+          $sort: { uploadDate: -1 }
+        }
+      ]);
+
+      const formattedSources = csvSources.map(source => ({
+        source: source._id,
+        contactCount: source.contactCount,
+        uploadDate: source.uploadDate,
+        lastContact: source.lastContact,
+        fileName: source.fileName,
+        uploadName: source.uploadName,
+        description: `CSV upload with ${source.contactCount} contacts`
+      }));
+
+      res.json({
+        success: true,
+        data: formattedSources
+      });
+    } catch (error) {
+      logger.error('Error in getCSVUploads:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
   async findDuplicates(req, res) {
     try {
       const { field = 'email' } = req.query;

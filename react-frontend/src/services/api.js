@@ -50,6 +50,8 @@ export const getSegmentContacts = (segment) => api.get(`/contacts/segments/${seg
 export const getContactsByCategory = (category, page = 1, limit = 20) => 
   api.get(`/contacts/category/${category}?page=${page}&limit=${limit}`);
 
+export const getCSVUploads = () => api.get('/contacts/csv-uploads');
+
 // Sync
 export const testHubSpotConnection = () => api.post('/sync/test/hubspot');
 export const startHubSpotSync = (type) => api.post('/sync/hubspot', { type });
