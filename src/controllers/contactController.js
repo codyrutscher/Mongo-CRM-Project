@@ -279,10 +279,20 @@ class ContactController {
             uploadDate: new Date()
           };
           
-          // Use unique email to avoid conflicts with other sources
-          if (contactData.email && !contactData.email.includes('_csv_')) {
-            contactData.customFields.originalEmail = contactData.email;
-            contactData.email = `${contactData.email.split('@')[0]}_csv_${Date.now()}@${contactData.email.split('@')[1]}`;
+          // Handle email uniqueness for CSV uploads
+          if (contactData.email && contactData.email.trim() !== '') {
+            // Store original email and create unique version for CSV
+            if (!contactData.email.includes('_csv_')) {
+              contactData.customFields.originalEmail = contactData.email;
+              const emailParts = contactData.email.split('@');
+              if (emailParts.length === 2) {
+                contactData.email = `${emailParts[0]}_csv_${Date.now()}_${Math.random().toString(36).substr(2, 5)}@${emailParts[1]}`;
+              }
+            }
+          } else {
+            // If no email, create a placeholder unique email
+            contactData.email = `noemail_csv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}@placeholder.com`;
+            contactData.customFields.hasRealEmail = false;
           }
           
           if (processedCount < 3) {

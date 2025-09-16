@@ -208,17 +208,46 @@ class FileUploadService {
         case 'email_address':
         case 'e-mail':
         case 'mail':
-          contact.email = value.toLowerCase();
+        case 'business_email':
+        case 'business email':
+        case 'work_email':
+        case 'work email':
+        case 'primary_email':
+        case 'primary email':
+          // Handle multiple emails - take the first valid one
+          if (value && value.includes(',')) {
+            const emails = value.split(',').map(e => e.trim()).filter(e => e && this.isValidEmail(e));
+            contact.email = emails.length > 0 ? emails[0].toLowerCase() : '';
+          } else {
+            contact.email = value.toLowerCase();
+          }
           break;
         case 'phone':
         case 'phone number':
         case 'mobile':
         case 'phone_number':
-          contact.phone = value;
+        case 'business_phone':
+        case 'business phone':
+        case 'work_phone':
+        case 'work phone':
+        case 'company_phone':
+        case 'company phone':
+        case 'primary_phone':
+        case 'primary phone':
+          // Handle multiple phone numbers - take the first one
+          if (value && value.includes(',')) {
+            const phones = value.split(',').map(p => p.trim()).filter(p => p);
+            contact.phone = phones.length > 0 ? phones[0] : '';
+          } else {
+            contact.phone = value;
+          }
           break;
         case 'company':
         case 'organization':
         case 'company name':
+        case 'company_name':
+        case 'business_name':
+        case 'business name':
           contact.company = value;
           break;
         case 'job title':
@@ -353,9 +382,14 @@ class FileUploadService {
 
     logger.debug(`Processed contact fields: firstName="${contact.firstName}", lastName="${contact.lastName}", email="${contact.email}"`);
 
-    // Validation and defaults
-    if (!contact.firstName && !contact.lastName && !contact.email) {
-      logger.debug(`Skipping record - no name or email found. Available columns: ${JSON.stringify(Object.keys(row))}`);
+    // Validation and defaults - require at least some meaningful data
+    const hasName = (contact.firstName && contact.firstName.trim()) || (contact.lastName && contact.lastName.trim());
+    const hasEmail = contact.email && contact.email.trim() && contact.email !== '';
+    const hasPhone = contact.phone && contact.phone.trim() && contact.phone !== '';
+    const hasCompany = contact.company && contact.company.trim() && contact.company !== '';
+    
+    if (!hasName && !hasEmail && !hasPhone && !hasCompany) {
+      logger.debug(`Skipping record - no meaningful data found. Available columns: ${JSON.stringify(Object.keys(row))}`);
       logger.debug(`Mapped contact data: ${JSON.stringify(contact)}`);
       return null; // Skip empty records
     }
