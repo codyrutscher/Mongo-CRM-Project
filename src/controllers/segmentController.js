@@ -1,6 +1,9 @@
+const Contact = require('../models/Contact');
+const Segment = require('../models/Segment');
 const segmentService = require('../services/segmentService');
 const exportService = require('../services/exportService');
 const hubspotService = require('../services/hubspotService');
+const searchService = require('../services/searchService');
 const logger = require('../utils/logger');
 
 class SegmentController {
