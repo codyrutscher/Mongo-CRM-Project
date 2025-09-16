@@ -29,6 +29,30 @@ const DebugAPI = () => {
     setLoading(false);
   };
 
+  const testDebugStats = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/contacts/debug-stats');
+      const data = await response.json();
+      setResults(prev => ({
+        ...prev,
+        debugStats: {
+          success: true,
+          data: data
+        }
+      }));
+    } catch (error) {
+      setResults(prev => ({
+        ...prev,
+        debugStats: {
+          success: false,
+          error: error.message
+        }
+      }));
+    }
+    setLoading(false);
+  };
+
   const testCategoryAPI = async (category) => {
     setLoading(true);
     try {
@@ -58,13 +82,27 @@ const DebugAPI = () => {
       
       <div className="mb-4">
         <h4>Test Dashboard Stats API</h4>
-        <Button onClick={testDashboardStats} disabled={loading}>
-          Test Dashboard Stats
-        </Button>
+        <div className="d-flex gap-2 mb-2">
+          <Button onClick={testDashboardStats} disabled={loading}>
+            Test Dashboard Stats
+          </Button>
+          <Button onClick={testDebugStats} disabled={loading} variant="warning">
+            Debug Stats (Detailed)
+          </Button>
+        </div>
         {results.dashboardStats && (
           <Card className="mt-2">
+            <Card.Header>Dashboard Stats</Card.Header>
             <Card.Body>
               <pre>{JSON.stringify(results.dashboardStats, null, 2)}</pre>
+            </Card.Body>
+          </Card>
+        )}
+        {results.debugStats && (
+          <Card className="mt-2">
+            <Card.Header>Debug Stats (Raw Database Queries)</Card.Header>
+            <Card.Body>
+              <pre>{JSON.stringify(results.debugStats, null, 2)}</pre>
             </Card.Body>
           </Card>
         )}

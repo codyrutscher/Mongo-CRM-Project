@@ -417,6 +417,137 @@ class ContactController {
     }
   }
 
+  async debugContactStats(req, res) {
+    try {
+      logger.info('Starting contact stats debug...');
+      
+      // Test individual queries to see what's happening
+      const totalContacts = await Contact.countDocuments();
+      logger.info(`Total contacts: ${totalContacts}`);
+
+      // Test source breakdown
+      const hubspotCount = await Contact.countDocuments({ source: 'hubspot' });
+      const sheetsCount = await Contact.countDocuments({ source: 'google_sheets' });
+      const csvCount = await Contact.countDocuments({ source: { $regex: '^csv_' } });
+      
+      logger.info(`Source breakdown: HubSpot=${hubspotCount}, Sheets=${sheetsCount}, CSV=${csvCount}`);
+
+      // Test field existence
+      const hasFirstName = await Contact.countDocuments({ firstName: { $exists: true, $ne: '', $ne: null } });
+      const hasLastName = await Contact.countDocuments({ lastName: { $exists: true, $ne: '', $ne: null } });
+      const hasEmail = await Contact.countDocuments({ email: { $exists: true, $ne: '', $ne: null } });
+      const hasPhone = await Contact.countDocuments({ phone: { $exists: true, $ne: '', $ne: null } });
+      const hasCompany = await Contact.countDocuments({ company: { $exists: true, $ne: '', $ne: null } });
+
+      logger.info(`Field existence: firstName=${hasFirstName}, lastName=${hasLastName}, email=${hasEmail}, phone=${hasPhone}, company=${hasCompany}`);
+
+      // Test clean contacts query
+      const cleanTotal = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null },
+        lastName: { $exists: true, $ne: '', $ne: null },
+        email: { $exists: true, $ne: '', $ne: null },
+        phone: { $exists: true, $ne: '', $ne: null },
+        company: { $exists: true, $ne: '', $ne: null }
+      });
+      logger.info(`Clean contacts (all fields): ${cleanTotal}`);
+
+      // Test email only query
+      const emailOnlyTotal = await Contact.countDocuments({
+        email: { $exists: true, $ne: '', $ne: null },
+        $or: [
+          { phone: { $exists: false } },
+          { phone: '' },
+          { phone: null }
+        ]
+      });
+      logger.info(`Email only contacts: ${emailOnlyTotal}`);
+
+      // Test phone only query
+      const phoneOnlyTotal = await Contact.countDocuments({
+        phone: { $exists: true, $ne: '', $ne: null },
+        $or: [
+          { email: { $exists: false } },
+          { email: '' },
+          { email: null }
+        ]
+      });
+      logger.info(`Phone only contacts: ${phoneOnlyTotal}`);
+
+      // Sample some contacts to see their actual data
+      const sampleContacts = await Contact.find({}).limit(5).lean();
+      logger.info('Sample contacts:', sampleContacts.map(c => ({
+        source: c.source,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        phone: c.phone,
+        company: c.company
+      })));
+
+      // Check for contacts with phone but no email (should be phone-only)
+      const phoneNoEmailSample = await Contact.find({
+        phone: { $exists: true, $ne: '', $ne: null },
+        $or: [
+          { email: { $exists: false } },
+          { email: '' },
+          { email: null }
+        ]
+      }).limit(3).lean();
+      
+      logger.info('Phone but no email samples:', phoneNoEmailSample.map(c => ({
+        source: c.source,
+        email: c.email,
+        phone: c.phone,
+        emailExists: !!c.email,
+        emailEmpty: c.email === '',
+        emailNull: c.email === null
+      })));
+
+      // Check for contacts with email but no phone (should be email-only)
+      const emailNoPhoneSample = await Contact.find({
+        email: { $exists: true, $ne: '', $ne: null },
+        $or: [
+          { phone: { $exists: false } },
+          { phone: '' },
+          { phone: null }
+        ]
+      }).limit(3).lean();
+      
+      logger.info('Email but no phone samples:', emailNoPhoneSample.map(c => ({
+        source: c.source,
+        email: c.email,
+        phone: c.phone,
+        phoneExists: !!c.phone,
+        phoneEmpty: c.phone === '',
+        phoneNull: c.phone === null
+      })));
+
+      res.json({
+        success: true,
+        debug: {
+          totalContacts,
+          sourceBreakdown: { hubspotCount, sheetsCount, csvCount },
+          fieldExistence: { hasFirstName, hasLastName, hasEmail, hasPhone, hasCompany },
+          categoryTotals: { cleanTotal, emailOnlyTotal, phoneOnlyTotal },
+          sampleContacts: sampleContacts.map(c => ({
+            source: c.source,
+            firstName: c.firstName || 'EMPTY',
+            lastName: c.lastName || 'EMPTY',
+            email: c.email || 'EMPTY',
+            phone: c.phone || 'EMPTY',
+            company: c.company || 'EMPTY'
+          }))
+        }
+      });
+    } catch (error) {
+      logger.error('Error in debugContactStats:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
   async getContactsByCategory(req, res) {
     try {
       const { category } = req.params;

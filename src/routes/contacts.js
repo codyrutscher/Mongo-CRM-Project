@@ -13,6 +13,9 @@ router.post('/search', contactController.searchContacts);
 // Get contact statistics
 router.get('/stats', contactController.getContactStats);
 
+// Debug contact statistics
+router.get('/debug-stats', contactController.debugContactStats);
+
 // Get contacts by category (for dashboard drill-down)
 router.get('/category/:category', contactController.getContactsByCategory);
 
