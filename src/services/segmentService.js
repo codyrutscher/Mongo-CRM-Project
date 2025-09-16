@@ -215,29 +215,39 @@ class SegmentService {
 
       // Special handling for contact ID-based segments
       if (filters._id && filters._id.$in) {
-        // Direct MongoDB query for contact IDs
+        // For large ID lists, use more efficient querying
+        const totalCount = filters._id.$in.length;
+        const limit = options.limit || 50;
+        const page = options.page || 1;
+        const skip = (page - 1) * limit;
+
+        // Use lean() for better performance on large datasets
         const contacts = await Contact.find({
           _id: { $in: filters._id.$in }
         })
         .sort(options.sort || { createdAt: -1 })
-        .skip(((options.page || 1) - 1) * (options.limit || 50))
-        .limit(options.limit || 50);
+        .skip(skip)
+        .limit(limit)
+        .lean(); // Use lean for better performance
 
-        const totalCount = filters._id.$in.length;
-        const totalPages = Math.ceil(totalCount / (options.limit || 50));
+        const totalPages = Math.ceil(totalCount / limit);
 
         return {
           contacts,
           pagination: {
-            current: options.page || 1,
+            current: page,
             total: totalPages,
             count: contacts.length,
             totalRecords: totalCount
           }
         };
       } else {
-        // Use search service for other filter types
-        return await searchService.advancedSearch(filters, options);
+        // Use search service for other filter types with lean queries for large exports
+        const searchOptions = { ...options };
+        if (options.limit > 1000) {
+          searchOptions.lean = true;
+        }
+        return await searchService.advancedSearch(filters, searchOptions);
       }
     } catch (error) {
       logger.error('Error fetching segment contacts:', error);

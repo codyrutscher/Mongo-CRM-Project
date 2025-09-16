@@ -13,18 +13,29 @@ class SearchService {
         page = 1,
         limit = this.defaultPageSize,
         sort = { createdAt: -1 },
-        select = null
+        select = null,
+        lean = false
       } = options;
 
       const actualLimit = Math.min(limit, this.maxPageSize);
       const skip = (page - 1) * actualLimit;
 
+      let contactQuery = Contact.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(actualLimit);
+
+      if (select) {
+        contactQuery = contactQuery.select(select);
+      }
+
+      // Use lean() for better performance on large datasets
+      if (lean || actualLimit > 1000) {
+        contactQuery = contactQuery.lean();
+      }
+
       const [contacts, total] = await Promise.all([
-        Contact.find(query)
-          .sort(sort)
-          .skip(skip)
-          .limit(actualLimit)
-          .select(select),
+        contactQuery,
         Contact.countDocuments(query)
       ]);
 

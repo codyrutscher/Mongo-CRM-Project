@@ -311,6 +311,21 @@ class ExportService {
     return stringValue;
   }
 
+  // Make escapeCSV available as a static method
+  static escapeCSV(value) {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    
+    const stringValue = String(value);
+    
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+    
+    return stringValue;
+  }
+
   async cleanupOldExports(maxAgeHours = 24) {
     try {
       const files = fs.readdirSync(this.exportDir);

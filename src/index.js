@@ -59,6 +59,13 @@ app.use('/api', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Increase timeout for large exports
+app.use('/api/segments/:id/export', (req, res, next) => {
+  req.setTimeout(10 * 60 * 1000); // 10 minutes for exports
+  res.setTimeout(10 * 60 * 1000);
+  next();
+});
+
 // Serve static files (for uploaded files, etc.)
 app.use('/uploads', express.static('uploads'));
 app.use('/exports', express.static('exports'));

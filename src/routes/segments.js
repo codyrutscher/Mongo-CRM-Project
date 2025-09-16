@@ -33,6 +33,9 @@ router.get('/:id/contacts', segmentController.getSegmentContacts);
 // Export segment
 router.get('/:id/export', segmentController.exportSegment);
 
+// Get export progress
+router.get('/export-progress/:exportId', segmentController.getExportProgress);
+
 // Duplicate segment
 router.post('/:id/duplicate', segmentController.duplicateSegment);
 
