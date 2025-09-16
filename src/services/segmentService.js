@@ -160,10 +160,8 @@ class SegmentService {
       // Update contact counts for all segments
       for (const segment of segments) {
         try {
-          // Handle undefined or null filters
-          const filters = segment.filters ? 
-            (typeof segment.filters.toObject === 'function' ? segment.filters.toObject() : segment.filters) : 
-            {};
+          // Handle filters safely - now using Mixed type
+          const filters = segment.filters || {};
           const count = await this.getSegmentCount(filters);
           segment.contactCount = count;
           segment.lastCountUpdate = new Date();
@@ -187,18 +185,8 @@ class SegmentService {
         throw new Error('Segment not found');
       }
 
-      // Handle both Map and Object types for filters
-      // Handle both Map and Object types for filters, including undefined/null
-      let filters = {};
-      if (segment.filters) {
-        if (segment.filters instanceof Map) {
-          filters = Object.fromEntries(segment.filters);
-        } else if (typeof segment.filters.toObject === 'function') {
-          filters = segment.filters.toObject();
-        } else if (typeof segment.filters === 'object') {
-          filters = segment.filters;
-        }
-      }
+      // Handle filters safely - now using Mixed type
+      const filters = segment.filters || {};
 
       // Update contact count
       const count = await this.getSegmentCount(filters);
@@ -220,18 +208,8 @@ class SegmentService {
         throw new Error('Segment not found');
       }
 
-      // Handle both Map and Object types for filters
-      // Handle both Map and Object types for filters, including undefined/null
-      let filters = {};
-      if (segment.filters) {
-        if (segment.filters instanceof Map) {
-          filters = Object.fromEntries(segment.filters);
-        } else if (typeof segment.filters.toObject === 'function') {
-          filters = segment.filters.toObject();
-        } else if (typeof segment.filters === 'object') {
-          filters = segment.filters;
-        }
-      }
+      // Handle filters safely - now using Mixed type
+      const filters = segment.filters || {};
 
       // Special handling for contact ID-based segments
       if (filters._id && filters._id.$in) {
@@ -350,10 +328,8 @@ class SegmentService {
         icon: originalSegment.icon
       });
 
-      // Handle filters safely
-      const filters = duplicatedSegment.filters ? 
-        (typeof duplicatedSegment.filters.toObject === 'function' ? duplicatedSegment.filters.toObject() : duplicatedSegment.filters) : 
-        {};
+      // Handle filters safely - now using Mixed type
+      const filters = duplicatedSegment.filters || {};
       const count = await this.getSegmentCount(filters);
       duplicatedSegment.contactCount = count;
 
@@ -372,10 +348,8 @@ class SegmentService {
         throw new Error('Segment not found');
       }
 
-      // Handle filters safely
-      const filters = segment.filters ? 
-        (typeof segment.filters.toObject === 'function' ? segment.filters.toObject() : segment.filters) : 
-        {};
+      // Handle filters safely - now using Mixed type
+      const filters = segment.filters || {};
       const contacts = await searchService.advancedSearch(filters, { limit: Number.MAX_SAFE_INTEGER });
 
       return {

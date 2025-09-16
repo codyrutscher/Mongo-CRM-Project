@@ -13,9 +13,9 @@ const segmentSchema = new mongoose.Schema({
     trim: true
   },
   filters: {
-    type: Map,
-    of: mongoose.Schema.Types.Mixed,
-    required: true
+    type: mongoose.Schema.Types.Mixed,
+    required: true,
+    default: {}
   },
   createdBy: {
     type: String,

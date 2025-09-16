@@ -177,6 +177,174 @@ const DebugPanel = () => {
     setLoading(false);
   };
 
+  // Comprehensive System Debug - Test multiple things at once
+  const debugAllSystems = async () => {
+    setLoading(true);
+    const debugResults = {
+      timestamp: new Date().toISOString(),
+      tests: []
+    };
+
+    try {
+      console.log('=== COMPREHENSIVE SYSTEM DEBUG ===');
+
+      // Test 1: Dashboard Stats
+      try {
+        console.log('Testing dashboard stats...');
+        const statsResponse = await fetch('/api/contacts/debug-stats');
+        const statsData = await statsResponse.json();
+        debugResults.tests.push({
+          name: 'Dashboard Stats',
+          success: statsResponse.ok,
+          status: statsResponse.status,
+          data: statsData,
+          error: statsResponse.ok ? null : statsData.error
+        });
+      } catch (error) {
+        debugResults.tests.push({
+          name: 'Dashboard Stats',
+          success: false,
+          error: error.message
+        });
+      }
+
+      // Test 2: Segments List
+      try {
+        console.log('Testing segments list...');
+        const segmentsResponse = await fetch('/api/segments');
+        const segmentsData = await segmentsResponse.json();
+        debugResults.tests.push({
+          name: 'Segments List',
+          success: segmentsResponse.ok,
+          status: segmentsResponse.status,
+          data: { segmentCount: segmentsData.data?.length || 0 },
+          error: segmentsResponse.ok ? null : segmentsData.error
+        });
+      } catch (error) {
+        debugResults.tests.push({
+          name: 'Segments List',
+          success: false,
+          error: error.message
+        });
+      }
+
+      // Test 3: CSV Uploads List
+      try {
+        console.log('Testing CSV uploads...');
+        const csvResponse = await fetch('/api/contacts/csv-uploads');
+        const csvData = await csvResponse.json();
+        debugResults.tests.push({
+          name: 'CSV Uploads',
+          success: csvResponse.ok,
+          status: csvResponse.status,
+          data: { csvCount: csvData.data?.length || 0 },
+          error: csvResponse.ok ? null : csvData.error
+        });
+      } catch (error) {
+        debugResults.tests.push({
+          name: 'CSV Uploads',
+          success: false,
+          error: error.message
+        });
+      }
+
+      // Test 4: Contact Stats
+      try {
+        console.log('Testing contact stats...');
+        const contactStatsResponse = await fetch('/api/contacts/stats');
+        const contactStatsData = await contactStatsResponse.json();
+        debugResults.tests.push({
+          name: 'Contact Stats',
+          success: contactStatsResponse.ok,
+          status: contactStatsResponse.status,
+          data: { totalContacts: contactStatsData.data?.total || 0 },
+          error: contactStatsResponse.ok ? null : contactStatsData.error
+        });
+      } catch (error) {
+        debugResults.tests.push({
+          name: 'Contact Stats',
+          success: false,
+          error: error.message
+        });
+      }
+
+      // Test 5: Segment Export (if segmentId provided)
+      if (segmentId) {
+        try {
+          console.log('Testing segment export...');
+          const exportResponse = await fetch(`/api/segments/${segmentId}/export?format=csv`);
+          const exportData = await exportResponse.json();
+          debugResults.tests.push({
+            name: 'Segment Export',
+            success: exportResponse.ok,
+            status: exportResponse.status,
+            data: exportData,
+            error: exportResponse.ok ? null : exportData.error
+          });
+        } catch (error) {
+          debugResults.tests.push({
+            name: 'Segment Export',
+            success: false,
+            error: error.message
+          });
+        }
+
+        // Test 6: Segment Debug
+        try {
+          console.log('Testing segment debug...');
+          const debugResponse = await fetch(`/api/segments/${segmentId}/debug`);
+          const debugData = await debugResponse.json();
+          debugResults.tests.push({
+            name: 'Segment Debug',
+            success: debugResponse.ok,
+            status: debugResponse.status,
+            data: debugData,
+            error: debugResponse.ok ? null : debugData.error
+          });
+        } catch (error) {
+          debugResults.tests.push({
+            name: 'Segment Debug',
+            success: false,
+            error: error.message
+          });
+        }
+      }
+
+      // Summary
+      const successCount = debugResults.tests.filter(t => t.success).length;
+      const totalTests = debugResults.tests.length;
+      debugResults.summary = {
+        total: totalTests,
+        passed: successCount,
+        failed: totalTests - successCount,
+        passRate: Math.round((successCount / totalTests) * 100)
+      };
+
+      console.log('Comprehensive debug completed:', debugResults);
+
+      setResults(prev => ({
+        ...prev,
+        comprehensiveDebug: {
+          success: true,
+          data: debugResults,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+    } catch (error) {
+      console.error('Comprehensive Debug Error:', error);
+      setResults(prev => ({
+        ...prev,
+        comprehensiveDebug: {
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    }
+    setLoading(false);
+  };
+
   // Test CSV Upload Endpoint
   const testCSVEndpoint = async () => {
     setLoading(true);
@@ -314,6 +482,9 @@ const DebugPanel = () => {
             <Button onClick={debugDashboardStats} disabled={loading} variant="warning">
               🔍 Debug Dashboard Stats
             </Button>
+            <Button onClick={debugAllSystems} disabled={loading} variant="danger">
+              🚨 Debug All Systems
+            </Button>
           </div>
 
           {results.dashboardStats && (
@@ -325,10 +496,38 @@ const DebugPanel = () => {
             </Alert>
           )}
 
+          {results.comprehensiveDebug && (
+            <Alert variant={results.comprehensiveDebug.success ? "success" : "danger"}>
+              <strong>Comprehensive System Debug Results:</strong>
+              {results.comprehensiveDebug.data?.summary && (
+                <div className="mt-2 mb-3">
+                  <strong>Summary: </strong>
+                  {results.comprehensiveDebug.data.summary.passed}/{results.comprehensiveDebug.data.summary.total} tests passed 
+                  ({results.comprehensiveDebug.data.summary.passRate}%)
+                </div>
+              )}
+              <div style={{maxHeight: '500px', overflow: 'auto'}}>
+                {results.comprehensiveDebug.data?.tests?.map((test, index) => (
+                  <div key={index} className={`p-2 mb-2 border rounded ${test.success ? 'border-success bg-light' : 'border-danger bg-danger bg-opacity-10'}`}>
+                    <strong>{test.success ? '✅' : '❌'} {test.name}</strong>
+                    {test.error && <div className="text-danger mt-1">Error: {test.error}</div>}
+                    {test.data && (
+                      <details className="mt-1">
+                        <summary>View Details</summary>
+                        <pre className="mt-1 small">{JSON.stringify(test.data, null, 2)}</pre>
+                      </details>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Alert>
+          )}
+
           <div className="mt-3">
             <h6>📋 Instructions:</h6>
             <ul>
               <li>Click "Debug Dashboard Stats" to run comprehensive stats analysis</li>
+              <li>Click "Debug All Systems" to test all endpoints and show all errors at once</li>
               <li>Check browser console for detailed step-by-step breakdown</li>
               <li>Look for clean contacts calculation and field existence analysis</li>
               <li>Verify source counts and totals match expectations</li>

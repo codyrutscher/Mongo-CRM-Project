@@ -81,7 +81,7 @@ class SearchService {
     const query = {};
 
     // Handle undefined, null, or empty filters
-    if (!filters || typeof filters !== 'object') {
+    if (!filters || typeof filters !== "object") {
       return query;
     }
 
