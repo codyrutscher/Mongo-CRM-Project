@@ -354,9 +354,15 @@ class SearchService {
         byLifecycleStage,
         byStatus,
         recentActivity,
-        cleanContacts,
-        emailOnlyContacts,
-        phoneOnlyContacts
+        cleanHubSpot,
+        cleanSheets,
+        cleanCSV,
+        emailHubSpot,
+        emailSheets,
+        emailCSV,
+        phoneHubSpot,
+        phoneSheets,
+        phoneCSV
       ] = await Promise.all([
         Contact.countDocuments(),
         Contact.aggregate([
@@ -474,13 +480,7 @@ class SearchService {
         })
       ]);
 
-      const [
-        cleanHubSpot, cleanSheets, cleanCSV,
-        emailHubSpot, emailSheets, emailCSV,
-        phoneHubSpot, phoneSheets, phoneCSV
-      ] = [
-        cleanContacts, emailOnlyContacts, phoneOnlyContacts
-      ];
+      // The results are already destructured above in the Promise.all
 
       return {
         total,

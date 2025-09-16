@@ -83,6 +83,8 @@ class FileUploadService {
             const transformedRow = this.transformRowData(rowObj, source || 'csv_upload');
             if (transformedRow) {
               results.push(transformedRow);
+            } else {
+              logger.debug(`Row ${totalRows} was not transformed (likely empty or invalid)`);
             }
           } catch (error) {
             logger.debug('Error processing row:', error.message);
@@ -189,17 +191,23 @@ class FileUploadService {
         case 'firstname':
         case 'fname':
         case 'first_name':
+        case 'given name':
+        case 'forename':
           contact.firstName = value;
           break;
         case 'last name':
         case 'lastname':
         case 'lname':
         case 'last_name':
+        case 'surname':
+        case 'family name':
           contact.lastName = value;
           break;
         case 'email':
         case 'email address':
         case 'email_address':
+        case 'e-mail':
+        case 'mail':
           contact.email = value.toLowerCase();
           break;
         case 'phone':
@@ -347,7 +355,8 @@ class FileUploadService {
 
     // Validation and defaults
     if (!contact.firstName && !contact.lastName && !contact.email) {
-      logger.debug(`Skipping record - no name or email: ${JSON.stringify(Object.keys(row))}`);
+      logger.debug(`Skipping record - no name or email found. Available columns: ${JSON.stringify(Object.keys(row))}`);
+      logger.debug(`Mapped contact data: ${JSON.stringify(contact)}`);
       return null; // Skip empty records
     }
 

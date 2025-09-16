@@ -197,13 +197,17 @@ class SegmentController {
       const { format = 'csv', chunk } = req.query;
 
       // Get segment info first
-      const segment = await segmentService.getSegment(id);
+      logger.info(`Getting segment ${id} for export`);
+      const segment = await segmentService.getSegmentById(id);
       if (!segment) {
+        logger.error(`Segment ${id} not found`);
         return res.status(404).json({
           success: false,
           error: 'Segment not found'
         });
       }
+
+      logger.info(`Segment found: ${segment.name}, filters:`, segment.filters);
 
       // Get total count first
       const totalCount = await segmentService.getSegmentCount(segment.filters);
@@ -272,10 +276,12 @@ class SegmentController {
       
     } catch (error) {
       logger.error('Error exporting segment:', error);
+      logger.error('Error stack:', error.stack);
       if (!res.headersSent) {
         res.status(500).json({
           success: false,
-          error: 'Failed to export segment: ' + error.message
+          error: 'Failed to export segment: ' + error.message,
+          details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
       }
     }
