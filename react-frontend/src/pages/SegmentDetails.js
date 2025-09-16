@@ -11,6 +11,8 @@ const SegmentDetails = () => {
   const [contacts, setContacts] = useState([]);
   const [pagination, setPagination] = useState({ current: 1, total: 1 });
   const [loading, setLoading] = useState(true);
+  const [exportChunks, setExportChunks] = useState(null);
+  const [showChunks, setShowChunks] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -48,18 +50,44 @@ const SegmentDetails = () => {
   const handleExport = async () => {
     try {
       const response = await exportSegment(id);
-      const blob = new Blob([response.data], { type: 'text/csv' });
+      
+      // Check if chunking is required
+      if (response.data.requiresChunking) {
+        setExportChunks(response.data.data);
+        setShowChunks(true);
+      } else {
+        // Direct download for smaller segments
+        const blob = new Blob([response.data], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `segment_${id}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error exporting segment:', error);
+      alert('Export failed. Please try again.');
+    }
+  };
+
+  const downloadChunk = async (chunkUrl, chunkNum) => {
+    try {
+      const response = await fetch(chunkUrl);
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `segment_${id}_${new Date().toISOString().split('T')[0]}.csv`;
+      a.download = `segment_${segment.name}_chunk_${chunkNum}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error exporting segment:', error);
-      alert('Export failed. Please try again.');
+      console.error('Error downloading chunk:', error);
+      alert(`Failed to download chunk ${chunkNum}. Please try again.`);
     }
   };
 
@@ -193,6 +221,51 @@ const SegmentDetails = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Export Chunks */}
+      {showChunks && exportChunks && (
+        <Row className="mb-4">
+          <Col>
+            <Card>
+              <Card.Header>
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5>Download Segment in Chunks</h5>
+                  <Button variant="outline-secondary" size="sm" onClick={() => setShowChunks(false)}>
+                    <i className="fas fa-times"></i> Close
+                  </Button>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <p className="text-muted mb-3">
+                  This segment has {exportChunks.totalContacts.toLocaleString()} contacts. 
+                  Download in {exportChunks.totalChunks} chunks of {exportChunks.chunkSize.toLocaleString()} contacts each.
+                </p>
+                <Row>
+                  {exportChunks.downloadUrls.map((chunk, index) => (
+                    <Col md={4} key={chunk.chunk} className="mb-3">
+                      <Card className="h-100">
+                        <Card.Body className="text-center">
+                          <h6>Chunk {chunk.chunk}</h6>
+                          <p className="text-muted small">
+                            {chunk.contacts.toLocaleString()} contacts
+                          </p>
+                          <Button 
+                            variant="primary" 
+                            size="sm"
+                            onClick={() => downloadChunk(chunk.url, chunk.chunk)}
+                          >
+                            <i className="fas fa-download"></i> Download
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {/* Contacts */}
       <Row>

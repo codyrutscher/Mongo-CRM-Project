@@ -385,106 +385,102 @@ class SearchService {
           { $sort: { _id: -1 } },
           { $limit: 30 }
         ]),
-        // Clean Contacts by source
-        Contact.aggregate([
-          {
-            $match: {
-              firstName: { $exists: true, $ne: '', $ne: null },
-              lastName: { $exists: true, $ne: '', $ne: null },
-              email: { $exists: true, $ne: '', $ne: null },
-              phone: { $exists: true, $ne: '', $ne: null },
-              company: { $exists: true, $ne: '', $ne: null }
-            }
-          },
-          {
-            $group: {
-              _id: {
-                $cond: [
-                  { $eq: ['$source', 'hubspot'] }, 'hubspot',
-                  { $cond: [
-                    { $eq: ['$source', 'google_sheets'] }, 'google_sheets',
-                    { $cond: [
-                      { $regexMatch: { input: '$source', regex: '^csv_' } }, 'csv',
-                      'other'
-                    ]}
-                  ]}
-                ]
-              },
-              count: { $sum: 1 }
-            }
-          }
-        ]),
-        // Email Only by source
-        Contact.aggregate([
-          {
-            $match: {
-              email: { $exists: true, $ne: '', $ne: null },
-              $or: [
-                { phone: { $exists: false } },
-                { phone: '' },
-                { phone: null }
-              ]
-            }
-          },
-          {
-            $group: {
-              _id: {
-                $cond: [
-                  { $eq: ['$source', 'hubspot'] }, 'hubspot',
-                  { $cond: [
-                    { $eq: ['$source', 'google_sheets'] }, 'google_sheets',
-                    { $cond: [
-                      { $regexMatch: { input: '$source', regex: '^csv_' } }, 'csv',
-                      'other'
-                    ]}
-                  ]}
-                ]
-              },
-              count: { $sum: 1 }
-            }
-          }
-        ]),
-        // Phone Only by source
-        Contact.aggregate([
-          {
-            $match: {
-              phone: { $exists: true, $ne: '', $ne: null },
-              $or: [
-                { email: { $exists: false } },
-                { email: '' },
-                { email: null }
-              ]
-            }
-          },
-          {
-            $group: {
-              _id: {
-                $cond: [
-                  { $eq: ['$source', 'hubspot'] }, 'hubspot',
-                  { $cond: [
-                    { $eq: ['$source', 'google_sheets'] }, 'google_sheets',
-                    { $cond: [
-                      { $regexMatch: { input: '$source', regex: '^csv_' } }, 'csv',
-                      'other'
-                    ]}
-                  ]}
-                ]
-              },
-              count: { $sum: 1 }
-            }
-          }
-        ])
+        // Clean Contacts - HubSpot
+        Contact.countDocuments({
+          source: 'hubspot',
+          firstName: { $exists: true, $ne: '', $ne: null },
+          lastName: { $exists: true, $ne: '', $ne: null },
+          email: { $exists: true, $ne: '', $ne: null },
+          phone: { $exists: true, $ne: '', $ne: null },
+          company: { $exists: true, $ne: '', $ne: null }
+        }),
+        // Clean Contacts - Google Sheets
+        Contact.countDocuments({
+          source: 'google_sheets',
+          firstName: { $exists: true, $ne: '', $ne: null },
+          lastName: { $exists: true, $ne: '', $ne: null },
+          email: { $exists: true, $ne: '', $ne: null },
+          phone: { $exists: true, $ne: '', $ne: null },
+          company: { $exists: true, $ne: '', $ne: null }
+        }),
+        // Clean Contacts - CSV
+        Contact.countDocuments({
+          source: { $regex: '^csv_' },
+          firstName: { $exists: true, $ne: '', $ne: null },
+          lastName: { $exists: true, $ne: '', $ne: null },
+          email: { $exists: true, $ne: '', $ne: null },
+          phone: { $exists: true, $ne: '', $ne: null },
+          company: { $exists: true, $ne: '', $ne: null }
+        }),
+        // Email Only - HubSpot
+        Contact.countDocuments({
+          source: 'hubspot',
+          email: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { phone: { $exists: false } },
+            { phone: '' },
+            { phone: null }
+          ]
+        }),
+        // Email Only - Google Sheets
+        Contact.countDocuments({
+          source: 'google_sheets',
+          email: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { phone: { $exists: false } },
+            { phone: '' },
+            { phone: null }
+          ]
+        }),
+        // Email Only - CSV
+        Contact.countDocuments({
+          source: { $regex: '^csv_' },
+          email: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { phone: { $exists: false } },
+            { phone: '' },
+            { phone: null }
+          ]
+        }),
+        // Phone Only - HubSpot
+        Contact.countDocuments({
+          source: 'hubspot',
+          phone: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { email: { $exists: false } },
+            { email: '' },
+            { email: null }
+          ]
+        }),
+        // Phone Only - Google Sheets
+        Contact.countDocuments({
+          source: 'google_sheets',
+          phone: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { email: { $exists: false } },
+            { email: '' },
+            { email: null }
+          ]
+        }),
+        // Phone Only - CSV
+        Contact.countDocuments({
+          source: { $regex: '^csv_' },
+          phone: { $exists: true, $ne: '', $ne: null },
+          $or: [
+            { email: { $exists: false } },
+            { email: '' },
+            { email: null }
+          ]
+        })
       ]);
 
-      // Process the aggregated results
-      const processSourceBreakdown = (results) => {
-        const breakdown = { hubspot: 0, google_sheets: 0, csv: 0, total: 0 };
-        results.forEach(item => {
-          breakdown[item._id] = item.count;
-          breakdown.total += item.count;
-        });
-        return breakdown;
-      };
+      const [
+        cleanHubSpot, cleanSheets, cleanCSV,
+        emailHubSpot, emailSheets, emailCSV,
+        phoneHubSpot, phoneSheets, phoneCSV
+      ] = [
+        cleanContacts, emailOnlyContacts, phoneOnlyContacts
+      ];
 
       return {
         total,
@@ -502,9 +498,24 @@ class SearchService {
         }, {}),
         recentActivity: recentActivity,
         // New dashboard stats with source breakdown
-        cleanContacts: processSourceBreakdown(cleanContacts),
-        emailOnlyContacts: processSourceBreakdown(emailOnlyContacts),
-        phoneOnlyContacts: processSourceBreakdown(phoneOnlyContacts)
+        cleanContacts: {
+          hubspot: cleanHubSpot,
+          google_sheets: cleanSheets,
+          csv: cleanCSV,
+          total: cleanHubSpot + cleanSheets + cleanCSV
+        },
+        emailOnlyContacts: {
+          hubspot: emailHubSpot,
+          google_sheets: emailSheets,
+          csv: emailCSV,
+          total: emailHubSpot + emailSheets + emailCSV
+        },
+        phoneOnlyContacts: {
+          hubspot: phoneHubSpot,
+          google_sheets: phoneSheets,
+          csv: phoneCSV,
+          total: phoneHubSpot + phoneSheets + phoneCSV
+        }
       };
     } catch (error) {
       logger.error('Error getting contact stats:', error);

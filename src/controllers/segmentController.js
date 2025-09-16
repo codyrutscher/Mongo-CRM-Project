@@ -217,8 +217,8 @@ class SegmentController {
       }
 
       // For large segments, offer chunked download
-      if (totalCount > 50000 && !chunk) {
-        const chunkSize = 50000;
+      if (totalCount > 10000 && !chunk) {
+        const chunkSize = 10000;
         const totalChunks = Math.ceil(totalCount / chunkSize);
         
         return res.json({
@@ -241,7 +241,7 @@ class SegmentController {
       // Handle chunked download
       if (chunk) {
         const chunkNum = parseInt(chunk);
-        const chunkSize = 50000;
+        const chunkSize = 10000;
         const skip = (chunkNum - 1) * chunkSize;
         
         const filename = `segment_${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_chunk_${chunkNum}_export_${Date.now()}.csv`;
