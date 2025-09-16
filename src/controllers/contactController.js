@@ -507,6 +507,46 @@ class ContactController {
       });
       logger.info(`Contacts with empty company string: ${emptyCompany}`);
 
+      // Test the exact clean query step by step
+      const step1 = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null }
+      });
+      const step2 = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null },
+        lastName: { $exists: true, $ne: '', $ne: null }
+      });
+      const step3 = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null },
+        lastName: { $exists: true, $ne: '', $ne: null },
+        email: { $exists: true, $ne: '', $ne: null }
+      });
+      const step4 = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null },
+        lastName: { $exists: true, $ne: '', $ne: null },
+        email: { $exists: true, $ne: '', $ne: null },
+        phone: { $exists: true, $ne: '', $ne: null }
+      });
+      const step5 = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: '', $ne: null },
+        lastName: { $exists: true, $ne: '', $ne: null },
+        email: { $exists: true, $ne: '', $ne: null },
+        phone: { $exists: true, $ne: '', $ne: null },
+        company: { $exists: true, $ne: '', $ne: null }
+      });
+
+      logger.info(`Clean query step by step:`);
+      logger.info(`Step 1 (firstName): ${step1}`);
+      logger.info(`Step 2 (+lastName): ${step2}`);
+      logger.info(`Step 3 (+email): ${step3}`);
+      logger.info(`Step 4 (+phone): ${step4}`);
+      logger.info(`Step 5 (+company): ${step5}`);
+
+      // Test if the issue is with the company field specifically
+      const hasNonEmptyCompany = await Contact.countDocuments({
+        company: { $exists: true, $ne: '', $ne: null, $regex: /.+/ }
+      });
+      logger.info(`Contacts with actual company data (regex): ${hasNonEmptyCompany}`);
+
       // Test email only query
       const emailOnlyTotal = await Contact.countDocuments({
         email: { $exists: true, $ne: '', $ne: null },
@@ -528,6 +568,71 @@ class ContactController {
         ]
       });
       logger.info(`Phone only contacts: ${phoneOnlyTotal}`);
+
+      // CSV Upload debugging
+      const csvSources = await Contact.aggregate([
+        {
+          $match: {
+            source: { $regex: '^csv_' }
+          }
+        },
+        {
+          $group: {
+            _id: '$source',
+            count: { $sum: 1 },
+            uploadDate: { $min: '$createdAt' },
+            sampleContact: { $first: '$$ROOT' }
+          }
+        },
+        {
+          $sort: { uploadDate: -1 }
+        }
+      ]);
+      logger.info(`CSV sources found: ${csvSources.length}`);
+      csvSources.forEach(source => {
+        logger.info(`CSV Source: ${source._id}, Count: ${source.count}, Upload: ${source.uploadDate}`);
+      });
+
+      // Test the EXACT same query used in getContactStats for clean contacts
+      const cleanContactsTotal = await Contact.countDocuments({
+        firstName: { $exists: true, $ne: "", $ne: null },
+        lastName: { $exists: true, $ne: "", $ne: null },
+        email: { $exists: true, $ne: "", $ne: null },
+        phone: { $exists: true, $ne: "", $ne: null },
+        company: { $exists: true, $ne: "", $ne: null },
+      });
+      logger.info(`Clean contacts (EXACT dashboard query): ${cleanContactsTotal}`);
+
+      // Test what the dashboard is actually calculating
+      const [cleanHubSpot, cleanSheets, cleanCSV] = await Promise.all([
+        Contact.countDocuments({
+          source: "hubspot",
+          firstName: { $exists: true, $ne: "", $ne: null },
+          lastName: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $ne: "", $ne: null },
+          phone: { $exists: true, $ne: "", $ne: null },
+          company: { $exists: true, $ne: "", $ne: null },
+        }),
+        Contact.countDocuments({
+          source: "google_sheets",
+          firstName: { $exists: true, $ne: "", $ne: null },
+          lastName: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $ne: "", $ne: null },
+          phone: { $exists: true, $ne: "", $ne: null },
+          company: { $exists: true, $ne: "", $ne: null },
+        }),
+        Contact.countDocuments({
+          source: { $regex: "^csv_" },
+          firstName: { $exists: true, $ne: "", $ne: null },
+          lastName: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $ne: "", $ne: null },
+          phone: { $exists: true, $ne: "", $ne: null },
+          company: { $exists: true, $ne: "", $ne: null },
+        })
+      ]);
+      
+      const dashboardTotal = cleanHubSpot + cleanSheets + cleanCSV;
+      logger.info(`Dashboard calculation: HubSpot=${cleanHubSpot}, Sheets=${cleanSheets}, CSV=${cleanCSV}, Total=${dashboardTotal}`);
 
       // Sample some contacts to see their actual data
       const sampleContacts = await Contact.find({}).limit(5).lean();
@@ -584,7 +689,7 @@ class ContactController {
           totalContacts,
           sourceBreakdown: { hubspotCount, sheetsCount, csvCount },
           fieldExistence: { hasFirstName, hasLastName, hasEmail, hasPhone, hasCompany },
-          categoryTotals: { cleanTotal, emailOnlyTotal, phoneOnlyTotal },
+          categoryTotals: { cleanTotal, emailOnlyTotal, phoneOnlyTotal, cleanWithRealCompany },
           sampleContacts: sampleContacts.map(c => ({
             source: c.source,
             firstName: c.firstName || 'EMPTY',
@@ -592,6 +697,22 @@ class ContactController {
             email: c.email || 'EMPTY',
             phone: c.phone || 'EMPTY',
             company: c.company || 'EMPTY'
+          })),
+          phoneNoEmailSamples: phoneNoEmailSample.map(c => ({
+            source: c.source,
+            email: c.email,
+            phone: c.phone,
+            emailExists: !!c.email,
+            emailEmpty: c.email === '',
+            emailNull: c.email === null
+          })),
+          emailNoPhoneSamples: emailNoPhoneSample.map(c => ({
+            source: c.source,
+            email: c.email,
+            phone: c.phone,
+            phoneExists: !!c.phone,
+            phoneEmpty: c.phone === '',
+            phoneNull: c.phone === null
           }))
         }
       });

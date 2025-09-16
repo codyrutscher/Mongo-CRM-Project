@@ -101,6 +101,47 @@ const DebugPanel = () => {
     setLoading(false);
   };
 
+  // Debug Segment Details
+  const debugSegmentDetails = async () => {
+    if (!segmentId) {
+      alert('Please enter a segment ID');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('=== SEGMENT DETAILS DEBUG ===');
+      console.log('Segment ID:', segmentId);
+
+      const response = await fetch(`/api/segments/${segmentId}/debug`);
+      const data = await response.json();
+      
+      console.log('Debug response:', data);
+
+      setResults(prev => ({
+        ...prev,
+        segmentDebug: {
+          success: response.ok,
+          status: response.status,
+          data: data,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+    } catch (error) {
+      console.error('Segment Debug Error:', error);
+      setResults(prev => ({
+        ...prev,
+        segmentDebug: {
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    }
+    setLoading(false);
+  };
+
   // Test CSV Upload Endpoint
   const testCSVEndpoint = async () => {
     setLoading(true);
@@ -246,6 +287,9 @@ const DebugPanel = () => {
             <Button onClick={debugSegmentExport} disabled={loading || !segmentId}>
               🐛 Debug Segment Export
             </Button>
+            <Button onClick={debugSegmentDetails} disabled={loading || !segmentId} variant="info">
+              🔍 Debug Segment Details
+            </Button>
             <Button onClick={getSegmentsList} disabled={loading} variant="outline-primary">
               📋 Get Segments List
             </Button>
@@ -255,6 +299,13 @@ const DebugPanel = () => {
             <Alert variant={results.segmentExport.success ? "success" : "danger"}>
               <strong>Segment Export Result:</strong>
               <pre className="mt-2">{JSON.stringify(results.segmentExport, null, 2)}</pre>
+            </Alert>
+          )}
+
+          {results.segmentDebug && (
+            <Alert variant={results.segmentDebug.success ? "success" : "danger"}>
+              <strong>Segment Debug Details:</strong>
+              <pre className="mt-2">{JSON.stringify(results.segmentDebug, null, 2)}</pre>
             </Alert>
           )}
 

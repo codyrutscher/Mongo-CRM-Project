@@ -225,9 +225,33 @@ class SegmentController {
       logger.info(`Segment contact count: ${totalCount}`);
 
       if (totalCount === 0) {
+        logger.error(`No contacts found in segment ${id} (${segment.name})`);
+        logger.error(`Segment filters:`, JSON.stringify(segment.filters, null, 2));
+        
+        // Let's test if the filters are working at all
+        try {
+          const testQuery = searchService.buildFilterQuery(segment.filters);
+          logger.error(`Built query:`, JSON.stringify(testQuery, null, 2));
+          
+          // Test a simple count to see if there are any contacts at all
+          const totalContacts = await Contact.countDocuments();
+          logger.error(`Total contacts in database: ${totalContacts}`);
+          
+          // Test if the query syntax is valid
+          const testCount = await Contact.countDocuments(testQuery);
+          logger.error(`Contacts matching segment query: ${testCount}`);
+        } catch (queryError) {
+          logger.error(`Error testing segment query:`, queryError);
+        }
+        
         return res.status(400).json({
           success: false,
-          error: 'No contacts found in this segment'
+          error: `No contacts found in this segment "${segment.name}". Check segment filters or contact data.`,
+          debug: {
+            segmentName: segment.name,
+            segmentFilters: segment.filters,
+            totalContactsInDB: await Contact.countDocuments()
+          }
         });
       }
 
@@ -507,6 +531,74 @@ class SegmentController {
       } else {
         res.end();
       }
+    }
+  }
+
+  async debugSegment(req, res) {
+    try {
+      const { id } = req.params;
+      
+      logger.info(`=== SEGMENT DEBUG FOR ID: ${id} ===`);
+      
+      // Get segment info
+      const segment = await segmentService.getSegmentById(id);
+      if (!segment) {
+        return res.status(404).json({
+          success: false,
+          error: 'Segment not found'
+        });
+      }
+
+      // Get total contacts in database
+      const totalContacts = await Contact.countDocuments();
+      
+      // Test the segment filters
+      const segmentCount = await segmentService.getSegmentCount(segment.filters);
+      
+      // Build the query to see what it looks like
+      const builtQuery = searchService.buildFilterQuery(segment.filters);
+      
+      // Get a few sample contacts that match (if any)
+      const sampleContacts = await Contact.find(builtQuery).limit(3).lean();
+      
+      // Test different variations of the query
+      const debugInfo = {
+        segmentInfo: {
+          id: segment._id,
+          name: segment.name,
+          description: segment.description,
+          createdAt: segment.createdAt,
+          isSystem: segment.isSystem
+        },
+        filters: segment.filters,
+        builtQuery: builtQuery,
+        counts: {
+          totalContactsInDB: totalContacts,
+          segmentContactCount: segmentCount,
+          sampleContactsFound: sampleContacts.length
+        },
+        sampleContacts: sampleContacts.map(c => ({
+          id: c._id,
+          source: c.source,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          email: c.email,
+          createdAt: c.createdAt
+        }))
+      };
+
+      logger.info('Segment debug info:', debugInfo);
+
+      res.json({
+        success: true,
+        data: debugInfo
+      });
+    } catch (error) {
+      logger.error('Error in debugSegment:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
     }
   }
 

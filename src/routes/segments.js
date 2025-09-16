@@ -36,6 +36,9 @@ router.get('/:id/export', segmentController.exportSegment);
 // Get export progress
 router.get('/export-progress/:exportId', segmentController.getExportProgress);
 
+// Debug segment
+router.get('/:id/debug', segmentController.debugSegment);
+
 // Duplicate segment
 router.post('/:id/duplicate', segmentController.duplicateSegment);
 
