@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, Alert, Form, ProgressBar } from 'react-bootstrap';
+import { Card, Button, Alert, Form } from 'react-bootstrap';
 
 const DebugPanel = () => {
   const [results, setResults] = useState({});
