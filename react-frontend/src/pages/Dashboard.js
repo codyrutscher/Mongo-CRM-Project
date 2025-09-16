@@ -31,6 +31,7 @@ const Dashboard = () => {
       ]);
 
       if (statsResponse.data.success) {
+        console.log('Dashboard: Received stats:', statsResponse.data.data);
         setStats(statsResponse.data.data);
       }
 

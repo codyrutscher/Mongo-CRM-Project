@@ -52,13 +52,16 @@ const ContactsByCategory = () => {
   };
 
   useEffect(() => {
+    console.log('ContactsByCategory: Loading category:', category);
     loadContacts();
   }, [category, currentPage, pageSize]);
 
   const loadContacts = async () => {
     try {
       setLoading(true);
+      console.log('ContactsByCategory: Fetching contacts for category:', category);
       const response = await getContactsByCategory(category, currentPage, pageSize);
+      console.log('ContactsByCategory: API response:', response.data);
 
       if (response.data.success) {
         setContacts(response.data.data.contacts || []);
@@ -66,6 +69,7 @@ const ContactsByCategory = () => {
           setTotalPages(response.data.data.pagination.totalPages);
           setTotalRecords(response.data.data.pagination.totalRecords);
         }
+        console.log('ContactsByCategory: Loaded', response.data.data.contacts?.length, 'contacts');
       }
     } catch (error) {
       console.error("Error loading contacts by category:", error);
