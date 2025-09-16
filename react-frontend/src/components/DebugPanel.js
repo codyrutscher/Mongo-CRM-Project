@@ -142,6 +142,41 @@ const DebugPanel = () => {
     setLoading(false);
   };
 
+  // Debug Dashboard Stats
+  const debugDashboardStats = async () => {
+    setLoading(true);
+    try {
+      console.log('=== DASHBOARD STATS DEBUG ===');
+
+      const response = await fetch('/api/contacts/debug-stats');
+      const data = await response.json();
+      
+      console.log('Debug stats response:', data);
+
+      setResults(prev => ({
+        ...prev,
+        dashboardStats: {
+          success: response.ok,
+          status: response.status,
+          data: data,
+          timestamp: new Date().toISOString()
+        }
+      }));
+
+    } catch (error) {
+      console.error('Dashboard Stats Debug Error:', error);
+      setResults(prev => ({
+        ...prev,
+        dashboardStats: {
+          success: false,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    }
+    setLoading(false);
+  };
+
   // Test CSV Upload Endpoint
   const testCSVEndpoint = async () => {
     setLoading(true);
@@ -264,6 +299,41 @@ const DebugPanel = () => {
               <pre className="mt-2">{JSON.stringify(results.csvEndpoint, null, 2)}</pre>
             </Alert>
           )}
+        </Card.Body>
+      </Card>
+
+      {/* Dashboard Stats Debug Section */}
+      <Card className="mb-4">
+        <Card.Header>
+          <h4>📊 Dashboard Stats Debug</h4>
+        </Card.Header>
+        <Card.Body>
+          <p>Test the dashboard statistics calculation to debug clean contacts count issues.</p>
+          
+          <div className="d-flex gap-2 mb-3">
+            <Button onClick={debugDashboardStats} disabled={loading} variant="warning">
+              🔍 Debug Dashboard Stats
+            </Button>
+          </div>
+
+          {results.dashboardStats && (
+            <Alert variant={results.dashboardStats.success ? "success" : "danger"}>
+              <strong>Dashboard Stats Debug Result:</strong>
+              <pre className="mt-2" style={{maxHeight: '400px', overflow: 'auto'}}>
+                {JSON.stringify(results.dashboardStats, null, 2)}
+              </pre>
+            </Alert>
+          )}
+
+          <div className="mt-3">
+            <h6>📋 Instructions:</h6>
+            <ul>
+              <li>Click "Debug Dashboard Stats" to run comprehensive stats analysis</li>
+              <li>Check browser console for detailed step-by-step breakdown</li>
+              <li>Look for clean contacts calculation and field existence analysis</li>
+              <li>Verify source counts and totals match expectations</li>
+            </ul>
+          </div>
         </Card.Body>
       </Card>
 
