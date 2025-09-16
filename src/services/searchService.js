@@ -385,33 +385,106 @@ class SearchService {
           { $sort: { _id: -1 } },
           { $limit: 30 }
         ]),
-        // Clean Contacts: Must have First Name, Last Name, Email, Phone, and Company
-        Contact.countDocuments({
-          firstName: { $exists: true, $ne: '', $ne: null },
-          lastName: { $exists: true, $ne: '', $ne: null },
-          email: { $exists: true, $ne: '', $ne: null },
-          phone: { $exists: true, $ne: '', $ne: null },
-          company: { $exists: true, $ne: '', $ne: null }
-        }),
-        // Total Contacts with Email Only (has email but no phone)
-        Contact.countDocuments({
-          email: { $exists: true, $ne: '', $ne: null },
-          $or: [
-            { phone: { $exists: false } },
-            { phone: '' },
-            { phone: null }
-          ]
-        }),
-        // Total Contacts with Phone Only (has phone but no email)
-        Contact.countDocuments({
-          phone: { $exists: true, $ne: '', $ne: null },
-          $or: [
-            { email: { $exists: false } },
-            { email: '' },
-            { email: null }
-          ]
-        })
+        // Clean Contacts by source
+        Contact.aggregate([
+          {
+            $match: {
+              firstName: { $exists: true, $ne: '', $ne: null },
+              lastName: { $exists: true, $ne: '', $ne: null },
+              email: { $exists: true, $ne: '', $ne: null },
+              phone: { $exists: true, $ne: '', $ne: null },
+              company: { $exists: true, $ne: '', $ne: null }
+            }
+          },
+          {
+            $group: {
+              _id: {
+                $cond: [
+                  { $eq: ['$source', 'hubspot'] }, 'hubspot',
+                  { $cond: [
+                    { $eq: ['$source', 'google_sheets'] }, 'google_sheets',
+                    { $cond: [
+                      { $regexMatch: { input: '$source', regex: '^csv_' } }, 'csv',
+                      'other'
+                    ]}
+                  ]}
+                ]
+              },
+              count: { $sum: 1 }
+            }
+          }
+        ]),
+        // Email Only by source
+        Contact.aggregate([
+          {
+            $match: {
+              email: { $exists: true, $ne: '', $ne: null },
+              $or: [
+                { phone: { $exists: false } },
+                { phone: '' },
+                { phone: null }
+              ]
+            }
+          },
+          {
+            $group: {
+              _id: {
+                $cond: [
+                  { $eq: ['$source', 'hubspot'] }, 'hubspot',
+                  { $cond: [
+                    { $eq: ['$source', 'google_sheets'] }, 'google_sheets',
+                    { $cond: [
+                      { $regexMatch: { input: '$source', regex: '^csv_' } }, 'csv',
+                      'other'
+                    ]}
+                  ]}
+                ]
+              },
+              count: { $sum: 1 }
+            }
+          }
+        ]),
+        // Phone Only by source
+        Contact.aggregate([
+          {
+            $match: {
+              phone: { $exists: true, $ne: '', $ne: null },
+              $or: [
+                { email: { $exists: false } },
+                { email: '' },
+                { email: null }
+              ]
+            }
+          },
+          {
+            $group: {
+              _id: {
+                $cond: [
+                  { $eq: ['$source', 'hubspot'] }, 'hubspot',
+                  { $cond: [
+                    { $eq: ['$source', 'google_sheets'] }, 'google_sheets',
+                    { $cond: [
+                      { $regexMatch: { input: '$source', regex: '^csv_' } }, 'csv',
+                      'other'
+                    ]}
+                  ]}
+                ]
+              },
+              count: { $sum: 1 }
+            }
+          }
+        ])
       ]);
+
+      // Process the aggregated results
+      const processSourceBreakdown = (results) => {
+        const breakdown = { hubspot: 0, google_sheets: 0, csv: 0, total: 0 };
+        results.forEach(item => {
+          breakdown[item._id] = item.count;
+          breakdown.total += item.count;
+        });
+        return breakdown;
+      };
 
       return {
         total,
@@ -428,10 +501,10 @@ class SearchService {
           return acc;
         }, {}),
         recentActivity: recentActivity,
-        // New dashboard stats
-        cleanContacts,
-        emailOnlyContacts,
-        phoneOnlyContacts
+        // New dashboard stats with source breakdown
+        cleanContacts: processSourceBreakdown(cleanContacts),
+        emailOnlyContacts: processSourceBreakdown(emailOnlyContacts),
+        phoneOnlyContacts: processSourceBreakdown(phoneOnlyContacts)
       };
     } catch (error) {
       logger.error('Error getting contact stats:', error);

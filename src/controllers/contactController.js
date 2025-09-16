@@ -493,6 +493,8 @@ class ContactController {
 
   async getCSVUploads(req, res) {
     try {
+      logger.info('Getting CSV uploads...');
+      
       // Get all unique CSV sources with their metadata
       const csvSources = await Contact.aggregate([
         {
@@ -515,6 +517,8 @@ class ContactController {
         }
       ]);
 
+      logger.info(`Found ${csvSources.length} CSV sources:`, csvSources);
+
       const formattedSources = csvSources.map(source => ({
         source: source._id,
         contactCount: source.contactCount,
@@ -524,6 +528,8 @@ class ContactController {
         uploadName: source.uploadName,
         description: `CSV upload with ${source.contactCount} contacts`
       }));
+
+      logger.info('Formatted sources:', formattedSources);
 
       res.json({
         success: true,

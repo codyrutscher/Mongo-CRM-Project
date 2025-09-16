@@ -27,7 +27,7 @@ const Navigation = () => {
                 <NavDropdown.Item>📁 CSV Contacts</NavDropdown.Item>
               </LinkContainer>
               <LinkContainer to="/sheets-contacts">
-                <NavDropdown.Item>📊 Google Sheets</NavDropdown.Item>
+                <NavDropdown.Item>📊 C17 Contacts</NavDropdown.Item>
               </LinkContainer>
             </NavDropdown>
             

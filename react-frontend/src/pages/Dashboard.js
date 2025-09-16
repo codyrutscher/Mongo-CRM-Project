@@ -121,9 +121,13 @@ const Dashboard = () => {
           <Card className="bg-success text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/contacts/category/clean')}>
             <Card.Body className="text-center">
               <i className="fas fa-check-circle fa-2x mb-2"></i>
-              <h3>{stats.cleanContacts || 0}</h3>
+              <h3>{stats.cleanContacts?.total || 0}</h3>
               <p>Clean Contacts</p>
-              <small>Complete: Name, Email, Phone, Company</small>
+              <small className="d-block">
+                HubSpot: {stats.cleanContacts?.hubspot || 0} | 
+                Sheets: {stats.cleanContacts?.google_sheets || 0} | 
+                CSV: {stats.cleanContacts?.csv || 0}
+              </small>
             </Card.Body>
           </Card>
         </Col>
@@ -131,9 +135,13 @@ const Dashboard = () => {
           <Card className="bg-info text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/contacts/category/email-only')}>
             <Card.Body className="text-center">
               <i className="fas fa-envelope fa-2x mb-2"></i>
-              <h3>{stats.emailOnlyContacts || 0}</h3>
-              <p>Total Contacts with Email Only</p>
-              <small>Email but no phone number</small>
+              <h3>{stats.emailOnlyContacts?.total || 0}</h3>
+              <p>Email Only</p>
+              <small className="d-block">
+                HubSpot: {stats.emailOnlyContacts?.hubspot || 0} | 
+                Sheets: {stats.emailOnlyContacts?.google_sheets || 0} | 
+                CSV: {stats.emailOnlyContacts?.csv || 0}
+              </small>
             </Card.Body>
           </Card>
         </Col>
@@ -141,9 +149,13 @@ const Dashboard = () => {
           <Card className="bg-warning text-white" style={{cursor: 'pointer'}} onClick={() => navigate('/contacts/category/phone-only')}>
             <Card.Body className="text-center">
               <i className="fas fa-phone fa-2x mb-2"></i>
-              <h3>{stats.phoneOnlyContacts || 0}</h3>
-              <p>Total Contacts with Phone Only</p>
-              <small>Phone but no email address</small>
+              <h3>{stats.phoneOnlyContacts?.total || 0}</h3>
+              <p>Phone Only</p>
+              <small className="d-block">
+                HubSpot: {stats.phoneOnlyContacts?.hubspot || 0} | 
+                Sheets: {stats.phoneOnlyContacts?.google_sheets || 0} | 
+                CSV: {stats.phoneOnlyContacts?.csv || 0}
+              </small>
             </Card.Body>
           </Card>
         </Col>

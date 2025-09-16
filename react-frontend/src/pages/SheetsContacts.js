@@ -217,7 +217,7 @@ const SheetsContacts = () => {
       <Row>
         <Col>
           <h2 className="mb-4">
-            <i className="fas fa-table"></i> Google Sheets Contacts
+            <i className="fas fa-table"></i> C17 Contacts
           </h2>
           <p className="text-muted">
             Contacts imported from Google Sheets
