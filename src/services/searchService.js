@@ -80,6 +80,11 @@ class SearchService {
   buildFilterQuery(filters) {
     const query = {};
 
+    // Handle undefined, null, or empty filters
+    if (!filters || typeof filters !== 'object') {
+      return query;
+    }
+
     // Handle different filter types
     Object.keys(filters).forEach((key) => {
       const value = filters[key];

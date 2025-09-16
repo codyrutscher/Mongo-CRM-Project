@@ -160,7 +160,11 @@ class SegmentService {
       // Update contact counts for all segments
       for (const segment of segments) {
         try {
-          const count = await this.getSegmentCount(segment.filters.toObject());
+          // Handle undefined or null filters
+          const filters = segment.filters ? 
+            (typeof segment.filters.toObject === 'function' ? segment.filters.toObject() : segment.filters) : 
+            {};
+          const count = await this.getSegmentCount(filters);
           segment.contactCount = count;
           segment.lastCountUpdate = new Date();
           await segment.save();
@@ -184,9 +188,17 @@ class SegmentService {
       }
 
       // Handle both Map and Object types for filters
-      const filters = segment.filters instanceof Map ? 
-        Object.fromEntries(segment.filters) : 
-        segment.filters.toObject ? segment.filters.toObject() : segment.filters;
+      // Handle both Map and Object types for filters, including undefined/null
+      let filters = {};
+      if (segment.filters) {
+        if (segment.filters instanceof Map) {
+          filters = Object.fromEntries(segment.filters);
+        } else if (typeof segment.filters.toObject === 'function') {
+          filters = segment.filters.toObject();
+        } else if (typeof segment.filters === 'object') {
+          filters = segment.filters;
+        }
+      }
 
       // Update contact count
       const count = await this.getSegmentCount(filters);
@@ -209,9 +221,17 @@ class SegmentService {
       }
 
       // Handle both Map and Object types for filters
-      const filters = segment.filters instanceof Map ? 
-        Object.fromEntries(segment.filters) : 
-        segment.filters.toObject ? segment.filters.toObject() : segment.filters;
+      // Handle both Map and Object types for filters, including undefined/null
+      let filters = {};
+      if (segment.filters) {
+        if (segment.filters instanceof Map) {
+          filters = Object.fromEntries(segment.filters);
+        } else if (typeof segment.filters.toObject === 'function') {
+          filters = segment.filters.toObject();
+        } else if (typeof segment.filters === 'object') {
+          filters = segment.filters;
+        }
+      }
 
       // Special handling for contact ID-based segments
       if (filters._id && filters._id.$in) {
@@ -330,7 +350,11 @@ class SegmentService {
         icon: originalSegment.icon
       });
 
-      const count = await this.getSegmentCount(duplicatedSegment.filters.toObject());
+      // Handle filters safely
+      const filters = duplicatedSegment.filters ? 
+        (typeof duplicatedSegment.filters.toObject === 'function' ? duplicatedSegment.filters.toObject() : duplicatedSegment.filters) : 
+        {};
+      const count = await this.getSegmentCount(filters);
       duplicatedSegment.contactCount = count;
 
       await duplicatedSegment.save();
@@ -348,7 +372,10 @@ class SegmentService {
         throw new Error('Segment not found');
       }
 
-      const filters = segment.filters.toObject();
+      // Handle filters safely
+      const filters = segment.filters ? 
+        (typeof segment.filters.toObject === 'function' ? segment.filters.toObject() : segment.filters) : 
+        {};
       const contacts = await searchService.advancedSearch(filters, { limit: Number.MAX_SAFE_INTEGER });
 
       return {
