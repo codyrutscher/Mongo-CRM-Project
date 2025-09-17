@@ -28,6 +28,12 @@ const CategorySourceIndex = () => {
       description: "Contacts that have a phone number but no email address",
       icon: "fas fa-phone",
       color: "warning"
+    },
+    "missing-company": {
+      title: "Missing Company Contacts by Source",
+      description: "Contacts that are missing company information",
+      icon: "fas fa-building",
+      color: "secondary"
     }
   };
 

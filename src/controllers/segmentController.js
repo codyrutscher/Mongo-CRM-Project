@@ -6,6 +6,111 @@ const hubspotService = require('../services/hubspotService');
 const searchService = require('../services/searchService');
 const logger = require('../utils/logger');
 
+// Helper function for exporting segment chunks
+async function exportSegmentChunk(segment, res, skip, limit, chunkNum) {
+  try {
+    logger.info(`=== CHUNK EXPORT START ===`);
+    logger.info(`Chunk ${chunkNum}: records ${skip + 1} to ${skip + limit}`);
+    logger.info(`Segment:`, segment.name);
+    logger.info(`Filters:`, JSON.stringify(segment.filters, null, 2));
+
+    // CSV headers
+    const headers = [
+      'First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title',
+      'Street Address', 'City', 'State', 'Zip Code', 'Country',
+      'Source', 'Lifecycle Stage', 'Status', 'DNC Status', 'DNC Date', 'DNC Reason',
+      'Compliance Notes', 'Tags', 'Created Date', 'Last Synced'
+    ];
+    
+    // Write headers
+    res.write(headers.map(h => `"${h}"`).join(',') + '\n');
+
+    // Get contacts using proper pagination
+    let query = {};
+    try {
+      query = searchService.buildFilterQuery(segment.filters);
+      logger.info(`Built query successfully:`, JSON.stringify(query, null, 2));
+    } catch (queryError) {
+      logger.error(`Error building query:`, queryError);
+      // Fallback to empty query for "All Contacts" segments
+      query = {};
+    }
+    
+    const contacts = await Contact.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Use lean for better performance
+
+    logger.info(`Retrieved ${contacts.length} contacts for chunk ${chunkNum}`);
+
+    if (contacts.length === 0) {
+      logger.warn(`No contacts found for chunk ${chunkNum}`);
+      res.end();
+      return;
+    }
+
+    // Process and write contacts
+    for (const contact of contacts) {
+      // For CSV contacts, use original email if available
+      let displayEmail = contact.email || '';
+      if (contact.source && contact.source.startsWith('csv_') && 
+          contact.customFields && contact.customFields.originalEmail) {
+        displayEmail = contact.customFields.originalEmail;
+      }
+
+      const escapeCSV = (value) => {
+        if (value === null || value === undefined) return '';
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      };
+
+      const row = [
+        escapeCSV(contact.firstName || ''),
+        escapeCSV(contact.lastName || ''),
+        escapeCSV(displayEmail),
+        escapeCSV(contact.phone || ''),
+        escapeCSV(contact.company || ''),
+        escapeCSV(contact.jobTitle || ''),
+        escapeCSV(contact.address?.street || ''),
+        escapeCSV(contact.address?.city || ''),
+        escapeCSV(contact.address?.state || ''),
+        escapeCSV(contact.address?.zipCode || ''),
+        escapeCSV(contact.address?.country || ''),
+        escapeCSV(contact.source || ''),
+        escapeCSV(contact.lifecycleStage || ''),
+        escapeCSV(contact.status || ''),
+        escapeCSV(contact.dncStatus || 'callable'),
+        escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString().split('T')[0] : ''),
+        escapeCSV(contact.dncReason || ''),
+        escapeCSV(contact.complianceNotes || ''),
+        escapeCSV(Array.isArray(contact.tags) ? contact.tags.join('; ') : ''),
+        escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString().split('T')[0] : ''),
+        escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString().split('T')[0] : '')
+      ];
+
+      res.write(row.join(',') + '\n');
+    }
+
+    res.end();
+    logger.info(`Chunk ${chunkNum} export completed: ${contacts.length} contacts`);
+
+  } catch (error) {
+    logger.error(`Error exporting chunk ${chunkNum}:`, error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to export chunk: ' + error.message
+      });
+    } else {
+      res.end();
+    }
+  }
+}
+
 class SegmentController {
   constructor() {
     this.exportProgress = new Map(); // Track export progress
@@ -272,7 +377,7 @@ class SegmentController {
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         
-        return await this.exportSegmentChunk(segment, res, skip, chunkSize, chunkNum);
+        return await exportSegmentChunk(segment, res, skip, chunkSize, chunkNum);
       }
 
       // For smaller segments, direct download
@@ -281,7 +386,7 @@ class SegmentController {
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       
-      return await this.exportSegmentChunk(segment, res, 0, totalCount, 1);
+      return await exportSegmentChunk(segment, res, 0, totalCount, 1);
       
     } catch (error) {
       logger.error('Error exporting segment:', error);
@@ -440,110 +545,6 @@ class SegmentController {
         res.status(500).json({
           success: false,
           error: 'Export failed: ' + error.message
-        });
-      } else {
-        res.end();
-      }
-    }
-  }
-
-  async exportSegmentChunk(segment, res, skip, limit, chunkNum) {
-    try {
-      logger.info(`=== CHUNK EXPORT START ===`);
-      logger.info(`Chunk ${chunkNum}: records ${skip + 1} to ${skip + limit}`);
-      logger.info(`Segment:`, segment.name);
-      logger.info(`Filters:`, JSON.stringify(segment.filters, null, 2));
-
-      // CSV headers
-      const headers = [
-        'First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title',
-        'Street Address', 'City', 'State', 'Zip Code', 'Country',
-        'Source', 'Lifecycle Stage', 'Status', 'DNC Status', 'DNC Date', 'DNC Reason',
-        'Compliance Notes', 'Tags', 'Created Date', 'Last Synced'
-      ];
-      
-      // Write headers
-      res.write(headers.map(h => `"${h}"`).join(',') + '\n');
-
-      // Get contacts using proper pagination
-      let query = {};
-      try {
-        query = searchService.buildFilterQuery(segment.filters);
-        logger.info(`Built query successfully:`, JSON.stringify(query, null, 2));
-      } catch (queryError) {
-        logger.error(`Error building query:`, queryError);
-        // Fallback to empty query for "All Contacts" segments
-        query = {};
-      }
-      
-      const contacts = await Contact.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(); // Use lean for better performance
-
-      logger.info(`Retrieved ${contacts.length} contacts for chunk ${chunkNum}`);
-
-      if (contacts.length === 0) {
-        logger.warn(`No contacts found for chunk ${chunkNum}`);
-        res.end();
-        return;
-      }
-
-      // Process and write contacts
-      for (const contact of contacts) {
-        // For CSV contacts, use original email if available
-        let displayEmail = contact.email || '';
-        if (contact.source && contact.source.startsWith('csv_') && 
-            contact.customFields && contact.customFields.originalEmail) {
-          displayEmail = contact.customFields.originalEmail;
-        }
-
-        const escapeCSV = (value) => {
-          if (value === null || value === undefined) return '';
-          const stringValue = String(value);
-          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-            return `"${stringValue.replace(/"/g, '""')}"`;
-          }
-          return stringValue;
-        };
-
-        const row = [
-          escapeCSV(contact.firstName || ''),
-          escapeCSV(contact.lastName || ''),
-          escapeCSV(displayEmail),
-          escapeCSV(contact.phone || ''),
-          escapeCSV(contact.company || ''),
-          escapeCSV(contact.jobTitle || ''),
-          escapeCSV(contact.address?.street || ''),
-          escapeCSV(contact.address?.city || ''),
-          escapeCSV(contact.address?.state || ''),
-          escapeCSV(contact.address?.zipCode || ''),
-          escapeCSV(contact.address?.country || ''),
-          escapeCSV(contact.source || ''),
-          escapeCSV(contact.lifecycleStage || ''),
-          escapeCSV(contact.status || ''),
-          escapeCSV(contact.dncStatus || 'callable'),
-          escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString().split('T')[0] : ''),
-          escapeCSV(contact.dncReason || ''),
-          escapeCSV(contact.complianceNotes || ''),
-          escapeCSV(Array.isArray(contact.tags) ? contact.tags.join('; ') : ''),
-          escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString().split('T')[0] : ''),
-          escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString().split('T')[0] : '')
-        ];
-
-        res.write(row.join(',') + '\n');
-      }
-
-      res.end();
-      logger.info(`Chunk ${chunkNum} export completed: ${contacts.length} contacts`);
-
-    } catch (error) {
-      logger.error(`Error exporting chunk ${chunkNum}:`, error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          error: 'Failed to export chunk: ' + error.message
         });
       } else {
         res.end();
