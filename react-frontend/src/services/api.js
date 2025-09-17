@@ -45,8 +45,13 @@ export const getContactSegments = () => api.get('/contacts/segments');
 
 export const getSegmentContacts = (segment) => api.get(`/contacts/segments/${segment}`);
 
-export const getContactsByCategory = (category, page = 1, limit = 20) => 
-  api.get(`/contacts/category/${category}?page=${page}&limit=${limit}`);
+export const getContactsByCategory = (category, page = 1, limit = 20, source = null) => {
+  let url = `/contacts/category/${category}?page=${page}&limit=${limit}`;
+  if (source) {
+    url += `&source=${source}`;
+  }
+  return api.get(url);
+};
 
 export const getCSVUploads = () => api.get('/contacts/csv-uploads');
 

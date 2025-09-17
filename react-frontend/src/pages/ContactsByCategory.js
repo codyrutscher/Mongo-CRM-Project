@@ -8,7 +8,7 @@ import PaginationComponent from "../components/PaginationComponent";
 import { getContactsByCategory, getContact } from "../services/api";
 
 const ContactsByCategory = () => {
-  const { category } = useParams();
+  const { category, source } = useParams();
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,12 @@ const ContactsByCategory = () => {
       description: "Contacts that have a phone number but no email address",
       icon: "fas fa-phone",
       color: "warning"
+    },
+    "missing-company": {
+      title: "Contacts Missing Company",
+      description: "Contacts that are missing company information",
+      icon: "fas fa-building",
+      color: "secondary"
     }
   };
 
@@ -55,7 +61,7 @@ const ContactsByCategory = () => {
     try {
       setLoading(true);
       console.log('ContactsByCategory: Fetching contacts for category:', category);
-      const response = await getContactsByCategory(category, currentPage, pageSize);
+      const response = await getContactsByCategory(category, currentPage, pageSize, source);
       console.log('ContactsByCategory: API response:', response.data);
 
       if (response.data.success) {
@@ -72,7 +78,7 @@ const ContactsByCategory = () => {
     } finally {
       setLoading(false);
     }
-  }, [category, currentPage, pageSize]);
+  }, [category, source, currentPage, pageSize]);
 
   useEffect(() => {
     console.log('ContactsByCategory: Loading category:', category);
@@ -136,6 +142,7 @@ const ContactsByCategory = () => {
             <div>
               <h2 className="mb-1">
                 <i className={currentCategory.icon}></i> {currentCategory.title}
+                {source && <span className="text-muted"> - {source === 'hubspot' ? 'HubSpot' : source === 'google_sheets' ? 'C17 Leads' : source}</span>}
               </h2>
               <p className="text-muted mb-0">{currentCategory.description}</p>
             </div>

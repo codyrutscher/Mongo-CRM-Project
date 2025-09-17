@@ -738,7 +738,7 @@ class ContactController {
   async getContactsByCategory(req, res) {
     try {
       const { category } = req.params;
-      const { page = 1, limit = 20 } = req.query;
+      const { page = 1, limit = 20, source } = req.query;
       
       let filter = {};
       
@@ -787,6 +787,11 @@ class ContactController {
             success: false,
             error: 'Invalid category'
           });
+      }
+
+      // Add source filtering if specified
+      if (source) {
+        filter.source = source;
       }
 
       // Use searchService to get proper email processing

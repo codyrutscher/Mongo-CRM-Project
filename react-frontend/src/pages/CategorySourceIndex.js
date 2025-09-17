@@ -78,6 +78,8 @@ const CategorySourceIndex = () => {
         return stats.emailOnlyContacts || {};
       case 'phone-only':
         return stats.phoneOnlyContacts || {};
+      case 'missing-company':
+        return stats.missingCompanyContacts || {};
       default:
         return {};
     }
@@ -88,7 +90,7 @@ const CategorySourceIndex = () => {
       navigate(`/csv-contacts/${encodeURIComponent(source)}`);
     } else {
       // Navigate to filtered contacts for this category and source
-      navigate(`/contacts/category/${category}?source=${source}`);
+      navigate(`/contacts/category/${category}/source/${source}`);
     }
   };
 
@@ -145,7 +147,9 @@ const CategorySourceIndex = () => {
                 <p className="text-muted">
                   {category === 'clean' ? 'Clean contacts' : 
                    category === 'email-only' ? 'Email only contacts' : 
-                   'Phone only contacts'} from HubSpot
+                   category === 'phone-only' ? 'Phone only contacts' :
+                   category === 'missing-company' ? 'Contacts missing company' :
+                   'Contacts'} from HubSpot
                 </p>
                 <Button variant="outline-primary" size="sm">
                   View Contacts <i className="fas fa-arrow-right"></i>
@@ -168,7 +172,9 @@ const CategorySourceIndex = () => {
                 <p className="text-muted">
                   {category === 'clean' ? 'Clean contacts' : 
                    category === 'email-only' ? 'Email only contacts' : 
-                   'Phone only contacts'} from Google Sheets
+                   category === 'phone-only' ? 'Phone only contacts' :
+                   category === 'missing-company' ? 'Contacts missing company' :
+                   'Contacts'} from Google Sheets
                 </p>
                 <Button variant="outline-success" size="sm">
                   View Contacts <i className="fas fa-arrow-right"></i>
