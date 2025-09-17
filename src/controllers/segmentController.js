@@ -538,32 +538,6 @@ class SegmentController {
       }
     }
   }
-          escapeCSV(contactObj.dncDate ? new Date(contactObj.dncDate).toISOString() : ''),
-          escapeCSV(contactObj.dncReason || ''),
-          escapeCSV(contactObj.complianceNotes || ''),
-          escapeCSV(contactObj.tags?.join('; ') || ''),
-          escapeCSV(contactObj.createdAt ? new Date(contactObj.createdAt).toISOString() : ''),
-          escapeCSV(contactObj.lastSyncedAt ? new Date(contactObj.lastSyncedAt).toISOString() : '')
-        ];
-
-        res.write(row.join(',') + '\n');
-      }
-
-      res.end();
-      logger.info(`Chunk ${chunkNum} export completed: ${contacts.length} contacts`);
-
-    } catch (error) {
-      logger.error('Error in chunk export:', error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          error: 'Chunk export failed: ' + error.message
-        });
-      } else {
-        res.end();
-      }
-    }
-  }
 
   async debugSegment(req, res) {
     try {
