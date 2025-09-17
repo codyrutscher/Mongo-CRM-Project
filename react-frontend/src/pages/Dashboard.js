@@ -241,14 +241,21 @@ const Dashboard = () => {
       <Row className="mb-4">
         <Col md={3}>
           <Card
-            className="stats-card text-white"
+            className="bg-primary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts")}
+            onClick={() => navigate("/contacts/sources")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-users fa-2x mb-2"></i>
               <h3>{stats.total}</h3>
               <p>Total Contacts</p>
+              <small className="d-block">
+                HubSpot: {stats.bySource?.hubspot || 0} | Sheets:{" "}
+                {stats.bySource?.google_sheets || 0} | CSV:{" "}
+                {Object.entries(stats.bySource || {})
+                  .filter(([key]) => key.startsWith('csv_'))
+                  .reduce((sum, [, count]) => sum + count, 0)}
+              </small>
             </Card.Body>
           </Card>
         </Col>

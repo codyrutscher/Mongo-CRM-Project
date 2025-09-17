@@ -9,6 +9,7 @@ import CSVSourceContacts from "./pages/CSVSourceContacts";
 import SheetsContacts from "./pages/SheetsContacts";
 import ContactsByCategory from "./pages/ContactsByCategory";
 import CategorySourceIndex from "./pages/CategorySourceIndex";
+import SourceIndex from "./pages/SourceIndex";
 import DebugAPI from "./pages/DebugAPI";
 import DebugPanel from "./components/DebugPanel";
 import Segments from "./pages/Segments";
@@ -32,6 +33,7 @@ function App() {
             <Route path="/csv-contacts" element={<CSVIndex />} />
             <Route path="/csv-contacts/:source" element={<CSVSourceContacts />} />
             <Route path="/sheets-contacts" element={<SheetsContacts />} />
+            <Route path="/contacts/sources" element={<SourceIndex />} />
             <Route path="/contacts/category/:category" element={<CategorySourceIndex />} />
             <Route path="/contacts/category/:category/source/:source" element={<ContactsByCategory />} />
             <Route path="/debug" element={<DebugAPI />} />
