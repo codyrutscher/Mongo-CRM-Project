@@ -772,6 +772,16 @@ class ContactController {
             ]
           };
           break;
+        case 'missing-company':
+          filter = {
+            $or: [
+              { company: { $exists: false } },
+              { company: '' },
+              { company: null },
+              { company: { $regex: /^.{0,1}$/ } } // 0-1 characters (essentially empty)
+            ]
+          };
+          break;
         default:
           return res.status(400).json({
             success: false,

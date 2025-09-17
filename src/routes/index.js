@@ -10,12 +10,38 @@ const router = express.Router();
 
 // Health check endpoint
 router.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'ProspereCRM API is running',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
+  try {
+    const mongoose = require('mongoose');
+    const dbStatus = mongoose.connection.readyState;
+    const dbStates = {
+      0: 'disconnected',
+      1: 'connected', 
+      2: 'connecting',
+      3: 'disconnecting'
+    };
+
+    res.json({
+      success: true,
+      message: 'ProspereCRM API is running',
+      timestamp: new Date().toISOString(),
+      version: '1.0.1',
+      environment: process.env.NODE_ENV || 'development',
+      database: {
+        status: dbStates[dbStatus] || 'unknown',
+        readyState: dbStatus
+      },
+      build: {
+        buildExists: require('fs').existsSync(require('path').resolve(__dirname, '../../react-frontend/build'))
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Health check failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // API routes

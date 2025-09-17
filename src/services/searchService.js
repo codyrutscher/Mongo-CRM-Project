@@ -400,6 +400,9 @@ class SearchService {
         phoneHubSpot,
         phoneSheets,
         phoneCSV,
+        missingCompanyHubSpot,
+        missingCompanySheets,
+        missingCompanyCSV,
       ] = await Promise.all([
         Contact.countDocuments(),
         Contact.aggregate([
@@ -489,6 +492,36 @@ class SearchService {
           phone: { $exists: true, $ne: "", $ne: null },
           $or: [{ email: { $exists: false } }, { email: "" }, { email: null }],
         }),
+        // Missing Company - HubSpot
+        Contact.countDocuments({
+          source: "hubspot",
+          $or: [
+            { company: { $exists: false } },
+            { company: "" },
+            { company: null },
+            { company: { $regex: /^.{0,1}$/ } } // 0-1 characters (essentially empty)
+          ]
+        }),
+        // Missing Company - Google Sheets
+        Contact.countDocuments({
+          source: "google_sheets",
+          $or: [
+            { company: { $exists: false } },
+            { company: "" },
+            { company: null },
+            { company: { $regex: /^.{0,1}$/ } }
+          ]
+        }),
+        // Missing Company - CSV
+        Contact.countDocuments({
+          source: { $regex: "^csv_" },
+          $or: [
+            { company: { $exists: false } },
+            { company: "" },
+            { company: null },
+            { company: { $regex: /^.{0,1}$/ } }
+          ]
+        }),
       ]);
 
       // The results are already destructured above in the Promise.all
@@ -526,6 +559,12 @@ class SearchService {
           google_sheets: phoneSheets,
           csv: phoneCSV,
           total: phoneHubSpot + phoneSheets + phoneCSV,
+        },
+        missingCompanyContacts: {
+          hubspot: missingCompanyHubSpot,
+          google_sheets: missingCompanySheets,
+          csv: missingCompanyCSV,
+          total: missingCompanyHubSpot + missingCompanySheets + missingCompanyCSV,
         },
       };
     } catch (error) {

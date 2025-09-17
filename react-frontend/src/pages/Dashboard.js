@@ -316,6 +316,28 @@ const Dashboard = () => {
         </Col>
       </Row>
 
+      {/* Second Row - Additional Categories */}
+      <Row className="mb-4">
+        <Col md={3}>
+          <Card
+            className="bg-secondary text-white"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/category/missing-company")}
+          >
+            <Card.Body className="text-center">
+              <i className="fas fa-building fa-2x mb-2"></i>
+              <h3>{stats.missingCompanyContacts?.total || 0}</h3>
+              <p>Missing Company</p>
+              <small className="d-block">
+                HubSpot: {stats.missingCompanyContacts?.hubspot || 0} | Sheets:{" "}
+                {stats.missingCompanyContacts?.google_sheets || 0} | CSV:{" "}
+                {stats.missingCompanyContacts?.csv || 0}
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
       {/* Contact Sources and Sync Jobs */}
       <Row>
         <Col md={6}>

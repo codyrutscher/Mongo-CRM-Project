@@ -226,9 +226,9 @@ class SegmentController {
         });
       }
 
-      // For large segments (>100), require chunked download - TESTING THRESHOLD
-      if (totalCount > 100 && !chunk) {
-        const chunkSize = 50; // TESTING - smaller chunks
+      // For large segments (>10,000), require chunked download
+      if (totalCount > 10000 && !chunk) {
+        const chunkSize = 10000;
         const totalChunks = Math.ceil(totalCount / chunkSize);
         
         logger.info(`Large segment: ${totalCount} contacts, creating ${totalChunks} chunks`);
@@ -449,7 +449,10 @@ class SegmentController {
 
   async exportSegmentChunk(segment, res, skip, limit, chunkNum) {
     try {
-      logger.info(`Exporting chunk ${chunkNum}: records ${skip + 1} to ${skip + limit}`);
+      logger.info(`=== CHUNK EXPORT START ===`);
+      logger.info(`Chunk ${chunkNum}: records ${skip + 1} to ${skip + limit}`);
+      logger.info(`Segment:`, segment.name);
+      logger.info(`Filters:`, JSON.stringify(segment.filters, null, 2));
 
       // CSV headers
       const headers = [
@@ -463,8 +466,15 @@ class SegmentController {
       res.write(headers.map(h => `"${h}"`).join(',') + '\n');
 
       // Get contacts using proper pagination
-      const query = searchService.buildFilterQuery(segment.filters);
-      logger.info(`Built query for chunk:`, JSON.stringify(query, null, 2));
+      let query = {};
+      try {
+        query = searchService.buildFilterQuery(segment.filters);
+        logger.info(`Built query successfully:`, JSON.stringify(query, null, 2));
+      } catch (queryError) {
+        logger.error(`Error building query:`, queryError);
+        // Fallback to empty query for "All Contacts" segments
+        query = {};
+      }
       
       const contacts = await Contact.find(query)
         .sort({ createdAt: -1 })
