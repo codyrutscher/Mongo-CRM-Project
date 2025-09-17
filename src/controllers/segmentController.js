@@ -201,6 +201,8 @@ class SegmentController {
 
       logger.info(`=== SEGMENT EXPORT START ===`);
       logger.info(`Segment ID: ${id}, Format: ${format}, Chunk: ${chunk}`);
+      logger.info(`Request headers:`, req.headers);
+      logger.info(`Request query:`, req.query);
 
       // Get segment info first
       const segment = await segmentService.getSegmentById(id);
@@ -224,9 +226,9 @@ class SegmentController {
         });
       }
 
-      // For large segments (>10,000), require chunked download
-      if (totalCount > 10000 && !chunk) {
-        const chunkSize = 10000;
+      // For large segments (>100), require chunked download - TESTING THRESHOLD
+      if (totalCount > 100 && !chunk) {
+        const chunkSize = 50; // TESTING - smaller chunks
         const totalChunks = Math.ceil(totalCount / chunkSize);
         
         logger.info(`Large segment: ${totalCount} contacts, creating ${totalChunks} chunks`);
