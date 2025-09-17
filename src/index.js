@@ -29,45 +29,64 @@ if (process.env.NODE_ENV === 'production') {
 // Connect to MongoDB
 connectDB();
 
-// Create demo users on startup
-const createDemoUsers = async () => {
+// Create 5 predefined users on startup
+const createPredefinedUsers = async () => {
   try {
     const User = require('./models/User');
     
-    // Check if admin user exists
-    const adminExists = await User.findOne({ email: 'admin@prosperecrm.com' });
-    if (!adminExists) {
-      const adminUser = new User({
+    const predefinedUsers = [
+      {
         email: 'admin@prosperecrm.com',
         password: 'Admin123!',
         firstName: 'Admin',
         lastName: 'User',
         role: 'admin'
-      });
-      await adminUser.save();
-      logger.info('✅ Admin user created: admin@prosperecrm.com / Admin123!');
-    }
-
-    // Check if demo user exists
-    const demoExists = await User.findOne({ email: 'demo@prosperecrm.com' });
-    if (!demoExists) {
-      const demoUser = new User({
-        email: 'demo@prosperecrm.com',
-        password: 'Demo123!',
-        firstName: 'Demo',
-        lastName: 'User',
+      },
+      {
+        email: 'john@prosperecrm.com',
+        password: 'John123!',
+        firstName: 'John',
+        lastName: 'Smith',
         role: 'user'
-      });
-      await demoUser.save();
-      logger.info('✅ Demo user created: demo@prosperecrm.com / Demo123!');
+      },
+      {
+        email: 'sarah@prosperecrm.com',
+        password: 'Sarah123!',
+        firstName: 'Sarah',
+        lastName: 'Johnson',
+        role: 'user'
+      },
+      {
+        email: 'mike@prosperecrm.com',
+        password: 'Mike123!',
+        firstName: 'Mike',
+        lastName: 'Davis',
+        role: 'user'
+      },
+      {
+        email: 'lisa@prosperecrm.com',
+        password: 'Lisa123!',
+        firstName: 'Lisa',
+        lastName: 'Wilson',
+        role: 'user'
+      }
+    ];
+
+    for (const userData of predefinedUsers) {
+      const userExists = await User.findOne({ email: userData.email });
+      if (!userExists) {
+        const user = new User(userData);
+        await user.save();
+        logger.info(`✅ User created: ${userData.email} / ${userData.password}`);
+      }
     }
   } catch (error) {
-    logger.error('Error creating demo users:', error);
+    logger.error('Error creating predefined users:', error);
   }
 };
 
-// Create demo users after a short delay to ensure DB connection
-setTimeout(createDemoUsers, 2000);
+// Create predefined users after a short delay to ensure DB connection
+setTimeout(createPredefinedUsers, 2000);
 
 // Security middleware with relaxed CSP for development
 app.use(helmet({

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { login } from '../services/auth';
 
 const Login = () => {
@@ -50,13 +50,10 @@ const Login = () => {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setFormData({
-      email: 'demo@prosperecrm.com',
-      password: 'Demo123!'
-    });
+  const handleQuickLogin = (email, password) => {
+    setFormData({ email, password });
     
-    // Auto-submit after setting demo credentials
+    // Auto-submit after setting credentials
     setTimeout(() => {
       handleSubmit({ preventDefault: () => {} });
     }, 100);
@@ -128,46 +125,88 @@ const Login = () => {
                     )}
                   </Button>
 
-                  <Button
-                    type="button"
-                    variant="outline-success"
-                    size="lg"
-                    className="w-100 mb-3"
-                    onClick={handleDemoLogin}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-play me-2"></i>
-                    Try Demo Account
-                  </Button>
+                  <div className="row g-2 mb-3">
+                    <div className="col-6">
+                      <Button
+                        type="button"
+                        variant="outline-primary"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => handleQuickLogin('admin@prosperecrm.com', 'Admin123!')}
+                        disabled={loading}
+                      >
+                        Admin
+                      </Button>
+                    </div>
+                    <div className="col-6">
+                      <Button
+                        type="button"
+                        variant="outline-success"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => handleQuickLogin('john@prosperecrm.com', 'John123!')}
+                        disabled={loading}
+                      >
+                        John
+                      </Button>
+                    </div>
+                    <div className="col-6">
+                      <Button
+                        type="button"
+                        variant="outline-info"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => handleQuickLogin('sarah@prosperecrm.com', 'Sarah123!')}
+                        disabled={loading}
+                      >
+                        Sarah
+                      </Button>
+                    </div>
+                    <div className="col-6">
+                      <Button
+                        type="button"
+                        variant="outline-warning"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => handleQuickLogin('mike@prosperecrm.com', 'Mike123!')}
+                        disabled={loading}
+                      >
+                        Mike
+                      </Button>
+                    </div>
+                    <div className="col-12">
+                      <Button
+                        type="button"
+                        variant="outline-secondary"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => handleQuickLogin('lisa@prosperecrm.com', 'Lisa123!')}
+                        disabled={loading}
+                      >
+                        Lisa
+                      </Button>
+                    </div>
+                  </div>
                 </Form>
-
-                <div className="text-center">
-                  <p className="text-muted">
-                    Don't have an account?{' '}
-                    <Link to="/register" className="text-primary fw-bold">
-                      Sign up here
-                    </Link>
-                  </p>
-                </div>
 
                 <hr className="my-4" />
 
                 <div className="text-center">
                   <small className="text-muted">
-                    <strong>Demo Credentials:</strong><br />
-                    Email: demo@prosperecrm.com<br />
-                    Password: Demo123!
+                    <strong>Available Users:</strong><br />
+                    <div className="mt-2">
+                      <div>admin@prosperecrm.com / Admin123!</div>
+                      <div>john@prosperecrm.com / John123!</div>
+                      <div>sarah@prosperecrm.com / Sarah123!</div>
+                      <div>mike@prosperecrm.com / Mike123!</div>
+                      <div>lisa@prosperecrm.com / Lisa123!</div>
+                    </div>
                   </small>
                 </div>
               </Card.Body>
             </Card>
 
-            <div className="text-center mt-4">
-              <Link to="/" className="text-muted">
-                <i className="fas fa-arrow-left me-2"></i>
-                Back to Home
-              </Link>
-            </div>
+
           </Col>
         </Row>
       </Container>

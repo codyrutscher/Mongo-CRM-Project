@@ -15,9 +15,7 @@ import DebugPanel from "./components/DebugPanel";
 import Segments from "./pages/Segments";
 import SegmentDetails from "./pages/SegmentDetails";
 import ContactModal from "./components/ContactModal";
-import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
@@ -30,9 +28,8 @@ function App() {
       <div className="App">
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           
           {/* Protected routes */}
           <Route path="/dashboard" element={
