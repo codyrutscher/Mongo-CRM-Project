@@ -266,7 +266,10 @@ class SegmentController {
         
         logger.info(`Large segment detected: ${totalCount} contacts, offering ${totalChunks} chunks`);
         
-        return res.json({
+        // Explicitly set content type for chunking response
+        res.setHeader('Content-Type', 'application/json');
+        
+        const chunkingResponse = {
           success: true,
           requiresChunking: true,
           data: {
@@ -280,7 +283,11 @@ class SegmentController {
             }))
           },
           message: `Segment has ${totalCount} contacts. Download in ${totalChunks} chunks of ${chunkSize} contacts each.`
-        });
+        };
+        
+        logger.info(`Returning chunking response:`, JSON.stringify(chunkingResponse, null, 2));
+        
+        return res.json(chunkingResponse);
       }
 
       // Handle chunked download

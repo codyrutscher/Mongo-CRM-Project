@@ -49,13 +49,24 @@ const SegmentDetails = () => {
 
   const handleExport = async () => {
     try {
+      console.log('=== SEGMENT EXPORT DEBUG ===');
+      console.log('Exporting segment ID:', id);
+      
       const response = await exportSegment(id);
       
+      console.log('Export response:', response);
+      console.log('Response data:', response.data);
+      console.log('Response headers:', response.headers);
+      console.log('Response status:', response.status);
+      console.log('Requires chunking?', response.data?.requiresChunking);
+      
       // Check if chunking is required
-      if (response.data.requiresChunking) {
+      if (response.data && response.data.requiresChunking) {
+        console.log('Chunking required, showing modal with chunks:', response.data.data);
         setExportChunks(response.data.data);
         setShowChunks(true);
       } else {
+        console.log('Direct download - creating blob from response data');
         // Direct download for smaller segments
         const blob = new Blob([response.data], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
