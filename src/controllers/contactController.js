@@ -779,23 +779,22 @@ class ContactController {
           });
       }
 
-      const contacts = await Contact.find(filter)
-        .sort({ createdAt: -1 })
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .exec();
-
-      const total = await Contact.countDocuments(filter);
+      // Use searchService to get proper email processing
+      const result = await searchService.searchContacts(filter, {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        sort: { createdAt: -1 }
+      });
 
       res.json({
         success: true,
         data: {
-          contacts,
+          contacts: result.contacts,
           pagination: {
             currentPage: page,
-            totalPages: Math.ceil(total / limit),
-            totalRecords: total,
-            hasNext: page < Math.ceil(total / limit),
+            totalPages: result.pagination.total,
+            totalRecords: result.pagination.totalRecords,
+            hasNext: page < result.pagination.total,
             hasPrev: page > 1
           }
         }

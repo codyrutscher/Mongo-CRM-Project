@@ -40,17 +40,29 @@ class SearchService {
       ]);
 
       // Post-process contacts to fix CSV email display
-      const processedContacts = contacts.map(contact => {
+      const processedContacts = contacts.map((contact) => {
         // Convert to plain object if it's a Mongoose document
         const contactObj = contact.toObject ? contact.toObject() : contact;
-        
+
         // For CSV contacts, show original email if available
-        if (contactObj.source && contactObj.source.startsWith('csv_') && 
-            contactObj.customFields && contactObj.customFields.originalEmail) {
-          contactObj.displayEmail = contactObj.customFields.originalEmail;
-          contactObj.email = contactObj.customFields.originalEmail;
+        if (contactObj.source && contactObj.source.startsWith("csv_")) {
+          // Handle Map type customFields properly
+          let customFields = contactObj.customFields;
+          if (customFields instanceof Map) {
+            customFields = Object.fromEntries(customFields);
+          } else if (contact.customFields instanceof Map) {
+            // If contactObj conversion didn't work, try the original contact
+            customFields = Object.fromEntries(contact.customFields);
+          }
+          
+          if (customFields && customFields.originalEmail) {
+            contactObj.displayEmail = customFields.originalEmail;
+            contactObj.email = customFields.originalEmail;
+            // Also update the customFields in the object
+            contactObj.customFields = customFields;
+          }
         }
-        
+
         return contactObj;
       });
 

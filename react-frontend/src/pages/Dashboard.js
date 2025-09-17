@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend
+} from 'chart.js';
 import { getDashboardStats, getSyncJobs } from '../services/api';
 import { formatSourceName, formatDate } from '../utils/formatters';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -45,27 +55,83 @@ const Dashboard = () => {
     }
   };
 
-  const renderSourceBreakdown = () => {
+  const renderSourcePieChart = () => {
     const sources = stats.bySource || {};
     const total = Object.values(sources).reduce((a, b) => a + b, 0);
     
-    return Object.entries(sources).map(([source, count]) => {
-      const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-      return (
-        <div key={source} className="mb-2">
-          <div className="d-flex justify-content-between">
-            <span>{formatSourceName(source)}</span>
-            <span>{count} ({percentage}%)</span>
-          </div>
-          <div className="progress" style={{height: '6px'}}>
-            <div 
-              className="progress-bar" 
-              style={{width: `${percentage}%`}}
-            ></div>
-          </div>
-        </div>
-      );
-    });
+    if (total === 0) {
+      return <p className="text-muted text-center">No contact data available</p>;
+    }
+
+    // Prepare data for pie chart
+    const labels = Object.keys(sources).map(source => formatSourceName(source));
+    const data = Object.values(sources);
+    
+    // Define colors for different sources
+    const colors = [
+      '#FF6384', // HubSpot - Pink/Red
+      '#36A2EB', // Google Sheets - Blue  
+      '#FFCE56', // CSV - Yellow
+      '#4BC0C0', // Additional sources - Teal
+      '#9966FF', // Additional sources - Purple
+      '#FF9F40', // Additional sources - Orange
+    ];
+
+    const chartData = {
+      labels: labels,
+      datasets: [
+        {
+          data: data,
+          backgroundColor: colors.slice(0, labels.length),
+          borderColor: colors.slice(0, labels.length).map(color => color + '80'), // Add transparency
+          borderWidth: 2,
+          hoverBorderWidth: 3,
+          hoverBorderColor: '#fff'
+        }
+      ]
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            usePointStyle: true,
+            font: {
+              size: 12
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed;
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+            }
+          },
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: '#fff',
+          borderWidth: 1
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      }
+    };
+
+    return (
+      <div style={{ height: '300px', position: 'relative' }}>
+        <Pie data={chartData} options={options} />
+      </div>
+    );
   };
 
   const renderSyncJobs = () => {
@@ -169,7 +235,7 @@ const Dashboard = () => {
               <h5><i className="fas fa-chart-pie"></i> Contact Sources</h5>
             </Card.Header>
             <Card.Body>
-              {renderSourceBreakdown()}
+              {renderSourcePieChart()}
             </Card.Body>
           </Card>
         </Col>
