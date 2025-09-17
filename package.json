@@ -1,6 +1,6 @@
 {
   "name": "prospere-crm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A comprehensive CRM system integrating HubSpot, Google Sheets, and MongoDB",
   "main": "src/index.js",
   "scripts": {

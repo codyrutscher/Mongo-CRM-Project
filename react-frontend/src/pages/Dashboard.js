@@ -38,7 +38,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🚀 DASHBOARD LOADED - NEW BUILD VERSION 1.0.2 WITH DEBUGGING');
+    console.log("🚀 DASHBOARD LOADED - NEW BUILD VERSION 1.0.2 WITH DEBUGGING");
     loadDashboardData();
   }, []);
 

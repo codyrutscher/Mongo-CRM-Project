@@ -5,6 +5,7 @@ import { getSegment, getSegmentContactsById, deleteSegment, exportSegment } from
 import { formatSourceName } from '../utils/formatters';
 
 const SegmentDetails = () => {
+  // Cache buster: v1.0.1 - Force rebuild for chunked export fix
   const { id } = useParams();
   const navigate = useNavigate();
   const [segment, setSegment] = useState(null);
