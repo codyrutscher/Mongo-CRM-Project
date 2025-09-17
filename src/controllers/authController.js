@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 
 class AuthController {
   // Generate JWT token
-  generateToken(userId) {
+  generateToken = (userId) => {
     const secret = process.env.JWT_SECRET || 'prospere-crm-default-secret-key-2024';
     logger.info(`Generating JWT token for user: ${userId}`);
     return jwt.sign(
@@ -15,7 +15,7 @@ class AuthController {
   }
 
   // Register new user
-  async register(req, res) {
+  register = async (req, res) => {
     try {
       const { email, password, firstName, lastName, role = 'user' } = req.body;
 
@@ -65,7 +65,7 @@ class AuthController {
   }
 
   // Login user
-  async login(req, res) {
+  login = async (req, res) => {
     try {
       logger.info('=== LOGIN ATTEMPT START ===');
       const { email, password } = req.body;
@@ -134,7 +134,7 @@ class AuthController {
   }
 
   // Get current user profile
-  async getProfile(req, res) {
+  getProfile = async (req, res) => {
     try {
       const user = await User.findById(req.user.userId).select('-password');
       if (!user) {
@@ -159,7 +159,7 @@ class AuthController {
   }
 
   // Update user profile
-  async updateProfile(req, res) {
+  updateProfile = async (req, res) => {
     try {
       const { firstName, lastName } = req.body;
       
@@ -185,7 +185,7 @@ class AuthController {
   }
 
   // Change password
-  async changePassword(req, res) {
+  changePassword = async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
 
@@ -226,7 +226,7 @@ class AuthController {
   }
 
   // Logout (client-side token removal)
-  async logout(req, res) {
+  logout = async (req, res) => {
     res.json({
       success: true,
       message: 'Logged out successfully'
