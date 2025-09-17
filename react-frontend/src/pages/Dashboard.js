@@ -253,7 +253,7 @@ const Dashboard = () => {
                 HubSpot: {stats.bySource?.hubspot || 0} | Sheets:{" "}
                 {stats.bySource?.google_sheets || 0} | CSV:{" "}
                 {Object.entries(stats.bySource || {})
-                  .filter(([key]) => key.startsWith('csv_'))
+                  .filter(([key]) => key.startsWith("csv_"))
                   .reduce((sum, [, count]) => sum + count, 0)}
               </small>
             </Card.Body>
