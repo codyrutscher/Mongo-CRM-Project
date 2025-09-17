@@ -67,23 +67,31 @@ class AuthController {
     try {
       const { email, password } = req.body;
 
+      logger.info(`Login attempt for email: ${email}`);
+
       // Find user and include password for comparison
       const user = await User.findOne({ email }).select('+password');
       if (!user) {
+        logger.warn(`User not found: ${email}`);
         return res.status(401).json({
           success: false,
           error: 'Invalid email or password'
         });
       }
 
+      logger.info(`User found: ${user.email}, role: ${user.role}`);
+
       // Check password
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
+        logger.warn(`Invalid password for user: ${email}`);
         return res.status(401).json({
           success: false,
           error: 'Invalid email or password'
         });
       }
+
+      logger.info(`Login successful for user: ${email}`);
 
       // Update last login
       await user.updateLastLogin();

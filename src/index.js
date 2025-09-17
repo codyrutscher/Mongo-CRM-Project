@@ -29,6 +29,46 @@ if (process.env.NODE_ENV === 'production') {
 // Connect to MongoDB
 connectDB();
 
+// Create demo users on startup
+const createDemoUsers = async () => {
+  try {
+    const User = require('./models/User');
+    
+    // Check if admin user exists
+    const adminExists = await User.findOne({ email: 'admin@prosperecrm.com' });
+    if (!adminExists) {
+      const adminUser = new User({
+        email: 'admin@prosperecrm.com',
+        password: 'Admin123!',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin'
+      });
+      await adminUser.save();
+      logger.info('✅ Admin user created: admin@prosperecrm.com / Admin123!');
+    }
+
+    // Check if demo user exists
+    const demoExists = await User.findOne({ email: 'demo@prosperecrm.com' });
+    if (!demoExists) {
+      const demoUser = new User({
+        email: 'demo@prosperecrm.com',
+        password: 'Demo123!',
+        firstName: 'Demo',
+        lastName: 'User',
+        role: 'user'
+      });
+      await demoUser.save();
+      logger.info('✅ Demo user created: demo@prosperecrm.com / Demo123!');
+    }
+  } catch (error) {
+    logger.error('Error creating demo users:', error);
+  }
+};
+
+// Create demo users after a short delay to ensure DB connection
+setTimeout(createDemoUsers, 2000);
+
 // Security middleware with relaxed CSP for development
 app.use(helmet({
   contentSecurityPolicy: {

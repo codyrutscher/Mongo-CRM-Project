@@ -45,6 +45,27 @@ router.get('/health', (req, res) => {
   }
 });
 
+// Debug endpoint to check users
+router.get('/debug/users', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const users = await User.find({}, 'email firstName lastName role isActive createdAt');
+    
+    res.json({
+      success: true,
+      data: {
+        totalUsers: users.length,
+        users: users
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // API routes
 router.use('/auth', authRoutes);
 router.use('/contacts', contactRoutes);

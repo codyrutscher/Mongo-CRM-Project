@@ -26,21 +26,25 @@ const Login = () => {
     setError('');
 
     try {
+      console.log('Attempting login with:', formData.email);
       const response = await login(formData.email, formData.password);
+      console.log('Login response:', response);
       
       if (response.success) {
         // Store token and user data
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
+        console.log('Login successful, redirecting to dashboard');
         // Redirect to dashboard
         navigate('/dashboard');
       } else {
+        console.error('Login failed:', response.error);
         setError(response.error || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Login failed. Please try again.');
+      setError(`Login failed: ${error.message || 'Please try again'}`);
     } finally {
       setLoading(false);
     }
