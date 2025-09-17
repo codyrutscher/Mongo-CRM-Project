@@ -7,9 +7,12 @@ export const formatSourceName = (source) => {
     'manual': 'Manual Entry'
   };
   
-  // Handle individual CSV upload sources
+  // Handle individual CSV upload sources dynamically
   if (source && source.startsWith('csv_')) {
-    return source.replace('csv_', '').replace(/_/g, ' ');
+    // Extract the clean name and convert underscores back to spaces
+    const cleanName = source.replace('csv_', '').replace(/_/g, ' ');
+    // Capitalize first letter of each word for better display
+    return cleanName.replace(/\b\w/g, l => l.toUpperCase());
   }
   
   return names[source] || source;
