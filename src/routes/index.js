@@ -4,6 +4,7 @@ const syncRoutes = require('./sync');
 const exportRoutes = require('./export');
 const csvRoutes = require('./csv');
 const segmentRoutes = require('./segments');
+const authRoutes = require('./auth');
 const webhookRoutes = require('./webhooks');
 
 const router = express.Router();
@@ -45,6 +46,7 @@ router.get('/health', (req, res) => {
 });
 
 // API routes
+router.use('/auth', authRoutes);
 router.use('/contacts', contactRoutes);
 router.use('/sync', syncRoutes);
 router.use('/export', exportRoutes);

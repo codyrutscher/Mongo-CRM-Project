@@ -331,9 +331,9 @@ class SegmentController {
         });
       }
 
-      // For large segments (>10,000), require chunked download
-      if (totalCount > 10000 && !chunk) {
-        const chunkSize = 10000;
+      // For large segments (>100,000), require chunked download
+      if (totalCount > 100000 && !chunk) {
+        const chunkSize = 100000;
         const totalChunks = Math.ceil(totalCount / chunkSize);
         
         logger.info(`Large segment: ${totalCount} contacts, creating ${totalChunks} chunks`);
@@ -368,7 +368,7 @@ class SegmentController {
           });
         }
 
-        const chunkSize = 10000;
+        const chunkSize = 100000;
         const skip = (chunkNum - 1) * chunkSize;
         
         logger.info(`Exporting chunk ${chunkNum}: records ${skip + 1} to ${skip + chunkSize}`);

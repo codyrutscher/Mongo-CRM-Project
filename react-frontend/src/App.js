@@ -15,6 +15,10 @@ import DebugPanel from "./components/DebugPanel";
 import Segments from "./pages/Segments";
 import SegmentDetails from "./pages/SegmentDetails";
 import ContactModal from "./components/ContactModal";
+import LandingPage from "./pages/LandingPage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
 function App() {
@@ -24,24 +28,110 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <Navigation />
-        <div className="container mt-4">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/hubspot-contacts" element={<HubSpotContacts />} />
-            <Route path="/csv-contacts" element={<CSVIndex />} />
-            <Route path="/csv-contacts/:source" element={<CSVSourceContacts />} />
-            <Route path="/sheets-contacts" element={<SheetsContacts />} />
-            <Route path="/contacts/sources" element={<SourceIndex />} />
-            <Route path="/contacts/category/:category" element={<CategorySourceIndex />} />
-            <Route path="/contacts/category/:category/source/:source" element={<ContactsByCategory />} />
-            <Route path="/debug" element={<DebugAPI />} />
-            <Route path="/debug-panel" element={<DebugPanel />} />
-            <Route path="/segments" element={<Segments />} />
-            <Route path="/segment-details/:id" element={<SegmentDetails />} />
-          </Routes>
-        </div>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <Dashboard />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/hubspot-contacts" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <HubSpotContacts />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/csv-contacts" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <CSVIndex />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/csv-contacts/:source" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <CSVSourceContacts />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/sheets-contacts" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <SheetsContacts />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/sources" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <SourceIndex />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/category/:category" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <CategorySourceIndex />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/contacts/category/:category/source/:source" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <ContactsByCategory />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/debug" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <DebugAPI />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/debug-panel" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <DebugPanel />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/segments" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <Segments />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="/segment-details/:id" element={
+            <ProtectedRoute>
+              <Navigation />
+              <div className="container mt-4">
+                <SegmentDetails />
+              </div>
+            </ProtectedRoute>
+          } />
+        </Routes>
 
         {/* LoadingModal can be used by individual components */}
         <ContactModal

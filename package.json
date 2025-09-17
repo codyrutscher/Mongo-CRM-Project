@@ -9,6 +9,7 @@
     "test": "jest",
     "build": "cd react-frontend && npm install && npm run build",
     "postinstall": "cd react-frontend && npm install",
+    "create-admin": "node scripts/create-admin-user.js",
     "postinstall": "npm run build"
   },
   "keywords": ["crm", "hubspot", "google-sheets", "mongodb", "data-sync"],
@@ -27,7 +28,9 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "compression": "^1.7.4",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
