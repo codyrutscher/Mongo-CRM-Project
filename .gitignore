@@ -76,3 +76,6 @@ Thumbs.db
 # Local CSV files (contain sensitive data)
 *.csv
 prosperedatabase1.csv
+
+# React build folder (built fresh on deployment)
+react-frontend/build/
