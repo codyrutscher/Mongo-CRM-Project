@@ -5,9 +5,11 @@ const logger = require('../utils/logger');
 class AuthController {
   // Generate JWT token
   generateToken(userId) {
+    const secret = process.env.JWT_SECRET || 'prospere-crm-default-secret-key-2024';
+    logger.info(`Generating JWT token for user: ${userId}`);
     return jwt.sign(
       { userId },
-      process.env.JWT_SECRET || 'your-secret-key',
+      secret,
       { expiresIn: '7d' }
     );
   }
@@ -65,7 +67,16 @@ class AuthController {
   // Login user
   async login(req, res) {
     try {
+      logger.info('=== LOGIN ATTEMPT START ===');
       const { email, password } = req.body;
+
+      if (!email || !password) {
+        logger.error('Missing email or password in request');
+        return res.status(400).json({
+          success: false,
+          error: 'Email and password are required'
+        });
+      }
 
       logger.info(`Login attempt for email: ${email}`);
 
@@ -114,9 +125,10 @@ class AuthController {
 
     } catch (error) {
       logger.error('Login error:', error);
+      logger.error('Error stack:', error.stack);
       res.status(500).json({
         success: false,
-        error: 'Login failed'
+        error: `Login failed: ${error.message}`
       });
     }
   }
