@@ -49,56 +49,84 @@ const SegmentDetails = () => {
 
   const handleExport = async () => {
     try {
-      console.log('=== SEGMENT EXPORT DEBUG ===');
+      console.log('=== SEGMENT EXPORT START ===');
       console.log('Exporting segment ID:', id);
       
       const response = await exportSegment(id);
       
-      console.log('Export response:', response);
+      console.log('Export response status:', response.status);
       console.log('Response data:', response.data);
-      console.log('Response headers:', response.headers);
-      console.log('Response status:', response.status);
       console.log('Requires chunking?', response.data?.requiresChunking);
       
       // Check if chunking is required
       if (response.data && response.data.requiresChunking) {
-        console.log('Chunking required, showing modal with chunks:', response.data.data);
+        console.log('Large segment - chunking required');
+        console.log('Chunk data:', response.data.data);
         setExportChunks(response.data.data);
         setShowChunks(true);
       } else {
-        console.log('Direct download - creating blob from response data');
-        // Direct download for smaller segments
-        const blob = new Blob([response.data], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `segment_${id}_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        console.log('Small segment - direct download');
+        
+        // For direct downloads, the response should be CSV data
+        if (typeof response.data === 'string' && response.data.includes(',')) {
+          // It's CSV data
+          const blob = new Blob([response.data], { type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_export.csv`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } else {
+          // Unexpected response format
+          console.error('Unexpected response format:', response.data);
+          alert('Export failed: Unexpected response format');
+        }
       }
     } catch (error) {
       console.error('Error exporting segment:', error);
-      alert('Export failed. Please try again.');
+      
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        alert(`Export failed: ${error.response.data.error || 'Server error'}`);
+      } else {
+        alert('Export failed. Please check your connection and try again.');
+      }
     }
   };
 
-  const downloadChunk = async (chunkUrl, chunkNum) => {
+  const downloadChunk = async (chunk) => {
     try {
-      const response = await fetch(chunkUrl);
+      console.log('Downloading chunk:', chunk);
+      
+      // Use the API service with proper authentication
+      const response = await fetch(`/api/segments/${id}/export?format=csv&chunk=${chunk.chunkNumber}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // If you use auth tokens
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `segment_${segment.name}_chunk_${chunkNum}.csv`;
+      a.download = `${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_chunk_${chunk.chunkNumber}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      
+      console.log(`Chunk ${chunk.chunkNumber} downloaded successfully`);
     } catch (error) {
       console.error('Error downloading chunk:', error);
-      alert(`Failed to download chunk ${chunkNum}. Please try again.`);
+      alert(`Failed to download chunk ${chunk.chunkNumber}. Please try again.`);
     }
   };
 
@@ -251,19 +279,33 @@ const SegmentDetails = () => {
                   This segment has {exportChunks.totalContacts.toLocaleString()} contacts. 
                   Download in {exportChunks.totalChunks} chunks of {exportChunks.chunkSize.toLocaleString()} contacts each.
                 </p>
+                <div className="mb-3">
+                  <Button 
+                    variant="success" 
+                    onClick={() => {
+                      exportChunks.chunks.forEach((chunk, index) => {
+                        setTimeout(() => downloadChunk(chunk), index * 1000); // Stagger downloads by 1 second
+                      });
+                    }}
+                  >
+                    <i className="fas fa-download"></i> Download All Chunks
+                  </Button>
+                </div>
                 <Row>
-                  {exportChunks.downloadUrls.map((chunk, index) => (
-                    <Col md={4} key={chunk.chunk} className="mb-3">
+                  {exportChunks.chunks.map((chunk) => (
+                    <Col md={4} key={chunk.chunkNumber} className="mb-3">
                       <Card className="h-100">
                         <Card.Body className="text-center">
-                          <h6>Chunk {chunk.chunk}</h6>
+                          <h6>Chunk {chunk.chunkNumber}</h6>
                           <p className="text-muted small">
-                            {chunk.contacts.toLocaleString()} contacts
+                            Records {chunk.startRecord.toLocaleString()} - {chunk.endRecord.toLocaleString()}
+                            <br />
+                            ({chunk.contactCount.toLocaleString()} contacts)
                           </p>
                           <Button 
                             variant="primary" 
                             size="sm"
-                            onClick={() => downloadChunk(chunk.url, chunk.chunk)}
+                            onClick={() => downloadChunk(chunk)}
                           >
                             <i className="fas fa-download"></i> Download
                           </Button>

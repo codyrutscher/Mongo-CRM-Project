@@ -199,137 +199,94 @@ class SegmentController {
       const { id } = req.params;
       const { format = 'csv', chunk } = req.query;
 
-      // Enhanced debugging
-      logger.info(`=== SEGMENT EXPORT DEBUG START ===`);
-      logger.info(`Segment ID: ${id}`);
-      logger.info(`Format: ${format}`);
-      logger.info(`Chunk: ${chunk}`);
-      logger.info(`Request headers:`, req.headers);
-      logger.info(`Request query:`, req.query);
+      logger.info(`=== SEGMENT EXPORT START ===`);
+      logger.info(`Segment ID: ${id}, Format: ${format}, Chunk: ${chunk}`);
 
       // Get segment info first
-      logger.info(`Getting segment ${id} for export`);
       const segment = await segmentService.getSegmentById(id);
       if (!segment) {
-        logger.error(`Segment ${id} not found`);
         return res.status(404).json({
           success: false,
           error: 'Segment not found'
         });
       }
 
-      logger.info(`Segment found: ${segment.name}`);
-      logger.info(`Segment filters:`, JSON.stringify(segment.filters, null, 2));
-      logger.info(`Segment type: ${typeof segment.filters}`);
+      logger.info(`Exporting segment: ${segment.name}`);
 
       // Get total count first
-      logger.info(`Calculating segment contact count...`);
       const totalCount = await segmentService.getSegmentCount(segment.filters);
-      logger.info(`Segment contact count: ${totalCount}`);
+      logger.info(`Total contacts in segment: ${totalCount}`);
 
       if (totalCount === 0) {
-        logger.error(`No contacts found in segment ${id} (${segment.name})`);
-        logger.error(`Segment filters:`, JSON.stringify(segment.filters, null, 2));
-        
-        // Let's test if the filters are working at all
-        try {
-          const testQuery = searchService.buildFilterQuery(segment.filters);
-          logger.error(`Built query:`, JSON.stringify(testQuery, null, 2));
-          
-          // Test a simple count to see if there are any contacts at all
-          const totalContacts = await Contact.countDocuments();
-          logger.error(`Total contacts in database: ${totalContacts}`);
-          
-          // Test if the query syntax is valid
-          const testCount = await Contact.countDocuments(testQuery);
-          logger.error(`Contacts matching segment query: ${testCount}`);
-        } catch (queryError) {
-          logger.error(`Error testing segment query:`, queryError);
-        }
-        
         return res.status(400).json({
           success: false,
-          error: `No contacts found in this segment "${segment.name}". Check segment filters or contact data.`,
-          debug: {
-            segmentName: segment.name,
-            segmentFilters: segment.filters,
-            totalContactsInDB: await Contact.countDocuments()
-          }
+          error: `No contacts found in segment "${segment.name}"`
         });
       }
 
-      // For large segments, offer chunked download
-      logger.info(`Checking if chunking needed: totalCount=${totalCount}, chunk=${chunk}`);
+      // For large segments (>10,000), require chunked download
       if (totalCount > 10000 && !chunk) {
         const chunkSize = 10000;
         const totalChunks = Math.ceil(totalCount / chunkSize);
         
-        logger.info(`Large segment detected: ${totalCount} contacts, offering ${totalChunks} chunks`);
+        logger.info(`Large segment: ${totalCount} contacts, creating ${totalChunks} chunks`);
         
-        // Explicitly set content type for chunking response
-        res.setHeader('Content-Type', 'application/json');
-        
-        const chunkingResponse = {
+        return res.json({
           success: true,
           requiresChunking: true,
           data: {
+            segmentName: segment.name,
             totalContacts: totalCount,
             chunkSize: chunkSize,
             totalChunks: totalChunks,
-            downloadUrls: Array.from({ length: totalChunks }, (_, i) => ({
-              chunk: i + 1,
-              url: `/api/segments/${id}/export?format=${format}&chunk=${i + 1}`,
-              contacts: Math.min(chunkSize, totalCount - (i * chunkSize))
+            chunks: Array.from({ length: totalChunks }, (_, i) => ({
+              chunkNumber: i + 1,
+              startRecord: (i * chunkSize) + 1,
+              endRecord: Math.min((i + 1) * chunkSize, totalCount),
+              contactCount: Math.min(chunkSize, totalCount - (i * chunkSize)),
+              downloadUrl: `/api/segments/${id}/export?format=${format}&chunk=${i + 1}`
             }))
           },
-          message: `Segment has ${totalCount} contacts. Download in ${totalChunks} chunks of ${chunkSize} contacts each.`
-        };
-        
-        logger.info(`Returning chunking response:`, JSON.stringify(chunkingResponse, null, 2));
-        
-        return res.json(chunkingResponse);
+          message: `Segment has ${totalCount} contacts. Download in ${totalChunks} chunks.`
+        });
       }
 
       // Handle chunked download
       if (chunk) {
         const chunkNum = parseInt(chunk);
+        if (isNaN(chunkNum) || chunkNum < 1) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid chunk number'
+          });
+        }
+
         const chunkSize = 10000;
         const skip = (chunkNum - 1) * chunkSize;
         
-        const filename = `segment_${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_chunk_${chunkNum}_export_${Date.now()}.csv`;
+        logger.info(`Exporting chunk ${chunkNum}: records ${skip + 1} to ${skip + chunkSize}`);
+        
+        const filename = `${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_chunk_${chunkNum}.csv`;
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         
-        return await this.streamSegmentChunk(segment, res, skip, chunkSize, chunkNum);
+        return await this.exportSegmentChunk(segment, res, skip, chunkSize, chunkNum);
       }
 
-      // Initialize progress tracking for regular export
-      const exportId = `export_${id}_${Date.now()}`;
-      this.exportProgress.set(exportId, {
-        total: totalCount,
-        processed: 0,
-        status: 'starting',
-        startTime: Date.now()
-      });
-
-      // Set response headers for streaming download
-      const filename = `segment_${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_export_${Date.now()}.csv`;
+      // For smaller segments, direct download
+      logger.info(`Small segment: ${totalCount} contacts, direct download`);
+      const filename = `${segment.name.replace(/[^a-zA-Z0-9]/g, '_')}_export.csv`;
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.setHeader('Transfer-Encoding', 'chunked');
-      res.setHeader('X-Export-ID', exportId);
-
-      // Stream the export for regular datasets
-      await this.streamSegmentExport(segment, res, totalCount, exportId);
+      
+      return await this.exportSegmentChunk(segment, res, 0, totalCount, 1);
       
     } catch (error) {
       logger.error('Error exporting segment:', error);
-      logger.error('Error stack:', error.stack);
       if (!res.headersSent) {
         res.status(500).json({
           success: false,
-          error: 'Failed to export segment: ' + error.message,
-          details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          error: 'Failed to export segment: ' + error.message
         });
       }
     }
@@ -488,11 +445,11 @@ class SegmentController {
     }
   }
 
-  async streamSegmentChunk(segment, res, skip, limit, chunkNum) {
+  async exportSegmentChunk(segment, res, skip, limit, chunkNum) {
     try {
-      logger.info(`Exporting chunk ${chunkNum}: ${skip} to ${skip + limit}`);
+      logger.info(`Exporting chunk ${chunkNum}: records ${skip + 1} to ${skip + limit}`);
 
-      // Write CSV headers
+      // CSV headers
       const headers = [
         'First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title',
         'Street Address', 'City', 'State', 'Zip Code', 'Country',
@@ -500,27 +457,34 @@ class SegmentController {
         'Compliance Notes', 'Tags', 'Created Date', 'Last Synced'
       ];
       
+      // Write headers
       res.write(headers.map(h => `"${h}"`).join(',') + '\n');
 
-      // Get contacts for this chunk
-      const segmentResult = await segmentService.getSegmentContacts(segment._id, {
-        page: Math.floor(skip / limit) + 1,
-        limit: limit,
-        sort: { createdAt: -1 }
-      });
-
-      const contacts = segmentResult.contacts || [];
+      // Get contacts using proper pagination
+      const query = searchService.buildFilterQuery(segment.filters);
+      logger.info(`Built query for chunk:`, JSON.stringify(query, null, 2));
       
-      // Stream contacts
+      const contacts = await Contact.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(); // Use lean for better performance
+
+      logger.info(`Retrieved ${contacts.length} contacts for chunk ${chunkNum}`);
+
+      if (contacts.length === 0) {
+        logger.warn(`No contacts found for chunk ${chunkNum}`);
+        res.end();
+        return;
+      }
+
+      // Process and write contacts
       for (const contact of contacts) {
-        // Convert to plain object if it's a Mongoose document
-        const contactObj = contact.toObject ? contact.toObject() : contact;
-        
         // For CSV contacts, use original email if available
-        let displayEmail = contactObj.email || '';
-        if (contactObj.source && contactObj.source.startsWith('csv_') && 
-            contactObj.customFields && contactObj.customFields.originalEmail) {
-          displayEmail = contactObj.customFields.originalEmail;
+        let displayEmail = contact.email || '';
+        if (contact.source && contact.source.startsWith('csv_') && 
+            contact.customFields && contact.customFields.originalEmail) {
+          displayEmail = contact.customFields.originalEmail;
         }
 
         const escapeCSV = (value) => {
@@ -533,21 +497,47 @@ class SegmentController {
         };
 
         const row = [
-          escapeCSV(contactObj.firstName || ''),
-          escapeCSV(contactObj.lastName || ''),
+          escapeCSV(contact.firstName || ''),
+          escapeCSV(contact.lastName || ''),
           escapeCSV(displayEmail),
-          escapeCSV(contactObj.phone || ''),
-          escapeCSV(contactObj.company || ''),
-          escapeCSV(contactObj.jobTitle || ''),
-          escapeCSV(contactObj.address?.street || ''),
-          escapeCSV(contactObj.address?.city || ''),
-          escapeCSV(contactObj.address?.state || ''),
-          escapeCSV(contactObj.address?.zipCode || ''),
-          escapeCSV(contactObj.address?.country || ''),
-          escapeCSV(contactObj.source || ''),
-          escapeCSV(contactObj.lifecycleStage || ''),
-          escapeCSV(contactObj.status || ''),
-          escapeCSV(contactObj.dncStatus || 'callable'),
+          escapeCSV(contact.phone || ''),
+          escapeCSV(contact.company || ''),
+          escapeCSV(contact.jobTitle || ''),
+          escapeCSV(contact.address?.street || ''),
+          escapeCSV(contact.address?.city || ''),
+          escapeCSV(contact.address?.state || ''),
+          escapeCSV(contact.address?.zipCode || ''),
+          escapeCSV(contact.address?.country || ''),
+          escapeCSV(contact.source || ''),
+          escapeCSV(contact.lifecycleStage || ''),
+          escapeCSV(contact.status || ''),
+          escapeCSV(contact.dncStatus || 'callable'),
+          escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString().split('T')[0] : ''),
+          escapeCSV(contact.dncReason || ''),
+          escapeCSV(contact.complianceNotes || ''),
+          escapeCSV(Array.isArray(contact.tags) ? contact.tags.join('; ') : ''),
+          escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString().split('T')[0] : ''),
+          escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString().split('T')[0] : '')
+        ];
+
+        res.write(row.join(',') + '\n');
+      }
+
+      res.end();
+      logger.info(`Chunk ${chunkNum} export completed: ${contacts.length} contacts`);
+
+    } catch (error) {
+      logger.error(`Error exporting chunk ${chunkNum}:`, error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to export chunk: ' + error.message
+        });
+      } else {
+        res.end();
+      }
+    }
+  }
           escapeCSV(contactObj.dncDate ? new Date(contactObj.dncDate).toISOString() : ''),
           escapeCSV(contactObj.dncReason || ''),
           escapeCSV(contactObj.complianceNotes || ''),
