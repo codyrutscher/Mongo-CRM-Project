@@ -32,19 +32,41 @@ const Segments = () => {
 
   const handleExportSegment = async (segmentId) => {
     try {
+      console.log('Exporting segment from list page:', segmentId);
+      
       const response = await exportSegment(segmentId);
-      const blob = new Blob([response.data], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `segment_${segmentId}_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Check if chunking is required
+      if (response.data && response.data.requiresChunking) {
+        console.log('Large segment detected, redirecting to details page for chunked download');
+        // For large segments, redirect to the details page where chunking is handled
+        alert(`This segment has ${response.data.data.totalContacts.toLocaleString()} contacts and requires chunked download. Redirecting to segment details page.`);
+        navigate(`/segment-details/${segmentId}`);
+        return;
+      }
+      
+      // For small segments, direct download
+      if (typeof response.data === 'string' && response.data.includes(',')) {
+        const blob = new Blob([response.data], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `segment_${segmentId}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        console.error('Unexpected response format:', response.data);
+        alert('Export failed: Unexpected response format');
+      }
     } catch (error) {
       console.error('Error exporting segment:', error);
-      alert('Export failed. Please try again.');
+      if (error.response) {
+        alert(`Export failed: ${error.response.data.error || 'Server error'}`);
+      } else {
+        alert('Export failed. Please try again.');
+      }
     }
   };
 

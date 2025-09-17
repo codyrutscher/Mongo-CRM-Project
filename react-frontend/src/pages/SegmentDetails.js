@@ -61,7 +61,9 @@ const SegmentDetails = () => {
       // Check if chunking is required
       if (response.data && response.data.requiresChunking) {
         console.log('Large segment - chunking required');
+        console.log('Full response:', response.data);
         console.log('Chunk data:', response.data.data);
+        console.log('Chunks array:', response.data.data?.chunks);
         setExportChunks(response.data.data);
         setShowChunks(true);
       } else {
@@ -279,40 +281,49 @@ const SegmentDetails = () => {
                   This segment has {exportChunks.totalContacts.toLocaleString()} contacts. 
                   Download in {exportChunks.totalChunks} chunks of {exportChunks.chunkSize.toLocaleString()} contacts each.
                 </p>
-                <div className="mb-3">
-                  <Button 
-                    variant="success" 
-                    onClick={() => {
-                      exportChunks.chunks.forEach((chunk, index) => {
-                        setTimeout(() => downloadChunk(chunk), index * 1000); // Stagger downloads by 1 second
-                      });
-                    }}
-                  >
-                    <i className="fas fa-download"></i> Download All Chunks
-                  </Button>
-                </div>
+                {exportChunks.chunks && exportChunks.chunks.length > 0 && (
+                  <div className="mb-3">
+                    <Button 
+                      variant="success" 
+                      onClick={() => {
+                        exportChunks.chunks.forEach((chunk, index) => {
+                          setTimeout(() => downloadChunk(chunk), index * 1000); // Stagger downloads by 1 second
+                        });
+                      }}
+                    >
+                      <i className="fas fa-download"></i> Download All Chunks
+                    </Button>
+                  </div>
+                )}
                 <Row>
-                  {exportChunks.chunks.map((chunk) => (
-                    <Col md={4} key={chunk.chunkNumber} className="mb-3">
-                      <Card className="h-100">
-                        <Card.Body className="text-center">
-                          <h6>Chunk {chunk.chunkNumber}</h6>
-                          <p className="text-muted small">
-                            Records {chunk.startRecord.toLocaleString()} - {chunk.endRecord.toLocaleString()}
-                            <br />
-                            ({chunk.contactCount.toLocaleString()} contacts)
-                          </p>
-                          <Button 
-                            variant="primary" 
-                            size="sm"
-                            onClick={() => downloadChunk(chunk)}
-                          >
-                            <i className="fas fa-download"></i> Download
-                          </Button>
-                        </Card.Body>
-                      </Card>
+                  {exportChunks.chunks && exportChunks.chunks.length > 0 ? (
+                    exportChunks.chunks.map((chunk) => (
+                      <Col md={4} key={chunk.chunkNumber} className="mb-3">
+                        <Card className="h-100">
+                          <Card.Body className="text-center">
+                            <h6>Chunk {chunk.chunkNumber}</h6>
+                            <p className="text-muted small">
+                              Records {chunk.startRecord.toLocaleString()} - {chunk.endRecord.toLocaleString()}
+                              <br />
+                              ({chunk.contactCount.toLocaleString()} contacts)
+                            </p>
+                            <Button 
+                              variant="primary" 
+                              size="sm"
+                              onClick={() => downloadChunk(chunk)}
+                            >
+                              <i className="fas fa-download"></i> Download
+                            </Button>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))
+                  ) : (
+                    <Col>
+                      <p className="text-muted">No chunks available. Check console for debugging info.</p>
+                      <pre>{JSON.stringify(exportChunks, null, 2)}</pre>
                     </Col>
-                  ))}
+                  )}
                 </Row>
               </Card.Body>
             </Card>
