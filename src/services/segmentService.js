@@ -210,6 +210,9 @@ class SegmentService {
 
       // Handle filters safely - now using Mixed type
       const filters = segment.filters || {};
+      
+      logger.info(`getSegmentContacts: Processing segment ${segmentId} with filters:`, JSON.stringify(filters, null, 2));
+      logger.info(`getSegmentContacts: Options:`, JSON.stringify(options, null, 2));
 
       // Special handling for contact ID-based segments
       if (filters._id && filters._id.$in) {
@@ -245,7 +248,12 @@ class SegmentService {
         if (options.limit > 1000) {
           searchOptions.lean = true;
         }
-        return await searchService.advancedSearch(filters, searchOptions);
+        
+        logger.info(`getSegmentContacts: Using searchService.advancedSearch with options:`, searchOptions);
+        const result = await searchService.advancedSearch(filters, searchOptions);
+        logger.info(`getSegmentContacts: Retrieved ${result.contacts?.length || 0} contacts`);
+        
+        return result;
       }
     } catch (error) {
       logger.error('Error fetching segment contacts:', error);

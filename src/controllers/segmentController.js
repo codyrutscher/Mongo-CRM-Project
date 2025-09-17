@@ -259,9 +259,12 @@ class SegmentController {
       }
 
       // For large segments, offer chunked download
+      logger.info(`Checking if chunking needed: totalCount=${totalCount}, chunk=${chunk}`);
       if (totalCount > 10000 && !chunk) {
         const chunkSize = 10000;
         const totalChunks = Math.ceil(totalCount / chunkSize);
+        
+        logger.info(`Large segment detected: ${totalCount} contacts, offering ${totalChunks} chunks`);
         
         return res.json({
           success: true,
@@ -331,6 +334,8 @@ class SegmentController {
     let page = 1;
 
     try {
+      logger.info(`Starting stream export for ${totalCount} contacts in batches of ${BATCH_SIZE}`);
+      
       // Write CSV headers first
       const headers = [
         'First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title',
@@ -339,10 +344,14 @@ class SegmentController {
         'Compliance Notes', 'Tags', 'Created Date', 'Last Synced'
       ];
       
+      logger.info(`Writing CSV headers...`);
       res.write(headers.map(h => `"${h}"`).join(',') + '\n');
 
       // Process contacts in batches
+      logger.info(`Starting batch processing loop...`);
       while (processedCount < totalCount) {
+        logger.info(`Processing batch ${page}: getting contacts ${processedCount + 1} to ${processedCount + BATCH_SIZE}`);
+        
         const segmentResult = await segmentService.getSegmentContacts(segment._id, {
           page: page,
           limit: BATCH_SIZE,
@@ -350,8 +359,10 @@ class SegmentController {
         });
 
         const contacts = segmentResult.contacts || [];
+        logger.info(`Retrieved ${contacts.length} contacts for batch ${page}`);
         
         if (contacts.length === 0) {
+          logger.info(`No more contacts found, breaking loop at page ${page}`);
           break;
         }
 
