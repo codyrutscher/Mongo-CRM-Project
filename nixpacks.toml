@@ -9,8 +9,9 @@ cmds = [
 
 [phases.build]
 cmds = [
-  'cd react-frontend && npm run build'
+  'cd react-frontend && npm run build',
+  'ls -la react-frontend/build'
 ]
 
 [start]
-cmd = 'npm start'
+cmd = 'node src/index.js'

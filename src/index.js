@@ -13,6 +13,19 @@ const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// In production, verify React build exists
+if (process.env.NODE_ENV === 'production') {
+  const buildPath = path.resolve(__dirname, '../react-frontend/build');
+  const fs = require('fs');
+  
+  if (!fs.existsSync(buildPath)) {
+    logger.error(`React build not found at: ${buildPath}`);
+    logger.error('This may cause the app to fail. Build should have been created during deployment.');
+  } else {
+    logger.info(`✅ React build verified at: ${buildPath}`);
+  }
+}
+
 // Connect to MongoDB
 connectDB();
 
@@ -78,23 +91,41 @@ if (process.env.NODE_ENV === 'production') {
   const buildPath = path.resolve(__dirname, '../react-frontend/build');
   
   logger.info(`Serving React build from: ${buildPath}`);
-  logger.info(`Build directory exists: ${require('fs').existsSync(buildPath)}`);
   
-  // Serve static files with proper MIME types
-  app.use(express.static(buildPath, {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (path.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
+  // Check if build directory exists, if not, wait for it or create a fallback
+  const fs = require('fs');
+  if (fs.existsSync(buildPath)) {
+    logger.info(`Build directory exists: true`);
+    
+    // Serve static files with proper MIME types
+    app.use(express.static(buildPath, {
+      setHeaders: (res, path) => {
+        if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        } else if (path.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        }
       }
-    }
-  }));
-  
-  // Handle React routing - serve index.html for non-API routes
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
-  });
+    }));
+    
+    // Handle React routing - serve index.html for non-API routes
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(buildPath, 'index.html'));
+    });
+  } else {
+    logger.warn(`Build directory not found: ${buildPath}`);
+    logger.warn('Serving API only - React build may still be in progress');
+    
+    // Fallback for when build doesn't exist yet
+    app.get('*', (req, res) => {
+      res.json({ 
+        success: false, 
+        message: 'React build not found - build may be in progress',
+        buildPath: buildPath,
+        timestamp: new Date().toISOString()
+      });
+    });
+  }
 } else {
   // Development - just serve API
   app.get('/', (req, res) => {
