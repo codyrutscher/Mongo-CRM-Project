@@ -3,6 +3,7 @@ const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 const logger = require('../utils/logger');
+const fieldMappingService = require('./fieldMappingService');
 
 class FileUploadService {
   constructor() {
@@ -179,74 +180,34 @@ class FileUploadService {
   }
 
   transformRowData(row, source) {
-    const contact = {};
+    try {
+      // Convert row headers to array for mapping
+      const headers = Object.keys(row);
+      const values = Object.values(row);
+      
+      // Create header mapping using field mapping service
+      const headerMapping = fieldMappingService.mapCSVHeaders(headers);
+      
+      // Map row to NAICS standard contact
+      const contact = fieldMappingService.mapCSVRowToContact(values, headerMapping, source);
+      
+      // Validate required fields
+      if (!contact.firstName && !contact.lastName && !contact.email && !contact.company) {
+        logger.debug('Skipping row - no essential data found');
+        return null;
+      }
 
-    // Extract data based on common column names
-    Object.keys(row).forEach(key => {
-      const value = String(row[key]).trim();
-      const normalizedKey = key.toLowerCase().trim();
+      // Set system fields
+      contact.lifecycleStage = 'lead';
+      contact.status = 'active';
+      contact.dncStatus = 'callable';
+      contact.lastSyncedAt = new Date();
 
-      switch (normalizedKey) {
-        case 'first name':
-        case 'firstname':
-        case 'fname':
-        case 'first_name':
-        case 'given name':
-        case 'forename':
-          contact.firstName = value;
-          break;
-        case 'last name':
-        case 'lastname':
-        case 'lname':
-        case 'last_name':
-        case 'surname':
-        case 'family name':
-          contact.lastName = value;
-          break;
-        case 'email':
-        case 'email address':
-        case 'email_address':
-        case 'e-mail':
-        case 'mail':
-        case 'business_email':
-        case 'business email':
-        case 'work_email':
-        case 'work email':
-        case 'primary_email':
-        case 'primary email':
-          // Handle multiple emails - take the first valid one
-          if (value && value.includes(',')) {
-            const emails = value.split(',').map(e => e.trim()).filter(e => e && this.isValidEmail(e));
-            contact.email = emails.length > 0 ? emails[0].toLowerCase() : '';
-          } else {
-            contact.email = value.toLowerCase();
-          }
-          break;
-        case 'phone':
-        case 'phone number':
-        case 'mobile':
-        case 'phone_number':
-        case 'business_phone':
-        case 'business phone':
-        case 'work_phone':
-        case 'work phone':
-        case 'company_phone':
-        case 'company phone':
-        case 'primary_phone':
-        case 'primary phone':
-          // Handle multiple phone numbers - take the first one
-          if (value && value.includes(',')) {
-            const phones = value.split(',').map(p => p.trim()).filter(p => p);
-            contact.phone = phones.length > 0 ? phones[0] : '';
-          } else {
-            contact.phone = value;
-          }
-          break;
-        case 'company':
-        case 'organization':
-        case 'company name':
-        case 'company_name':
-        case 'business_name':
+      return contact;
+    } catch (error) {
+      logger.error('Error transforming row data:', error);
+      return null;
+    }
         case 'business name':
           contact.company = value;
           break;

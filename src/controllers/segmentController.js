@@ -4,6 +4,7 @@ const segmentService = require('../services/segmentService');
 const exportService = require('../services/exportService');
 const hubspotService = require('../services/hubspotService');
 const searchService = require('../services/searchService');
+const fieldMappingService = require('../services/fieldMappingService');
 const logger = require('../utils/logger');
 
 // Helper function for exporting segment chunks
@@ -14,13 +15,8 @@ async function exportSegmentChunk(segment, res, skip, limit, chunkNum) {
     logger.info(`Segment:`, segment.name);
     logger.info(`Filters:`, JSON.stringify(segment.filters, null, 2));
 
-    // CSV headers
-    const headers = [
-      'First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Job Title',
-      'Street Address', 'City', 'State', 'Zip Code', 'Country',
-      'Source', 'Lifecycle Stage', 'Status', 'DNC Status', 'DNC Date', 'DNC Reason',
-      'Compliance Notes', 'Tags', 'Created Date', 'Last Synced'
-    ];
+    // NAICS Standard CSV headers
+    const headers = fieldMappingService.getExportHeaders();
     
     // Write headers
     res.write(headers.map(h => `"${h}"`).join(',') + '\n');
@@ -68,29 +64,8 @@ async function exportSegmentChunk(segment, res, skip, limit, chunkNum) {
         return stringValue;
       };
 
-      const row = [
-        escapeCSV(contact.firstName || ''),
-        escapeCSV(contact.lastName || ''),
-        escapeCSV(displayEmail),
-        escapeCSV(contact.phone || ''),
-        escapeCSV(contact.company || ''),
-        escapeCSV(contact.jobTitle || ''),
-        escapeCSV(contact.address?.street || ''),
-        escapeCSV(contact.address?.city || ''),
-        escapeCSV(contact.address?.state || ''),
-        escapeCSV(contact.address?.zipCode || ''),
-        escapeCSV(contact.address?.country || ''),
-        escapeCSV(contact.source || ''),
-        escapeCSV(contact.lifecycleStage || ''),
-        escapeCSV(contact.status || ''),
-        escapeCSV(contact.dncStatus || 'callable'),
-        escapeCSV(contact.dncDate ? new Date(contact.dncDate).toISOString().split('T')[0] : ''),
-        escapeCSV(contact.dncReason || ''),
-        escapeCSV(contact.complianceNotes || ''),
-        escapeCSV(Array.isArray(contact.tags) ? contact.tags.join('; ') : ''),
-        escapeCSV(contact.createdAt ? new Date(contact.createdAt).toISOString().split('T')[0] : ''),
-        escapeCSV(contact.lastSyncedAt ? new Date(contact.lastSyncedAt).toISOString().split('T')[0] : '')
-      ];
+      // Use NAICS standard row format
+      const row = fieldMappingService.contactToCSVRow(contact).map(value => escapeCSV(value));
 
       res.write(row.join(',') + '\n');
     }

@@ -10,6 +10,7 @@
     "build": "cd react-frontend && npm install && npm run build",
     "postinstall": "cd react-frontend && npm install",
     "create-admin": "node scripts/create-admin-user.js",
+    "migrate-naics": "node scripts/migrate-to-naics.js",
     "postinstall": "npm run build"
   },
   "keywords": ["crm", "hubspot", "google-sheets", "mongodb", "data-sync"],
