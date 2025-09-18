@@ -110,24 +110,33 @@ class FieldMappingService {
       'last_contact': 'lastCampaignDate'
     };
 
-    // HubSpot Field Mappings
+    // HubSpot Field Mappings (based on hubspotprospere.csv)
     this.hubspotMappings = {
+      // Personal Information
       'firstname': 'firstName',
       'lastname': 'lastName',
       'jobtitle': 'jobTitle',
+      'linkedin_profile_url': 'contactLinkedInProfile',
       'email': 'email',
       'phone': 'phone',
+      
+      // Company Information
       'company': 'company',
       'website': 'companyWebsiteURL',
-      'industry': 'industry',
-      'num_employees': 'numberOfEmployees',
-      'founded_year': 'yearCompanyEstablished',
+      'business_category___industry_of_interest': 'industry',
+      'naics_code': 'naicsCode',
+      'numemployees': 'numberOfEmployees',
+      'year_established': 'yearCompanyEstablished',
+      'office_phone': 'companyPhoneNumber',
       'address': 'companyStreetAddress',
       'city': 'companyCity',
       'state': 'companyState',
       'zip': 'companyZipCode',
-      'hs_lead_status': 'leadSource',
-      'lifecyclestage': 'campaignCategory'
+      
+      // Lead Information
+      'lead_source': 'leadSource',
+      'contact_type': 'campaignCategory',
+      'hs_email_last_send_date': 'lastCampaignDate'
     };
 
     // Google Sheets Field Mappings (C17 Leads)
@@ -245,7 +254,7 @@ class FieldMappingService {
     return contact;
   }
 
-  // Generate NAICS standard CSV export headers
+  // Generate NAICS standard CSV export headers (matching template exactly)
   getExportHeaders() {
     return [
       'First Name',
@@ -259,7 +268,7 @@ class FieldMappingService {
       'Industry',
       'NAICS Code',
       'Number of Employees',
-      'Year Company Established',
+      'Year Company Established ',
       'Company Phone Number',
       'Company Street Address',
       'Company City',

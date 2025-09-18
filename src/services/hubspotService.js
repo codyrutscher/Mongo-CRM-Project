@@ -15,21 +15,23 @@ class HubSpotService {
     try {
       const params = {
         properties: [
-          // Basic contact info
-          'firstname', 'lastname', 'email', 'phone', 'company', 'jobtitle',
-          'address', 'city', 'state', 'zip', 'country', 'lifecyclestage',
-          'createdate', 'lastmodifieddate',
+          // NAICS Standard Fields (matching hubspotprospere.csv)
+          'firstname', 'lastname', 'jobtitle', 'linkedin_profile_url', 'email', 'phone',
+          'company', 'website', 'business_category___industry_of_interest', 'naics_code',
+          'numemployees', 'year_established', 'office_phone', 'address', 'city', 'state', 'zip',
+          'lead_source', 'contact_type', 'hs_email_last_send_date',
           
-          // Business and industry fields
-          'business_category___industry_of_interest', 'annualrevenue', 'industry',
-          'account_type', 'contact_type', 'broker', 'lead_source',
+          // System fields
+          'createdate', 'lastmodifieddate', 'lifecyclestage',
+          
+          // Additional business fields
+          'annualrevenue', 'industry', 'account_type', 'broker',
           'buyer_status', 'seller_status', 'interested_in',
-          'website', 'linkedin_profile', 'year_established',
           'currently_own_a_business', 'legal_organization_type',
           'primary_investor_type', 'buying_role', 'motivation_for_buying',
           
           // DNC and compliance
-          'do_not_call', 'dnc_flag', 'optout'
+          'do_not_call', 'dnc_flag', 'optout', 'compliance_notes'
         ].join(',')
       };
 
@@ -349,64 +351,49 @@ class HubSpotService {
   }
 
   transformContactData(hubspotContact) {
-    const props = hubspotContact.properties;
+    const fieldMappingService = require('./fieldMappingService');
+    const mappingService = new fieldMappingService();
     
-    // Extract DNC information from HubSpot properties
+    // Use the field mapping service to transform to NAICS standard
+    const contact = mappingService.mapHubSpotToContact(hubspotContact);
+    
+    // Add HubSpot-specific DNC and compliance handling
+    const props = hubspotContact.properties;
     const dncStatus = this.mapDncStatus(props);
     
-    return {
-      firstName: props.firstname?.trim() || '',
-      lastName: props.lastname?.trim() || '',
-      email: props.email?.trim()?.toLowerCase() || '',
-      phone: props.phone?.trim() || '',
-      company: props.company?.trim() || '',
-      jobTitle: props.jobtitle?.trim() || '',
-      address: {
-        street: props.address || '',
-        city: props.city || '',
-        state: props.state || '',
-        zipCode: props.zip || '',
-        country: props.country || ''
-      },
-      source: 'hubspot',
-      sourceId: hubspotContact.id,
-      lifecycleStage: this.mapLifecycleStage(props.lifecyclestage),
-      dncStatus: dncStatus.status,
-      dncDate: dncStatus.date,
-      dncReason: dncStatus.reason,
-      complianceNotes: props.compliance_notes || '',
-      customFields: {
-        hubspotId: hubspotContact.id,
-        createDate: props.createdate,
-        lastModifiedDate: props.lastmodifieddate,
-        
-        // Business fields
-        businessCategory: props.business_category___industry_of_interest || '',
-        industry: props.industry || '',
-        annualRevenue: props.annualrevenue || '',
-        accountType: props.account_type || '',
-        contactType: props.contact_type || '',
-        broker: props.broker || '',
-        leadSource: props.lead_source || '',
-        buyerStatus: props.buyer_status || '',
-        sellerStatus: props.seller_status || '',
-        interestedIn: props.interested_in || '',
-        website: props.website || '',
-        linkedinProfile: props.linkedin_profile || '',
-        yearEstablished: props.year_established || '',
-        currentlyOwnBusiness: props.currently_own_a_business || '',
-        legalOrgType: props.legal_organization_type || '',
-        primaryInvestorType: props.primary_investor_type || '',
-        buyingRole: props.buying_role || '',
-        motivationForBuying: props.motivation_for_buying || '',
-        
-        // DNC fields
-        hubspotDncFlag: props.dnc_flag || '',
-        hubspotDoNotCall: props.do_not_call || '',
-        hubspotMarketingOptOut: props.optout || ''
-      },
-      lastSyncedAt: new Date()
-    };
+    contact.dncStatus = dncStatus.status;
+    contact.dncDate = dncStatus.date;
+    contact.dncReason = dncStatus.reason;
+    contact.complianceNotes = props.compliance_notes || '';
+    
+    // Add HubSpot-specific metadata to customFields
+    contact.customFields = contact.customFields || {};
+    contact.customFields.hubspotId = hubspotContact.id;
+    contact.customFields.createDate = props.createdate;
+    contact.customFields.lastModifiedDate = props.lastmodifieddate;
+    contact.customFields.lifecycleStage = props.lifecyclestage;
+    
+    // Additional HubSpot fields not in NAICS standard
+    contact.customFields.annualRevenue = props.annualrevenue || '';
+    contact.customFields.accountType = props.account_type || '';
+    contact.customFields.broker = props.broker || '';
+    contact.customFields.buyerStatus = props.buyer_status || '';
+    contact.customFields.sellerStatus = props.seller_status || '';
+    contact.customFields.interestedIn = props.interested_in || '';
+    contact.customFields.currentlyOwnBusiness = props.currently_own_a_business || '';
+    contact.customFields.legalOrgType = props.legal_organization_type || '';
+    contact.customFields.primaryInvestorType = props.primary_investor_type || '';
+    contact.customFields.buyingRole = props.buying_role || '';
+    contact.customFields.motivationForBuying = props.motivation_for_buying || '';
+    
+    // DNC flags from HubSpot
+    contact.customFields.hubspotDncFlag = props.dnc_flag || '';
+    contact.customFields.hubspotDoNotCall = props.do_not_call || '';
+    contact.customFields.hubspotMarketingOptOut = props.optout || '';
+    
+    contact.lastSyncedAt = new Date();
+    
+    return contact;
   }
 
   mapDncStatus(props) {

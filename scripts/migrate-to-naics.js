@@ -1,7 +1,5 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Contact = require('../src/models/Contact');
-const ContactNAICS = require('../src/models/ContactNAICS');
 
 async function migrateToNAICS() {
   try {
@@ -11,8 +9,9 @@ async function migrateToNAICS() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connected to MongoDB');
 
-    // Get current contact count
-    const currentCount = await Contact.countDocuments();
+    // Get current contact count using direct MongoDB query
+    const contactsCollection = mongoose.connection.db.collection('contacts');
+    const currentCount = await contactsCollection.countDocuments();
     console.log(`📊 Current contacts in database: ${currentCount}`);
 
     if (currentCount === 0) {
@@ -25,9 +24,9 @@ async function migrateToNAICS() {
     console.log('📋 All data sources (HubSpot, Google Sheets, CSV) will be re-synced with NAICS fields');
     console.log('🔄 This process is irreversible');
     
-    // In a real scenario, you might want to backup first
+    // Clear existing contacts using direct MongoDB operations
     console.log('\n🗑️  Clearing existing contacts...');
-    const deleteResult = await Contact.deleteMany({});
+    const deleteResult = await contactsCollection.deleteMany({});
     console.log(`✅ Deleted ${deleteResult.deletedCount} contacts`);
 
     // Clear any existing indexes and recreate with NAICS structure
