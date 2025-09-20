@@ -26,14 +26,14 @@ const ContactModal = ({ show, contact, onHide }) => {
             </Table>
           </div>
           <div className="col-md-6">
-            <h6><i className="fas fa-map-marker-alt"></i> Address</h6>
+            <h6><i className="fas fa-map-marker-alt"></i> Company Address</h6>
             <Table size="sm">
               <tbody>
-                <tr><td><strong>Street:</strong></td><td>{contact.address?.street || 'N/A'}</td></tr>
-                <tr><td><strong>City:</strong></td><td>{contact.address?.city || 'N/A'}</td></tr>
-                <tr><td><strong>State:</strong></td><td>{contact.address?.state || 'N/A'}</td></tr>
-                <tr><td><strong>Zip Code:</strong></td><td>{contact.address?.zipCode || 'N/A'}</td></tr>
-                <tr><td><strong>Country:</strong></td><td>{contact.address?.country || 'N/A'}</td></tr>
+                <tr><td><strong>Street Address:</strong></td><td>{contact.companyStreetAddress || 'N/A'}</td></tr>
+                <tr><td><strong>City:</strong></td><td>{contact.companyCity || 'N/A'}</td></tr>
+                <tr><td><strong>State:</strong></td><td>{contact.companyState || 'N/A'}</td></tr>
+                <tr><td><strong>Zip Code:</strong></td><td>{contact.companyZipCode || 'N/A'}</td></tr>
+                <tr><td><strong>Website URL:</strong></td><td>{contact.companyWebsiteURL || 'N/A'}</td></tr>
               </tbody>
             </Table>
           </div>
@@ -62,26 +62,17 @@ const ContactModal = ({ show, contact, onHide }) => {
             </Table>
           </div>
           <div className="col-md-6">
-            <h6><i className="fas fa-tags"></i> Tags & Custom Fields</h6>
-            <div className="mb-2">
-              <strong>Tags:</strong>
-              <div className="mt-1">
-                {contact.tags && contact.tags.length > 0 ? 
-                  contact.tags.map(tag => <Badge key={tag} bg="secondary" className="me-1">{tag}</Badge>) :
-                  <span className="text-muted">No tags</span>
-                }
-              </div>
-            </div>
-            {contact.customFields && Object.keys(contact.customFields).length > 0 && (
-              <div className="mt-3">
-                <strong>Custom Fields:</strong>
-                <div className="mt-2">
-                  {Object.entries(contact.customFields).map(([key, value]) => (
-                    <div key={key}><small><strong>{key}:</strong> {value}</small></div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <h6><i className="fas fa-building"></i> Business Information</h6>
+            <Table size="sm">
+              <tbody>
+                <tr><td><strong>Industry:</strong></td><td>{contact.industry || 'N/A'}</td></tr>
+                <tr><td><strong>NAICS Code:</strong></td><td>{contact.naicsCode || 'N/A'}</td></tr>
+                <tr><td><strong>Employees:</strong></td><td>{contact.numberOfEmployees || 'N/A'}</td></tr>
+                <tr><td><strong>Year Established:</strong></td><td>{contact.yearCompanyEstablished || 'N/A'}</td></tr>
+                <tr><td><strong>Lead Source:</strong></td><td>{contact.leadSource || 'N/A'}</td></tr>
+                <tr><td><strong>Campaign Category:</strong></td><td>{contact.campaignCategory || 'N/A'}</td></tr>
+              </tbody>
+            </Table>
           </div>
         </div>
         

@@ -38,7 +38,9 @@ const ContactCard = ({ contact, isSelected, onSelect, onViewDetails }) => {
             <small className="text-muted">
               <i className="fas fa-envelope"></i> {contact.email || 'No email'}<br/>
               <i className="fas fa-phone"></i> {contact.phone || 'No phone'}<br/>
-              <i className="fas fa-building"></i> {contact.company || 'No company'}
+              <i className="fas fa-building"></i> {contact.company || 'No company'}<br/>
+              {contact.industry && <><i className="fas fa-industry"></i> {contact.industry}<br/></>}
+              {contact.companyCity && contact.companyState && <><i className="fas fa-map-marker-alt"></i> {contact.companyCity}, {contact.companyState}</>}
             </small>
           </Card.Text>
           

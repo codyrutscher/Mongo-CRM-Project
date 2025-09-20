@@ -3,28 +3,32 @@ import { Card, Row, Col, Form, Button, Badge, Collapse } from 'react-bootstrap';
 
 const SheetsFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibility }) => {
   const [filters, setFilters] = useState({
-    // Basic Info
+    // Basic Info (NAICS Standard)
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
+    company: '',
     jobTitle: '',
     
-    // Address Fields (from custom fields)
-    'customFields.Final_City': '',
-    'customFields.Final_State': '',
-    'customFields.Location': '',
+    // Company Address Fields (NAICS Standard)
+    companyStreetAddress: '',
+    companyCity: '',
+    companyState: '',
+    companyZipCode: '',
     
-    // Business Information (from custom fields)
-    'customFields.Company Name': '',
-    'customFields.Website': '',
-    'customFields.Final_Specialty_Business': '',
-    'customFields.Final_Business_Type': '',
-    'customFields.Final_Year_Founded': '',
+    // NAICS Business Fields
+    campaignCategory: '', // Contact Type in NAICS
+    leadSource: '', // Direct field in NAICS
+    industry: '', // Business Category in NAICS
+    naicsCode: '',
+    numberOfEmployees: '',
+    companyWebsiteURL: '',
+    yearCompanyEstablished: '',
     
     // Google Sheets specific fields
-    'customFields.sheetName': '',
-    'customFields.Status': ''
+    sheetName: '',
+    status: ''
   });
 
   const [activeFilterCount, setActiveFilterCount] = useState(0);
@@ -54,17 +58,21 @@ const SheetsFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisi
       lastName: '',
       email: '',
       phone: '',
+      company: '',
       jobTitle: '',
-      'customFields.Final_City': '',
-      'customFields.Final_State': '',
-      'customFields.Location': '',
-      'customFields.Company Name': '',
-      'customFields.Website': '',
-      'customFields.Final_Specialty_Business': '',
-      'customFields.Final_Business_Type': '',
-      'customFields.Final_Year_Founded': '',
-      'customFields.sheetName': '',
-      'customFields.Status': ''
+      companyStreetAddress: '',
+      companyCity: '',
+      companyState: '',
+      companyZipCode: '',
+      campaignCategory: '',
+      leadSource: '',
+      industry: '',
+      naicsCode: '',
+      numberOfEmployees: '',
+      companyWebsiteURL: '',
+      yearCompanyEstablished: '',
+      sheetName: '',
+      status: ''
     });
     setActiveFilterCount(0);
     onClearFilters();
@@ -168,19 +176,19 @@ const SheetsFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisi
                 <Form.Label>Company Name</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Company Name']}
-                  onChange={(e) => handleFilterChange('customFields.Company Name', e.target.value)}
+                  value={filters.company}
+                  onChange={(e) => handleFilterChange('company', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Website</Form.Label>
+                <Form.Label>Company Website URL</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Website']}
-                  onChange={(e) => handleFilterChange('customFields.Website', e.target.value)}
+                  value={filters.companyWebsiteURL}
+                  onChange={(e) => handleFilterChange('companyWebsiteURL', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
@@ -193,75 +201,83 @@ const SheetsFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisi
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>City</Form.Label>
+                <Form.Label>Company City</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Final_City']}
-                  onChange={(e) => handleFilterChange('customFields.Final_City', e.target.value)}
+                  value={filters.companyCity}
+                  onChange={(e) => handleFilterChange('companyCity', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>State</Form.Label>
+                <Form.Label>Company State</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Final_State']}
-                  onChange={(e) => handleFilterChange('customFields.Final_State', e.target.value)}
+                  value={filters.companyState}
+                  onChange={(e) => handleFilterChange('companyState', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Country</Form.Label>
-                <Form.Select
-                  value={filters['customFields.Location']}
-                  onChange={(e) => handleFilterChange('customFields.Location', e.target.value)}
-                >
-                  <option value="">All Countries</option>
-                  <option value="United States">🇺🇸 United States</option>
-                  <option value="Canada">🇨🇦 Canada</option>
-                  <option value="United Kingdom">🇬🇧 United Kingdom</option>
-                </Form.Select>
+                <Form.Label>Company Zip Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={filters.companyZipCode}
+                  onChange={(e) => handleFilterChange('companyZipCode', e.target.value)}
+                  placeholder="Contains..."
+                />
               </Form.Group>
             </Col>
           </Row>
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Business Information</h6>
+              <h6 className="text-muted mb-3 mt-3">Business Information (NAICS Standard)</h6>
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Business Specialty</Form.Label>
+                <Form.Label>Industry</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Final_Specialty_Business']}
-                  onChange={(e) => handleFilterChange('customFields.Final_Specialty_Business', e.target.value)}
+                  value={filters.industry}
+                  onChange={(e) => handleFilterChange('industry', e.target.value)}
                   placeholder="e.g., software, consulting"
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Business Type</Form.Label>
+                <Form.Label>NAICS Code</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Final_Business_Type']}
-                  onChange={(e) => handleFilterChange('customFields.Final_Business_Type', e.target.value)}
-                  placeholder="e.g., SaaS, consulting"
+                  value={filters.naicsCode}
+                  onChange={(e) => handleFilterChange('naicsCode', e.target.value)}
+                  placeholder="e.g., 236220"
                 />
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Year Founded</Form.Label>
+                <Form.Label>Number of Employees</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.Final_Year_Founded']}
-                  onChange={(e) => handleFilterChange('customFields.Final_Year_Founded', e.target.value)}
+                  value={filters.numberOfEmployees}
+                  onChange={(e) => handleFilterChange('numberOfEmployees', e.target.value)}
+                  placeholder="e.g., 1-10, 50+"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Year Company Established</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={filters.yearCompanyEstablished}
+                  onChange={(e) => handleFilterChange('yearCompanyEstablished', e.target.value)}
                   placeholder="e.g., 2020"
                 />
               </Form.Group>
@@ -270,14 +286,45 @@ const SheetsFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisi
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Sheet Information</h6>
+              <h6 className="text-muted mb-3 mt-3">Lead & Campaign Information</h6>
             </Col>
-            <Col md={6}>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Lead Source</Form.Label>
+                <Form.Select
+                  value={filters.leadSource}
+                  onChange={(e) => handleFilterChange('leadSource', e.target.value)}
+                >
+                  <option value="">All Sources</option>
+                  <option value="Google Sheets">📊 Google Sheets</option>
+                  <option value="Website">🌐 Website</option>
+                  <option value="Referral">🤝 Referral</option>
+                  <option value="Cold Call">❄️ Cold Call</option>
+                  <option value="LinkedIn">💼 LinkedIn</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Campaign Category</Form.Label>
+                <Form.Select
+                  value={filters.campaignCategory}
+                  onChange={(e) => handleFilterChange('campaignCategory', e.target.value)}
+                >
+                  <option value="">All Types</option>
+                  <option value="Seller">💼 Seller</option>
+                  <option value="Buyer">🛒 Buyer</option>
+                  <option value="Lead">📈 Lead</option>
+                  <option value="Prospect">👁️ Prospect</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
               <Form.Group className="mb-3">
                 <Form.Label>Sheet Name</Form.Label>
                 <Form.Select
-                  value={filters['customFields.sheetName']}
-                  onChange={(e) => handleFilterChange('customFields.sheetName', e.target.value)}
+                  value={filters.sheetName}
+                  onChange={(e) => handleFilterChange('sheetName', e.target.value)}
                 >
                   <option value="">All Sheets</option>
                   <option value="Technology Cleaning">💻 Technology Cleaning</option>
@@ -291,12 +338,12 @@ const SheetsFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisi
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={6}>
+            <Col md={3}>
               <Form.Group className="mb-3">
                 <Form.Label>Status</Form.Label>
                 <Form.Select
-                  value={filters['customFields.Status']}
-                  onChange={(e) => handleFilterChange('customFields.Status', e.target.value)}
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
                 >
                   <option value="">All Statuses</option>
                   <option value="Scheduled">📅 Scheduled</option>

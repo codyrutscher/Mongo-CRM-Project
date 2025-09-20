@@ -3,7 +3,7 @@ import { Card, Row, Col, Form, Button, Badge, Collapse } from 'react-bootstrap';
 
 const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibility }) => {
   const [filters, setFilters] = useState({
-    // Basic Info
+    // Basic Info (NAICS Standard)
     firstName: '',
     lastName: '',
     email: '',
@@ -11,20 +11,20 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
     company: '',
     jobTitle: '',
     
-    // Address Fields
-    'address.street': '',
-    'address.city': '',
-    'address.state': '',
-    'address.zipCode': '',
+    // Company Address Fields (NAICS Standard)
+    companyStreetAddress: '',
+    companyCity: '',
+    companyState: '',
+    companyZipCode: '',
     
-    // CSV-specific fields
-    'customFields.contactType': '',
-    'customFields.leadSource': '',
-    'customFields.businessCategory': '',
-    'customFields.sicCode': '',
-    'customFields.numberOfEmployees': '',
-    'customFields.websiteUrl': '',
-    'customFields.yearEstablished': ''
+    // NAICS Business Fields
+    campaignCategory: '', // Contact Type in NAICS
+    leadSource: '', // Direct field in NAICS
+    industry: '', // Business Category in NAICS
+    naicsCode: '',
+    numberOfEmployees: '',
+    companyWebsiteURL: '',
+    yearCompanyEstablished: ''
   });
 
   const [activeFilterCount, setActiveFilterCount] = useState(0);
@@ -56,17 +56,17 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
       phone: '',
       company: '',
       jobTitle: '',
-      'address.street': '',
-      'address.city': '',
-      'address.state': '',
-      'address.zipCode': '',
-      'customFields.contactType': '',
-      'customFields.leadSource': '',
-      'customFields.businessCategory': '',
-      'customFields.sicCode': '',
-      'customFields.numberOfEmployees': '',
-      'customFields.websiteUrl': '',
-      'customFields.yearEstablished': ''
+      companyStreetAddress: '',
+      companyCity: '',
+      companyState: '',
+      companyZipCode: '',
+      campaignCategory: '',
+      leadSource: '',
+      industry: '',
+      naicsCode: '',
+      numberOfEmployees: '',
+      companyWebsiteURL: '',
+      yearCompanyEstablished: ''
     });
     setActiveFilterCount(0);
     onClearFilters();
@@ -180,47 +180,58 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Address Information</h6>
+              <h6 className="text-muted mb-3 mt-3">Company Address Information</h6>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>City</Form.Label>
+                <Form.Label>Company City</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['address.city']}
-                  onChange={(e) => handleFilterChange('address.city', e.target.value)}
+                  value={filters.companyCity}
+                  onChange={(e) => handleFilterChange('companyCity', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>State</Form.Label>
+                <Form.Label>Company State</Form.Label>
                 <Form.Select
-                  value={filters['address.state']}
-                  onChange={(e) => handleFilterChange('address.state', e.target.value)}
+                  value={filters.companyState}
+                  onChange={(e) => handleFilterChange('companyState', e.target.value)}
                 >
                   <option value="">All States</option>
-                  <option value="Nevada">Nevada</option>
-                  <option value="California">California</option>
-                  <option value="Texas">Texas</option>
-                  <option value="Florida">Florida</option>
-                  <option value="New York">New York</option>
-                  <option value="Arizona">Arizona</option>
-                  <option value="Colorado">Colorado</option>
-                  <option value="Utah">Utah</option>
-                  <option value="Washington">Washington</option>
-                  <option value="Oregon">Oregon</option>
+                  <option value="NV">Nevada</option>
+                  <option value="CA">California</option>
+                  <option value="TX">Texas</option>
+                  <option value="FL">Florida</option>
+                  <option value="NY">New York</option>
+                  <option value="AZ">Arizona</option>
+                  <option value="CO">Colorado</option>
+                  <option value="UT">Utah</option>
+                  <option value="WA">Washington</option>
+                  <option value="OR">Oregon</option>
                 </Form.Select>
               </Form.Group>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Zip Code</Form.Label>
+                <Form.Label>Company Zip Code</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['address.zipCode']}
-                  onChange={(e) => handleFilterChange('address.zipCode', e.target.value)}
+                  value={filters.companyZipCode}
+                  onChange={(e) => handleFilterChange('companyZipCode', e.target.value)}
+                  placeholder="Contains..."
+                />
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Company Street Address</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={filters.companyStreetAddress}
+                  onChange={(e) => handleFilterChange('companyStreetAddress', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
@@ -229,14 +240,14 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Business Information</h6>
+              <h6 className="text-muted mb-3 mt-3">Business Information (NAICS Standard)</h6>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Contact Type</Form.Label>
+                <Form.Label>Campaign Category (Contact Type)</Form.Label>
                 <Form.Select
-                  value={filters['customFields.contactType']}
-                  onChange={(e) => handleFilterChange('customFields.contactType', e.target.value)}
+                  value={filters.campaignCategory}
+                  onChange={(e) => handleFilterChange('campaignCategory', e.target.value)}
                 >
                   <option value="">All Types</option>
                   <option value="Seller">💼 Seller</option>
@@ -250,8 +261,8 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
               <Form.Group className="mb-3">
                 <Form.Label>Lead Source</Form.Label>
                 <Form.Select
-                  value={filters['customFields.leadSource']}
-                  onChange={(e) => handleFilterChange('customFields.leadSource', e.target.value)}
+                  value={filters.leadSource}
+                  onChange={(e) => handleFilterChange('leadSource', e.target.value)}
                 >
                   <option value="">All Sources</option>
                   <option value="ZoomInfo">🎯 ZoomInfo</option>
@@ -264,11 +275,11 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Business Category</Form.Label>
+                <Form.Label>Industry</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.businessCategory']}
-                  onChange={(e) => handleFilterChange('customFields.businessCategory', e.target.value)}
+                  value={filters.industry}
+                  onChange={(e) => handleFilterChange('industry', e.target.value)}
                   placeholder="e.g., Software, Retail"
                 />
               </Form.Group>
@@ -278,8 +289,8 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
                 <Form.Label>Number of Employees</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.numberOfEmployees']}
-                  onChange={(e) => handleFilterChange('customFields.numberOfEmployees', e.target.value)}
+                  value={filters.numberOfEmployees}
+                  onChange={(e) => handleFilterChange('numberOfEmployees', e.target.value)}
                   placeholder="e.g., 1-10, 50+"
                 />
               </Form.Group>
@@ -288,38 +299,37 @@ const CSVFilters = ({ onFilterChange, onClearFilters, isVisible, onToggleVisibil
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Industry Codes & Details</h6>
+              <h6 className="text-muted mb-3 mt-3">NAICS & Company Details</h6>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>SIC Code</Form.Label>
+                <Form.Label>NAICS Code</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.sicCode']}
-                  onChange={(e) => handleFilterChange('customFields.sicCode', e.target.value)}
-                  placeholder="e.g., 7372"
+                  value={filters.naicsCode}
+                  onChange={(e) => handleFilterChange('naicsCode', e.target.value)}
+                  placeholder="e.g., 236220"
                 />
               </Form.Group>
             </Col>
-
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Website URL</Form.Label>
+                <Form.Label>Company Website URL</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.websiteUrl']}
-                  onChange={(e) => handleFilterChange('customFields.websiteUrl', e.target.value)}
+                  value={filters.companyWebsiteURL}
+                  onChange={(e) => handleFilterChange('companyWebsiteURL', e.target.value)}
                   placeholder="Contains..."
                 />
               </Form.Group>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Year Established</Form.Label>
+                <Form.Label>Year Company Established</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters['customFields.yearEstablished']}
-                  onChange={(e) => handleFilterChange('customFields.yearEstablished', e.target.value)}
+                  value={filters.yearCompanyEstablished}
+                  onChange={(e) => handleFilterChange('yearCompanyEstablished', e.target.value)}
                   placeholder="e.g., 2020"
                 />
               </Form.Group>
