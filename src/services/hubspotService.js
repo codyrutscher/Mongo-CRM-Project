@@ -351,8 +351,7 @@ class HubSpotService {
   }
 
   transformContactData(hubspotContact) {
-    const fieldMappingService = require('./fieldMappingService');
-    const mappingService = new fieldMappingService();
+    const mappingService = require('./fieldMappingService');
     
     // Use the field mapping service to transform to NAICS standard
     const contact = mappingService.mapHubSpotToContact(hubspotContact);

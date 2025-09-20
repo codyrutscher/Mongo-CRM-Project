@@ -8,7 +8,7 @@ const AdvancedFilters = ({
   onToggleVisibility,
 }) => {
   const [filters, setFilters] = useState({
-    // Basic Info
+    // Basic Info (NAICS Standard)
     firstName: "",
     lastName: "",
     email: "",
@@ -16,21 +16,22 @@ const AdvancedFilters = ({
     company: "",
     jobTitle: "",
 
-    // Address Fields
-    "address.street": "",
-    "address.city": "",
-    "address.state": "",
-    "address.zipCode": "",
-    "address.country": "",
+    // Company Address Fields (NAICS Standard)
+    companyStreetAddress: "",
+    companyCity: "",
+    companyState: "",
+    companyZipCode: "",
 
     // Status Fields
     lifecycleStage: "",
     dncStatus: "",
 
-    // Custom Fields (only fields with data)
-    "customFields.contactType": "",
-    "customFields.businessCategory": "",
-    "customFields.leadSource": "",
+    // NAICS Business Fields
+    campaignCategory: "", // Contact Type in NAICS
+    industry: "", // Business Category in NAICS
+    leadSource: "", // Direct field in NAICS
+    naicsCode: "",
+    numberOfEmployees: "",
   });
 
   const [activeFilterCount, setActiveFilterCount] = useState(0);
@@ -64,16 +65,17 @@ const AdvancedFilters = ({
       phone: "",
       company: "",
       jobTitle: "",
-      "address.street": "",
-      "address.city": "",
-      "address.state": "",
-      "address.zipCode": "",
-      "address.country": "",
+      companyStreetAddress: "",
+      companyCity: "",
+      companyState: "",
+      companyZipCode: "",
       lifecycleStage: "",
       dncStatus: "",
-      "customFields.contactType": "",
-      "customFields.businessCategory": "",
-      "customFields.leadSource": "",
+      campaignCategory: "",
+      industry: "",
+      leadSource: "",
+      naicsCode: "",
+      numberOfEmployees: "",
     });
     setActiveFilterCount(0);
     onClearFilters();
@@ -201,16 +203,16 @@ const AdvancedFilters = ({
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Address Information</h6>
+              <h6 className="text-muted mb-3 mt-3">Company Address Information</h6>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Street Address</Form.Label>
+                <Form.Label>Company Street Address</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters["address.street"]}
+                  value={filters.companyStreetAddress}
                   onChange={(e) =>
-                    handleFilterChange("address.street", e.target.value)
+                    handleFilterChange("companyStreetAddress", e.target.value)
                   }
                   placeholder="Contains..."
                 />
@@ -218,12 +220,12 @@ const AdvancedFilters = ({
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>City</Form.Label>
+                <Form.Label>Company City</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters["address.city"]}
+                  value={filters.companyCity}
                   onChange={(e) =>
-                    handleFilterChange("address.city", e.target.value)
+                    handleFilterChange("companyCity", e.target.value)
                   }
                   placeholder="Contains..."
                 />
@@ -231,35 +233,35 @@ const AdvancedFilters = ({
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>State/Province</Form.Label>
+                <Form.Label>Company State</Form.Label>
                 <Form.Select
-                  value={filters["address.state"]}
+                  value={filters.companyState}
                   onChange={(e) =>
-                    handleFilterChange("address.state", e.target.value)
+                    handleFilterChange("companyState", e.target.value)
                   }
                 >
                   <option value="">All States</option>
-                  <option value="Texas">Texas</option>
-                  <option value="Colorado">Colorado</option>
-                  <option value="Nevada">Nevada</option>
-                  <option value="California">California</option>
-                  <option value="Florida">Florida</option>
-                  <option value="New York">New York</option>
-                  <option value="Arizona">Arizona</option>
-                  <option value="Utah">Utah</option>
-                  <option value="Washington">Washington</option>
-                  <option value="Oregon">Oregon</option>
+                  <option value="TX">Texas</option>
+                  <option value="CO">Colorado</option>
+                  <option value="NV">Nevada</option>
+                  <option value="CA">California</option>
+                  <option value="FL">Florida</option>
+                  <option value="NY">New York</option>
+                  <option value="AZ">Arizona</option>
+                  <option value="UT">Utah</option>
+                  <option value="WA">Washington</option>
+                  <option value="OR">Oregon</option>
                 </Form.Select>
               </Form.Group>
             </Col>
             <Col md={3}>
               <Form.Group className="mb-3">
-                <Form.Label>Zip Code</Form.Label>
+                <Form.Label>Company Zip Code</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters["address.zipCode"]}
+                  value={filters.companyZipCode}
                   onChange={(e) =>
-                    handleFilterChange("address.zipCode", e.target.value)
+                    handleFilterChange("companyZipCode", e.target.value)
                   }
                   placeholder="Contains..."
                 />
@@ -309,18 +311,15 @@ const AdvancedFilters = ({
 
           <Row>
             <Col md={12}>
-              <h6 className="text-muted mb-3 mt-3">Business Information</h6>
+              <h6 className="text-muted mb-3 mt-3">Business Information (NAICS Standard)</h6>
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Contact Type</Form.Label>
+                <Form.Label>Campaign Category (Contact Type)</Form.Label>
                 <Form.Select
-                  value={filters["customFields.contactType"]}
+                  value={filters.campaignCategory}
                   onChange={(e) =>
-                    handleFilterChange(
-                      "customFields.contactType",
-                      e.target.value
-                    )
+                    handleFilterChange("campaignCategory", e.target.value)
                   }
                 >
                   <option value="">All Types</option>
@@ -329,9 +328,7 @@ const AdvancedFilters = ({
                   <option value="Buyer & Seller">🔄 Buyer & Seller</option>
                   <option value="Referral Partner">🤝 Referral Partner</option>
                   <option value="EXF Client">👑 EXF Client</option>
-                  <option value="Corporate Partner">
-                    🏢 Corporate Partner
-                  </option>
+                  <option value="Corporate Partner">🏢 Corporate Partner</option>
                   <option value="Tenant">🏠 Tenant</option>
                   <option value="Other">📋 Other</option>
                 </Form.Select>
@@ -339,15 +336,12 @@ const AdvancedFilters = ({
             </Col>
             <Col md={4}>
               <Form.Group className="mb-3">
-                <Form.Label>Industry/Business Category</Form.Label>
+                <Form.Label>Industry</Form.Label>
                 <Form.Control
                   type="text"
-                  value={filters["customFields.businessCategory"]}
+                  value={filters.industry}
                   onChange={(e) =>
-                    handleFilterChange(
-                      "customFields.businessCategory",
-                      e.target.value
-                    )
+                    handleFilterChange("industry", e.target.value)
                   }
                   placeholder="e.g., Construction, Automotive"
                 />
@@ -357,12 +351,9 @@ const AdvancedFilters = ({
               <Form.Group className="mb-3">
                 <Form.Label>Lead Source</Form.Label>
                 <Form.Select
-                  value={filters["customFields.leadSource"]}
+                  value={filters.leadSource}
                   onChange={(e) =>
-                    handleFilterChange(
-                      "customFields.leadSource",
-                      e.target.value
-                    )
+                    handleFilterChange("leadSource", e.target.value)
                   }
                 >
                   <option value="">All Sources</option>
@@ -375,6 +366,41 @@ const AdvancedFilters = ({
                   <option value="Axial">⚡ Axial</option>
                   <option value="Email">📧 Email</option>
                   <option value="Other">📋 Other</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>NAICS Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={filters.naicsCode}
+                  onChange={(e) =>
+                    handleFilterChange("naicsCode", e.target.value)
+                  }
+                  placeholder="e.g., 236220"
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Number of Employees</Form.Label>
+                <Form.Select
+                  value={filters.numberOfEmployees}
+                  onChange={(e) =>
+                    handleFilterChange("numberOfEmployees", e.target.value)
+                  }
+                >
+                  <option value="">All Sizes</option>
+                  <option value="1-10">1-10 employees</option>
+                  <option value="11-50">11-50 employees</option>
+                  <option value="51-200">51-200 employees</option>
+                  <option value="201-500">201-500 employees</option>
+                  <option value="501-1000">501-1000 employees</option>
+                  <option value="1000+">1000+ employees</option>
                 </Form.Select>
               </Form.Group>
             </Col>

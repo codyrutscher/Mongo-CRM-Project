@@ -166,15 +166,21 @@ class SearchService {
           break;
 
         case "city":
-          query["address.city"] = { $regex: value, $options: "i" };
+        case "companyCity":
+          query.companyCity = { $regex: value, $options: "i" };
           break;
 
         case "state":
-          query["address.state"] = { $regex: value, $options: "i" };
+        case "companyState":
+          query.companyState = { $regex: value, $options: "i" };
           break;
 
-        case "country":
-          query["address.country"] = { $regex: value, $options: "i" };
+        case "companyStreetAddress":
+          query.companyStreetAddress = { $regex: value, $options: "i" };
+          break;
+
+        case "companyZipCode":
+          query.companyZipCode = { $regex: value, $options: "i" };
           break;
 
         case "dateRange":
@@ -208,6 +214,39 @@ class SearchService {
           } else {
             query.dncStatus = value;
           }
+          break;
+
+        // NAICS Standard Fields
+        case "industry":
+          query.industry = { $regex: value, $options: "i" };
+          break;
+
+        case "campaignCategory":
+          query.campaignCategory = value;
+          break;
+
+        case "leadSource":
+          query.leadSource = { $regex: value, $options: "i" };
+          break;
+
+        case "naicsCode":
+          query.naicsCode = { $regex: value, $options: "i" };
+          break;
+
+        case "numberOfEmployees":
+          query.numberOfEmployees = { $regex: value, $options: "i" };
+          break;
+
+        case "jobTitle":
+          query.jobTitle = { $regex: value, $options: "i" };
+          break;
+
+        case "firstName":
+          query.firstName = { $regex: value, $options: "i" };
+          break;
+
+        case "lastName":
+          query.lastName = { $regex: value, $options: "i" };
           break;
 
         case "customFields":

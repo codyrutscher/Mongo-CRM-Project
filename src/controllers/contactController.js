@@ -23,18 +23,21 @@ class ContactController {
         dateFilter = ''
       } = req.query;
 
-      // Build filters object from query parameters
+      // Build filters object from query parameters (NAICS Standard)
       const filters = {};
       
       if (dncStatus) filters.dncStatus = dncStatus;
-      if (contactType) filters['customFields.contactType'] = contactType;
-      if (location) filters['address.state'] = location;
+      if (contactType) filters.campaignCategory = contactType; // NAICS: campaignCategory
+      if (location) filters.companyState = location; // NAICS: companyState
       if (source) filters.source = source;
       if (industry) {
-        filters['customFields.businessCategory'] = new RegExp(industry, 'i');
+        filters.industry = new RegExp(industry, 'i'); // NAICS: industry
       }
       if (sicCode) {
-        filters['customFields.sicCode'] = sicCode;
+        filters['customFields.sicCode'] = sicCode; // Keep in customFields
+      }
+      if (naicsCode) {
+        filters.naicsCode = naicsCode; // NAICS: direct field
       }
       
       if (dateFilter) {
