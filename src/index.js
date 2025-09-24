@@ -113,8 +113,12 @@ app.use(helmet({
       connectSrc: [
         "'self'",
         "https://browser-intake-datadoghq.com",
+        "https://browser-intake-us5-datadoghq.com",
         "https://session-replay-datadoghq.com",
-        "https://rum-http-intake.logs.datadoghq.com"
+        "https://session-replay-us5-datadoghq.com",
+        "https://rum-http-intake.logs.datadoghq.com",
+        "https://rum-http-intake.logs.us5.datadoghq.com",
+        "https://cdn.jsdelivr.net"
       ]
     }
   }
