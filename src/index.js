@@ -110,7 +110,12 @@ app.use(helmet({
         "https://cdnjs.cloudflare.com"
       ],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"]
+      connectSrc: [
+        "'self'",
+        "https://browser-intake-datadoghq.com",
+        "https://session-replay-datadoghq.com",
+        "https://rum-http-intake.logs.datadoghq.com"
+      ]
     }
   }
 }));
