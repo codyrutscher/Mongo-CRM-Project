@@ -24,7 +24,7 @@ export const initializeDatadog = () => {
     
     console.log('Initializing Datadog Logs with config:', {
       ...logsConfig,
-      clientToken: '***HIDDEN***'
+      clientToken: `***${logsConfig.clientToken.slice(-8)}` // Show last 8 chars for debugging
     });
     
     datadogLogs.init(logsConfig);
@@ -65,6 +65,9 @@ export const logger = {
       datadogLogs.logger.info(message, context);
     } catch (error) {
       console.error('Failed to send info log to Datadog:', error);
+      if (error.message && error.message.includes('403')) {
+        console.error('403 Forbidden - Check your Datadog client token permissions');
+      }
     }
   },
   
