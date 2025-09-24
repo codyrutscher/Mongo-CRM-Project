@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../services/auth';
+import { useDatadog } from '../hooks/useDatadog';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { logUserAction, logError, rum } = useDatadog();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -25,6 +27,12 @@ const Login = () => {
     setLoading(true);
     setError('');
 
+    // Log login attempt
+    logUserAction('login_attempt', { 
+      email: formData.email,
+      timestamp: new Date().toISOString() 
+    });
+
     try {
       console.log('Attempting login with:', formData.email);
       const response = await login(formData.email, formData.password);
@@ -35,15 +43,45 @@ const Login = () => {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
+        // Log successful login
+        logUserAction('login_success', { 
+          email: formData.email,
+          userId: response.data.user.id,
+          userRole: response.data.user.role 
+        });
+
+        // Set user in RUM for session tracking
+        rum.setUser({
+          id: response.data.user.id,
+          email: response.data.user.email,
+          role: response.data.user.role,
+        });
+        
         console.log('Login successful, redirecting to dashboard');
         // Redirect to dashboard
         navigate('/dashboard');
       } else {
         console.error('Login failed:', response.error);
+        
+        // Log failed login
+        logUserAction('login_failed', { 
+          email: formData.email,
+          error: response.error,
+          reason: 'invalid_credentials' 
+        });
+        
         setError(response.error || 'Login failed');
       }
     } catch (error) {
       console.error('Login error:', error);
+      
+      // Log login error
+      logError(error, { 
+        context: 'login_process',
+        email: formData.email,
+        action: 'login_attempt' 
+      });
+      
       setError(`Login failed: ${error.message || 'Please try again'}`);
     } finally {
       setLoading(false);
@@ -51,6 +89,12 @@ const Login = () => {
   };
 
   const handleQuickLogin = (email, password) => {
+    // Log quick login usage
+    logUserAction('quick_login_used', { 
+      email,
+      loginType: 'quick_login' 
+    });
+    
     setFormData({ email, password });
     
     // Auto-submit after setting credentials
