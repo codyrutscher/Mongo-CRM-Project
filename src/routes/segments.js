@@ -27,6 +27,9 @@ router.put('/:id', segmentController.updateSegment);
 // Delete segment
 router.delete('/:id', segmentController.deleteSegment);
 
+// Update segment filters (one-time fix)
+router.post('/fix-dnc-filters', segmentController.fixDNCFilters);
+
 // Get contacts in segment
 router.get('/:id/contacts', segmentController.getSegmentContacts);
 

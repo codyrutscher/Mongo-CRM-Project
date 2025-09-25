@@ -758,6 +758,96 @@ class SegmentController {
       });
     }
   }
+
+  async fixDNCFilters(req, res) {
+    try {
+      const mongoose = require('mongoose');
+      const db = mongoose.connection.db;
+      const segmentsCollection = db.collection('segments');
+      const contactsCollection = db.collection('contacts');
+      
+      // Update DNC segment filter
+      const dncUpdate = await segmentsCollection.updateOne(
+        { 
+          $or: [
+            { name: 'DNC - Do Not Call' },
+            { name: 'DNC - Do Not Call (Dynamic)' }
+          ]
+        },
+        {
+          $set: {
+            filters: { dncStatus: 'dnc_internal' },
+            description: 'Contacts with Do Not Call = Yes in HubSpot - Real-time via webhooks',
+            updatedAt: new Date()
+          }
+        }
+      );
+      
+      // Update Callable segment filter
+      const callableUpdate = await segmentsCollection.updateOne(
+        { 
+          $or: [
+            { name: 'Callable Contacts' },
+            { name: 'Callable Contacts (Dynamic)' }
+          ]
+        },
+        {
+          $set: {
+            filters: {
+              $or: [
+                { dncStatus: 'callable' },
+                { dncStatus: { $exists: false } },
+                { dncStatus: null }
+              ]
+            },
+            description: 'Contacts safe to call - Real-time via webhooks',
+            updatedAt: new Date()
+          }
+        }
+      );
+      
+      // Get new counts
+      const dncCount = await contactsCollection.countDocuments({ dncStatus: 'dnc_internal' });
+      const callableCount = await contactsCollection.countDocuments({
+        $or: [
+          { dncStatus: 'callable' },
+          { dncStatus: { $exists: false } },
+          { dncStatus: null }
+        ]
+      });
+      
+      // Update segment counts
+      await segmentsCollection.updateOne(
+        { $or: [{ name: 'DNC - Do Not Call' }, { name: 'DNC - Do Not Call (Dynamic)' }] },
+        { $set: { contactCount: dncCount, lastCountUpdate: new Date() } }
+      );
+      
+      await segmentsCollection.updateOne(
+        { $or: [{ name: 'Callable Contacts' }, { name: 'Callable Contacts (Dynamic)' }] },
+        { $set: { contactCount: callableCount, lastCountUpdate: new Date() } }
+      );
+      
+      res.json({
+        success: true,
+        message: 'DNC segment filters updated successfully',
+        data: {
+          dncSegmentUpdated: dncUpdate.modifiedCount > 0,
+          callableSegmentUpdated: callableUpdate.modifiedCount > 0,
+          newCounts: {
+            dnc: dncCount,
+            callable: callableCount
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error fixing DNC filters:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update DNC filters'
+      });
+    }
+  }
 }
 
 module.exports = new SegmentController();
