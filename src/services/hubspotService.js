@@ -14,25 +14,7 @@ class HubSpotService {
   async getContacts(limit = 100, after = null, contactId = null) {
     try {
       const params = {
-        properties: [
-          // NAICS Standard Fields (matching hubspotprospere.csv)
-          'firstname', 'lastname', 'jobtitle', 'linkedin_profile_url', 'email', 'phone',
-          'company', 'website', 'business_category___industry_of_interest', 'naics_code',
-          'numemployees', 'year_established', 'office_phone', 'address', 'city', 'state', 'zip',
-          'lead_source', 'contact_type', 'hs_email_last_send_date',
-          
-          // System fields
-          'createdate', 'lastmodifieddate', 'lifecyclestage',
-          
-          // Additional business fields
-          'annualrevenue', 'industry', 'account_type', 'broker',
-          'buyer_status', 'seller_status', 'interested_in',
-          'currently_own_a_business', 'legal_organization_type',
-          'primary_investor_type', 'buying_role', 'motivation_for_buying',
-          
-          // DNC and compliance
-          'do_not_call', 'dnc_flag', 'optout', 'compliance_notes'
-        ].join(',')
+        properties: 'firstname,lastname,jobtitle,linkedin_profile_url,email,phone,website,business_category___industry_of_interest,naics_code,numemployees,year_established,office_phone,address,city,state,zip,lead_source,contact_type,hs_email_last_send_date,createdate,lastmodifieddate,lifecyclestage,annualrevenue,industry,account_type,broker,buyer_status,seller_status,currently_own_a_business,legal_organization_type,primary_investor_type,buying_role,motivation_for_buying,dnc_flag,optout,compliance_notes,hs_do_not_call,do_not_call'
       };
 
       let url = `${this.baseURL}/crm/v3/objects/contacts`;
@@ -356,8 +338,11 @@ class HubSpotService {
     // Use the field mapping service to transform to NAICS standard
     const contact = mappingService.mapHubSpotToContact(hubspotContact);
     
-    // Add HubSpot-specific DNC and compliance handling
+    // Handle missing company field (causes 500 error in API)
     const props = hubspotContact.properties;
+    contact.company = props.company || ''; // Will be empty since we can't fetch it
+    
+    // Add HubSpot-specific DNC and compliance handling
     const dncStatus = this.mapDncStatus(props);
     
     contact.dncStatus = dncStatus.status;
@@ -385,10 +370,11 @@ class HubSpotService {
     contact.customFields.buyingRole = props.buying_role || '';
     contact.customFields.motivationForBuying = props.motivation_for_buying || '';
     
-    // DNC flags from HubSpot
+    // DNC flags from HubSpot (using working properties)
     contact.customFields.hubspotDncFlag = props.dnc_flag || '';
-    contact.customFields.hubspotDoNotCall = props.do_not_call || '';
-    contact.customFields.hubspotMarketingOptOut = props.optout || '';
+    contact.customFields.hubspotDoNotCall = props.hs_do_not_call || props.do_not_call || props.dnc_flag || props.hs_email_optout || 'false';
+    contact.customFields.hubspotMarketingOptOut = props.optout || props.hs_email_optout || '';
+    contact.customFields.hubspotMarketableStatus = props.hs_marketable_status || '';
     
     contact.lastSyncedAt = new Date();
     
@@ -406,13 +392,16 @@ class HubSpotService {
     }
     
     // Map HubSpot DNC properties to our DNC status
-    // Check for "Do Not Call" property from workflow (boolean true/false or string)
-    if (props.do_not_call === true || props.do_not_call === 'true' || 
-        props.do_not_call === 'Yes' || props.dnc_flag === 'true') {
+    // Check for DNC using multiple HubSpot properties
+    if (props.hs_do_not_call === 'true' || props.hs_do_not_call === true ||
+        props.do_not_call === 'true' || props.do_not_call === true ||
+        props.dnc_flag === 'true' || props.dnc_flag === true ||
+        props.hs_email_optout === 'true' || props.hs_email_optout === true ||
+        props.hs_marketable_status === 'NOT_OPTED_IN') {
       return {
         status: 'dnc_internal',
         date: props.dnc_date ? new Date(props.dnc_date) : new Date(),
-        reason: props.dnc_reason || 'Marked as DNC in HubSpot'
+        reason: props.dnc_reason || 'Marked as DNC in HubSpot (Do Not Call property)'
       };
     }
     

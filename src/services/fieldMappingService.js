@@ -120,8 +120,8 @@ class FieldMappingService {
       'email': 'email',
       'phone': 'phone',
       
-      // Company Information
-      'company': 'company',
+      // Company Information (company field causes 500 error, so we'll handle it separately)
+      // 'company': 'company', // Commented out due to API error
       'website': 'companyWebsiteURL',
       'business_category___industry_of_interest': 'industry',
       'naics_code': 'naicsCode',

@@ -142,6 +142,37 @@ class WebhookService {
       if (existingContact) {
         // Update the contact
         Object.assign(existingContact, contactData);
+        
+        // Special handling for "Do Not Call" property changes
+        if (propertyName === 'hs_do_not_call' || propertyName === 'do_not_call') {
+          const dncValue = hubspotContact.properties?.hs_do_not_call || hubspotContact.properties?.do_not_call;
+          
+          if (dncValue === 'true' || dncValue === true || dncValue === '1') {
+            // Contact marked as DNC
+            existingContact.dncStatus = 'dnc_internal';
+            existingContact.dncDate = new Date();
+            existingContact.dncReason = 'HubSpot Do Not Call property set to true';
+            existingContact.complianceNotes = 'Contact marked as Do Not Call in HubSpot - DO NOT CALL';
+            
+            if (!existingContact.tags.includes('DNC')) {
+              existingContact.tags.push('DNC');
+            }
+            
+            logger.info(`🚫 Contact marked as DNC via property: ${existingContact.firstName} ${existingContact.lastName}`);
+          } else {
+            // Contact marked as callable
+            existingContact.dncStatus = 'callable';
+            existingContact.dncDate = null;
+            existingContact.dncReason = null;
+            existingContact.complianceNotes = 'Contact Do Not Call property set to false - now callable';
+            
+            // Remove DNC tag
+            existingContact.tags = existingContact.tags.filter(tag => tag !== 'DNC');
+            
+            logger.info(`✅ Contact marked as callable via property: ${existingContact.firstName} ${existingContact.lastName}`);
+          }
+        }
+        
         existingContact.lastSyncedAt = new Date();
         await existingContact.save();
         logger.info(`✅ Updated contact: ${existingContact.firstName} ${existingContact.lastName}`);
