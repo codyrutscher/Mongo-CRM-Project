@@ -173,6 +173,70 @@ class WebhookService {
           }
         }
         
+        // Special handling for Cold Lead property changes
+        if (propertyName === 'seller_cold_lead' || propertyName === 'buyer_cold_lead' || 
+            propertyName === 'cre_cold_lead' || propertyName === 'exf_cold_lead') {
+          
+          const props = hubspotContact.properties;
+          const coldLeadTypes = [];
+          
+          if (props.seller_cold_lead === 'true' || props.seller_cold_lead === true) {
+            coldLeadTypes.push('Seller');
+          }
+          if (props.buyer_cold_lead === 'true' || props.buyer_cold_lead === true) {
+            coldLeadTypes.push('Buyer');
+          }
+          if (props.cre_cold_lead === 'true' || props.cre_cold_lead === true) {
+            coldLeadTypes.push('CRE');
+          }
+          if (props.exf_cold_lead === 'true' || props.exf_cold_lead === true) {
+            coldLeadTypes.push('EXF');
+          }
+          
+          if (coldLeadTypes.length > 0) {
+            // Contact marked as Cold Lead
+            existingContact.customFields = existingContact.customFields || {};
+            existingContact.customFields.coldLead = true;
+            existingContact.customFields.coldLeadTypes = coldLeadTypes;
+            existingContact.customFields.sellerColdLead = props.seller_cold_lead === 'true' || props.seller_cold_lead === true;
+            existingContact.customFields.buyerColdLead = props.buyer_cold_lead === 'true' || props.buyer_cold_lead === true;
+            existingContact.customFields.creColdLead = props.cre_cold_lead === 'true' || props.cre_cold_lead === true;
+            existingContact.customFields.exfColdLead = props.exf_cold_lead === 'true' || props.exf_cold_lead === true;
+            existingContact.customFields.coldLeadSyncDate = new Date().toISOString();
+            
+            // Add Cold Lead tags
+            if (!existingContact.tags.includes('Cold Lead')) {
+              existingContact.tags.push('Cold Lead');
+            }
+            
+            coldLeadTypes.forEach(type => {
+              const tag = `Cold Lead - ${type}`;
+              if (!existingContact.tags.includes(tag)) {
+                existingContact.tags.push(tag);
+              }
+            });
+            
+            logger.info(`❄️ Contact marked as Cold Lead (${coldLeadTypes.join(', ')}): ${existingContact.firstName} ${existingContact.lastName}`);
+          } else {
+            // All Cold Lead properties are false - remove Cold Lead status
+            if (existingContact.customFields) {
+              existingContact.customFields.coldLead = false;
+              existingContact.customFields.coldLeadTypes = [];
+              existingContact.customFields.sellerColdLead = false;
+              existingContact.customFields.buyerColdLead = false;
+              existingContact.customFields.creColdLead = false;
+              existingContact.customFields.exfColdLead = false;
+            }
+            
+            // Remove Cold Lead tags
+            existingContact.tags = existingContact.tags.filter(tag => 
+              !tag.includes('Cold Lead')
+            );
+            
+            logger.info(`✅ Contact Cold Lead status removed: ${existingContact.firstName} ${existingContact.lastName}`);
+          }
+        }
+        
         existingContact.lastSyncedAt = new Date();
         await existingContact.save();
         logger.info(`✅ Updated contact: ${existingContact.firstName} ${existingContact.lastName}`);
