@@ -21,6 +21,7 @@ router.post('/test/google-sheets', syncController.testGoogleSheetsConnection);
 
 // Cold Lead sync
 router.post('/cold-leads', syncController.syncColdLeads);
+router.get('/cold-leads/status', syncController.getColdLeadStatus);
 
 // Google Sheets utilities
 router.get('/google-sheets/:spreadsheetId/info', syncController.getGoogleSheetInfo);

@@ -260,36 +260,89 @@ class SyncController {
 
   async syncColdLeads(req, res) {
     try {
-      logger.info('Starting Cold Lead sync from HubSpot...');
+      logger.info('Starting Railway Cold Lead sync from HubSpot...');
       
-      // Import the Cold Lead sync functionality
+      // Import the Railway Cold Lead sync functionality
       const { exec } = require('child_process');
       const path = require('path');
       
-      // Execute the Cold Lead sync script
-      const scriptPath = path.join(__dirname, '../../scripts/sync-cold-leads.js');
+      // Execute the Railway Cold Lead sync script
+      const scriptPath = path.join(__dirname, '../../scripts/railway-cold-lead-sync.js');
       
-      exec(`node ${scriptPath}`, (error, stdout, stderr) => {
+      exec(`node ${scriptPath}`, { timeout: 30 * 60 * 1000 }, (error, stdout, stderr) => {
         if (error) {
-          logger.error('Cold Lead sync error:', error);
+          logger.error('Railway Cold Lead sync error:', error);
           return;
         }
         
         if (stderr) {
-          logger.warn('Cold Lead sync stderr:', stderr);
+          logger.warn('Railway Cold Lead sync stderr:', stderr);
         }
         
-        logger.info('Cold Lead sync output:', stdout);
+        logger.info('Railway Cold Lead sync completed:', stdout);
       });
       
       res.json({
         success: true,
-        message: 'Cold Lead sync started in background',
-        note: 'This process may take several minutes to complete'
+        message: 'Railway Cold Lead sync started',
+        details: 'Syncing all HubSpot contacts and labeling Cold Leads',
+        note: 'This process may take 10-15 minutes to complete all contacts',
+        endpoint: 'Check /api/contacts/stats for progress'
       });
       
     } catch (error) {
-      logger.error('Error starting Cold Lead sync:', error);
+      logger.error('Error starting Railway Cold Lead sync:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getColdLeadStatus(req, res) {
+    try {
+      const Contact = require('../models/Contact');
+      
+      // Get Cold Lead statistics
+      const totalContacts = await Contact.countDocuments();
+      const coldLeads = await Contact.countDocuments({ 'customFields.coldLead': true });
+      
+      const sellerColdLeads = await Contact.countDocuments({ 'customFields.sellerColdLead': true });
+      const buyerColdLeads = await Contact.countDocuments({ 'customFields.buyerColdLead': true });
+      const creColdLeads = await Contact.countDocuments({ 'customFields.creColdLead': true });
+      const exfColdLeads = await Contact.countDocuments({ 'customFields.exfColdLead': true });
+      
+      // Check if Doug Broomes exists
+      const dougBroomes = await Contact.findOne({ email: 'doug@ironwood-works.com' });
+      
+      res.json({
+        success: true,
+        data: {
+          totalContacts,
+          coldLeads: {
+            total: coldLeads,
+            seller: sellerColdLeads,
+            buyer: buyerColdLeads,
+            cre: creColdLeads,
+            exf: exfColdLeads
+          },
+          testContact: {
+            dougBroomes: dougBroomes ? {
+              name: `${dougBroomes.firstName} ${dougBroomes.lastName}`,
+              email: dougBroomes.email,
+              company: dougBroomes.company,
+              hubspotId: dougBroomes.sourceId,
+              isColdLead: dougBroomes.customFields?.coldLead || false,
+              coldLeadTypes: dougBroomes.customFields?.coldLeadTypes || [],
+              tags: dougBroomes.tags || []
+            } : null
+          },
+          lastUpdated: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      logger.error('Error getting Cold Lead status:', error);
       res.status(500).json({
         success: false,
         error: error.message
