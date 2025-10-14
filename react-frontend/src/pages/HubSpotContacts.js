@@ -40,9 +40,23 @@ const HubSpotContacts = () => {
       if (Object.keys(filters).length > 0 || searchQuery) {
         // Use advanced search with filters
         const searchFilters = { ...filters, source: 'hubspot' };
+        
+        // Handle search query
         if (searchQuery) {
-          searchFilters.searchQuery = searchQuery;
+          const searchTerms = searchQuery.trim().split(' ');
+          if (searchTerms.length === 2) {
+            // "FirstName LastName" format
+            searchFilters.firstName = searchTerms[0];
+            searchFilters.lastName = searchTerms[1];
+          } else if (searchQuery.includes('@')) {
+            // Email search
+            searchFilters.email = searchQuery;
+          } else {
+            // Single term - search firstName, lastName, or company
+            searchFilters.firstName = searchQuery;
+          }
         }
+        
         response = await getContactsWithFilters(searchFilters, currentPage, pageSize, sortField, sortOrder);
       } else {
         // Use simple source-based filtering
@@ -151,7 +165,15 @@ const HubSpotContacts = () => {
       setLoading(true);
       const searchFilters = { ...filters, source: 'hubspot' };
       if (searchQuery) {
-        searchFilters.searchQuery = searchQuery;
+        const searchTerms = searchQuery.trim().split(' ');
+        if (searchTerms.length === 2) {
+          searchFilters.firstName = searchTerms[0];
+          searchFilters.lastName = searchTerms[1];
+        } else if (searchQuery.includes('@')) {
+          searchFilters.email = searchQuery;
+        } else {
+          searchFilters.firstName = searchQuery;
+        }
       }
       
       const response = await getAllFilteredContactIds(searchFilters);
