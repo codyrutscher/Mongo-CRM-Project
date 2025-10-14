@@ -257,6 +257,45 @@ class SyncController {
       });
     }
   }
+
+  async syncColdLeads(req, res) {
+    try {
+      logger.info('Starting Cold Lead sync from HubSpot...');
+      
+      // Import the Cold Lead sync functionality
+      const { exec } = require('child_process');
+      const path = require('path');
+      
+      // Execute the Cold Lead sync script
+      const scriptPath = path.join(__dirname, '../../scripts/sync-cold-leads.js');
+      
+      exec(`node ${scriptPath}`, (error, stdout, stderr) => {
+        if (error) {
+          logger.error('Cold Lead sync error:', error);
+          return;
+        }
+        
+        if (stderr) {
+          logger.warn('Cold Lead sync stderr:', stderr);
+        }
+        
+        logger.info('Cold Lead sync output:', stdout);
+      });
+      
+      res.json({
+        success: true,
+        message: 'Cold Lead sync started in background',
+        note: 'This process may take several minutes to complete'
+      });
+      
+    } catch (error) {
+      logger.error('Error starting Cold Lead sync:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new SyncController();

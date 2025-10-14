@@ -19,6 +19,9 @@ router.get('/last/:source', syncController.getLastSyncInfo);
 router.post('/test/hubspot', syncController.testHubSpotConnection);
 router.post('/test/google-sheets', syncController.testGoogleSheetsConnection);
 
+// Cold Lead sync
+router.post('/cold-leads', syncController.syncColdLeads);
+
 // Google Sheets utilities
 router.get('/google-sheets/:spreadsheetId/info', syncController.getGoogleSheetInfo);
 router.post('/google-sheets/preview', syncController.previewGoogleSheetData);
