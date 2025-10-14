@@ -254,19 +254,45 @@ class WebhookService {
 
   async handleContactDeletion(hubspotContactId) {
     try {
-      logger.info(`🗑️  Deleting contact from HubSpot: ${hubspotContactId}`);
+      logger.info(`🗑️  Handling contact deletion from HubSpot: ${hubspotContactId}`);
 
-      // Find and mark contact as deleted
+      // Find the contact
       const existingContact = await Contact.findOne({
         source: 'hubspot',
         sourceId: hubspotContactId
       });
 
       if (existingContact) {
-        existingContact.status = 'deleted';
-        existingContact.lastSyncedAt = new Date();
-        await existingContact.save();
-        logger.info(`✅ Marked contact as deleted: ${existingContact.firstName} ${existingContact.lastName}`);
+        // Check if this is a Cold Lead contact
+        const isColdLead = existingContact.customFields?.coldLead === true;
+        
+        if (isColdLead) {
+          // For Cold Lead contacts: Keep in Prospere CRM, just mark as deleted from HubSpot
+          existingContact.customFields = existingContact.customFields || {};
+          existingContact.customFields.deletedFromHubSpot = true;
+          existingContact.customFields.deletedFromHubSpotDate = new Date().toISOString();
+          existingContact.customFields.hubspotDeletionReason = 'Contact deleted from HubSpot (Cold Lead preserved)';
+          
+          // Add a tag to indicate it was deleted from HubSpot
+          if (!existingContact.tags.includes('Deleted from HubSpot')) {
+            existingContact.tags.push('Deleted from HubSpot');
+          }
+          
+          // Keep status as active in Prospere CRM
+          existingContact.status = 'active';
+          existingContact.lastSyncedAt = new Date();
+          
+          await existingContact.save();
+          logger.info(`❄️ Cold Lead contact preserved in Prospere CRM (deleted from HubSpot): ${existingContact.firstName} ${existingContact.lastName}`);
+          
+        } else {
+          // For regular contacts: Mark as deleted (existing behavior)
+          existingContact.status = 'deleted';
+          existingContact.lastSyncedAt = new Date();
+          await existingContact.save();
+          logger.info(`✅ Regular contact marked as deleted: ${existingContact.firstName} ${existingContact.lastName}`);
+        }
+        
       } else {
         logger.info(`ℹ️  Contact not found for deletion: ${hubspotContactId}`);
       }

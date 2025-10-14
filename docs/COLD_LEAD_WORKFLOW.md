@@ -26,6 +26,15 @@ When a Cold Lead property changes in HubSpot:
 - ✅ Stored in `customFields.coldLead` with all Cold Lead properties
 - ✅ Contact remains in HubSpot (not deleted immediately)
 
+### 1.1. Cold Lead Deletion Protection (Automatic via Webhook)
+
+When a Cold Lead contact is deleted from HubSpot:
+- ✅ Webhook detects the deletion
+- ✅ Contact is PRESERVED in Prospere CRM (not deleted)
+- ✅ Marked as `deletedFromHubSpot: true` with deletion timestamp
+- ✅ Tagged with "Deleted from HubSpot" for easy identification
+- ✅ Status remains "active" in Prospere CRM for continued access
+
 ### 2. Manual Full Sync
 
 Run a complete sync of all Cold Leads from HubSpot:
@@ -78,7 +87,8 @@ Cold Lead contacts are stored with:
 
 ```javascript
 {
-  tags: ['Cold Lead', 'Cold Lead - Seller', 'Cold Lead - Buyer', ...],
+  status: 'active', // Always active in Prospere CRM, even if deleted from HubSpot
+  tags: ['Cold Lead', 'Cold Lead - Seller', 'Cold Lead - Buyer', 'Deleted from HubSpot'],
   customFields: {
     coldLead: true,
     coldLeadTypes: ['Seller', 'Buyer', 'CRE', 'EXF'],
@@ -88,7 +98,8 @@ Cold Lead contacts are stored with:
     exfColdLead: true/false,
     coldLeadSyncDate: '2025-09-29T...',
     deletedFromHubSpot: true/false,
-    deletedFromHubSpotDate: '2025-09-29T...'
+    deletedFromHubSpotDate: '2025-09-29T...',
+    hubspotDeletionReason: 'Contact deleted from HubSpot (Cold Lead preserved)'
   }
 }
 ```
@@ -129,6 +140,16 @@ const deletedFromHubSpot = await Contact.find({
 });
 ```
 
+### Find Cold Leads still active in HubSpot
+
+```javascript
+const activeInHubSpot = await Contact.find({
+  source: 'hubspot',
+  'customFields.coldLead': true,
+  'customFields.deletedFromHubSpot': { $ne: true }
+});
+```
+
 ## Automation Setup
 
 ### Recommended Weekly Schedule
@@ -141,6 +162,27 @@ Set up a cron job or scheduled task to run weekly:
 
 # Or with deletion (if approved)
 0 9 * * 1 cd /path/to/project && railway run node scripts/weekly-cold-lead-cleanup.js --export-and-delete --confirmed
+```
+
+## Managing Deleted Cold Leads
+
+Use the management tool to view and export Cold Leads that have been deleted from HubSpot:
+
+```bash
+# Show statistics
+railway run node scripts/manage-deleted-cold-leads.js --stats
+
+# List deleted Cold Leads
+railway run node scripts/manage-deleted-cold-leads.js --list
+
+# Export deleted Cold Leads to CSV
+railway run node scripts/manage-deleted-cold-leads.js --export
+
+# Show active Cold Leads still in HubSpot
+railway run node scripts/manage-deleted-cold-leads.js --active
+
+# Show all Cold Leads (active and deleted)
+railway run node scripts/manage-deleted-cold-leads.js --all
 ```
 
 ## CSV Export Format
