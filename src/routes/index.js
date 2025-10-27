@@ -6,6 +6,7 @@ const csvRoutes = require('./csv');
 const segmentRoutes = require('./segments');
 const authRoutes = require('./auth');
 const webhookRoutes = require('./webhooks');
+const responseGeniusRoutes = require('./responseGenius');
 
 const router = express.Router();
 
@@ -74,6 +75,7 @@ router.use('/export', exportRoutes);
 router.use('/csv', csvRoutes);
 router.use('/segments', segmentRoutes);
 router.use('/webhooks', webhookRoutes);
+router.use('/response-genius', responseGeniusRoutes);
 
 // API info endpoint
 router.get('/', (req, res) => {

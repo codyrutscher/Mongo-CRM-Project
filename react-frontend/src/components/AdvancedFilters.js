@@ -32,6 +32,22 @@ const AdvancedFilters = ({
     leadSource: "", // Direct field in NAICS
     naicsCode: "",
     numberOfEmployees: "",
+    
+    // Campaign Fields
+    campaignType: "",
+    campaignStatus: "",
+    
+    // Response Genius DNC Lists
+    dnc___seller_outreach: "",
+    dnc___buyer_outreach: "",
+    dnc___cre_outreach: "",
+    dnc___exf_outreach: "",
+    
+    // Response Genius Cold Lead Lists
+    seller_cold_lead: "",
+    buyer_cold_lead: "",
+    cre_cold_lead: "",
+    exf_cold_lead: "",
   });
 
   const [activeFilterCount, setActiveFilterCount] = useState(0);
@@ -76,6 +92,16 @@ const AdvancedFilters = ({
       leadSource: "",
       naicsCode: "",
       numberOfEmployees: "",
+      campaignType: "",
+      campaignStatus: "",
+      dnc___seller_outreach: "",
+      dnc___buyer_outreach: "",
+      dnc___cre_outreach: "",
+      dnc___exf_outreach: "",
+      seller_cold_lead: "",
+      buyer_cold_lead: "",
+      cre_cold_lead: "",
+      exf_cold_lead: "",
     });
     setActiveFilterCount(0);
     onClearFilters();
@@ -401,6 +427,178 @@ const AdvancedFilters = ({
                   <option value="201-500">201-500 employees</option>
                   <option value="501-1000">501-1000 employees</option>
                   <option value="1000+">1000+ employees</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={12}>
+              <h6 className="text-muted mb-3 mt-3">Campaign Tracking</h6>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Campaign Type</Form.Label>
+                <Form.Select
+                  value={filters.campaignType}
+                  onChange={(e) =>
+                    handleFilterChange("campaignType", e.target.value)
+                  }
+                >
+                  <option value="">All Types</option>
+                  <option value="Buyer">🛒 Buyer</option>
+                  <option value="Seller">💼 Seller</option>
+                  <option value="CRE">🏢 CRE</option>
+                  <option value="Exit Factor">🚀 Exit Factor</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label>Campaign Status</Form.Label>
+                <Form.Select
+                  value={filters.campaignStatus}
+                  onChange={(e) =>
+                    handleFilterChange("campaignStatus", e.target.value)
+                  }
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Delivered">✅ Delivered</option>
+                  <option value="Unsubscribed">🚫 Unsubscribed</option>
+                  <option value="Hard Bounce">❌ Hard Bounce</option>
+                  <option value="Soft Bounce">⚠️ Soft Bounce</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={12}>
+              <h6 className="text-muted mb-3 mt-3">Response Genius Lists - DNC</h6>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>DNC - Seller Outreach</Form.Label>
+                <Form.Select
+                  value={filters.dnc___seller_outreach}
+                  onChange={(e) =>
+                    handleFilterChange("dnc___seller_outreach", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>DNC - Buyer Outreach</Form.Label>
+                <Form.Select
+                  value={filters.dnc___buyer_outreach}
+                  onChange={(e) =>
+                    handleFilterChange("dnc___buyer_outreach", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>DNC - CRE Outreach</Form.Label>
+                <Form.Select
+                  value={filters.dnc___cre_outreach}
+                  onChange={(e) =>
+                    handleFilterChange("dnc___cre_outreach", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>DNC - EXF Outreach</Form.Label>
+                <Form.Select
+                  value={filters.dnc___exf_outreach}
+                  onChange={(e) =>
+                    handleFilterChange("dnc___exf_outreach", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={12}>
+              <h6 className="text-muted mb-3 mt-3">Response Genius Lists - Cold Leads</h6>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Seller Cold Lead</Form.Label>
+                <Form.Select
+                  value={filters.seller_cold_lead}
+                  onChange={(e) =>
+                    handleFilterChange("seller_cold_lead", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>Buyer Cold Lead</Form.Label>
+                <Form.Select
+                  value={filters.buyer_cold_lead}
+                  onChange={(e) =>
+                    handleFilterChange("buyer_cold_lead", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>CRE Cold Lead</Form.Label>
+                <Form.Select
+                  value={filters.cre_cold_lead}
+                  onChange={(e) =>
+                    handleFilterChange("cre_cold_lead", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>EXF Cold Lead</Form.Label>
+                <Form.Select
+                  value={filters.exf_cold_lead}
+                  onChange={(e) =>
+                    handleFilterChange("exf_cold_lead", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="true">✓ On List</option>
+                  <option value="false">✗ Not on List</option>
                 </Form.Select>
               </Form.Group>
             </Col>

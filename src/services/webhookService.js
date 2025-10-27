@@ -1,5 +1,8 @@
 const Contact = require('../models/Contact');
 const hubspotService = require('./hubspotService');
+const responseGeniusService = require('./responseGeniusService');
+const responseGeniusDncService = require('./responseGeniusDncService');
+const responseGenius8ListsService = require('./responseGenius8ListsService');
 const logger = require('../utils/logger');
 const crypto = require('crypto');
 
@@ -217,6 +220,16 @@ class WebhookService {
             });
             
             logger.info(`❄️ Contact marked as Cold Lead (${coldLeadTypes.join(', ')}): ${existingContact.firstName} ${existingContact.lastName}`);
+            
+            // Sync to Response Genius in real-time
+            try {
+              const rgResult = await responseGeniusService.syncColdLead(existingContact);
+              if (rgResult.success) {
+                logger.info(`✅ Synced Cold Lead to Response Genius: ${existingContact.email} -> ${rgResult.syncedTo.join(', ')}`);
+              }
+            } catch (rgError) {
+              logger.error(`Error syncing to Response Genius: ${rgError.message}`);
+            }
           } else {
             // All Cold Lead properties are false - remove Cold Lead status
             if (existingContact.customFields) {
@@ -234,6 +247,44 @@ class WebhookService {
             );
             
             logger.info(`✅ Contact Cold Lead status removed: ${existingContact.firstName} ${existingContact.lastName}`);
+            
+            // Remove from Response Genius lists
+            try {
+              const rgResult = await responseGeniusService.removeFromAllLists(existingContact.email);
+              if (rgResult.success) {
+                logger.info(`✅ Removed from Response Genius lists: ${existingContact.email}`);
+              }
+            } catch (rgError) {
+              logger.error(`Error removing from Response Genius: ${rgError.message}`);
+            }
+          }
+        }
+        
+        // Special handling for DNC and Cold Lead property changes
+        const responseGeniusProperties = [
+          'dnc___seller_outreach',
+          'dnc___buyer_outreach', 
+          'dnc___cre_outreach',
+          'dnc___exf_outreach',
+          'seller_cold_lead',
+          'buyer_cold_lead',
+          'cre_cold_lead',
+          'exf_cold_lead'
+        ];
+        
+        if (responseGeniusProperties.includes(propertyName)) {
+          logger.info(`📋 Response Genius property changed: ${propertyName}`);
+          
+          // Sync to Response Genius lists in real-time
+          try {
+            const result = await responseGenius8ListsService.handleContactPropertyChange(existingContact, propertyName);
+            if (result.success) {
+              logger.info(`✅ Synced to Response Genius: ${existingContact.email} - ${result.action} to ${result.listName}`);
+            } else {
+              logger.error(`Failed to sync to Response Genius: ${result.error}`);
+            }
+          } catch (rgError) {
+            logger.error(`Error syncing to Response Genius: ${rgError.message}`);
           }
         }
         
@@ -263,15 +314,21 @@ class WebhookService {
       });
 
       if (existingContact) {
-        // Check if this is a Cold Lead contact
+        // Check if this is a Cold Lead contact or DNC contact
         const isColdLead = existingContact.customFields?.coldLead === true;
+        const isDNC = existingContact.tags?.includes('DNC') || existingContact.dncStatus === 'dnc_internal';
         
-        if (isColdLead) {
-          // For Cold Lead contacts: Keep in Prospere CRM, just mark as deleted from HubSpot
+        if (isColdLead || isDNC) {
+          // For Cold Lead or DNC contacts: Keep in Prospere CRM, just mark as deleted from HubSpot
           existingContact.customFields = existingContact.customFields || {};
           existingContact.customFields.deletedFromHubSpot = true;
           existingContact.customFields.deletedFromHubSpotDate = new Date().toISOString();
-          existingContact.customFields.hubspotDeletionReason = 'Contact deleted from HubSpot (Cold Lead preserved)';
+          
+          let preserveReason = [];
+          if (isColdLead) preserveReason.push('Cold Lead');
+          if (isDNC) preserveReason.push('DNC');
+          
+          existingContact.customFields.hubspotDeletionReason = `Contact deleted from HubSpot (${preserveReason.join(' & ')} preserved for compliance)`;
           
           // Add a tag to indicate it was deleted from HubSpot
           if (!existingContact.tags.includes('Deleted from HubSpot')) {
@@ -283,7 +340,7 @@ class WebhookService {
           existingContact.lastSyncedAt = new Date();
           
           await existingContact.save();
-          logger.info(`❄️ Cold Lead contact preserved in Prospere CRM (deleted from HubSpot): ${existingContact.firstName} ${existingContact.lastName}`);
+          logger.info(`🔒 ${preserveReason.join(' & ')} contact preserved in Prospere CRM (deleted from HubSpot): ${existingContact.firstName} ${existingContact.lastName}`);
           
         } else {
           // For regular contacts: Mark as deleted (existing behavior)

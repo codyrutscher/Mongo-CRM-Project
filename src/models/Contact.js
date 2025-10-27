@@ -165,6 +165,66 @@ const contactSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    
+    // Response Genius DNC Lists (synced from HubSpot)
+    dnc___seller_outreach: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    dnc___buyer_outreach: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    dnc___cre_outreach: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    dnc___exf_outreach: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    
+    // Response Genius Cold Lead Lists (synced from HubSpot)
+    seller_cold_lead: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    buyer_cold_lead: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    cre_cold_lead: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    exf_cold_lead: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    
+    // Campaign Status (for email campaign tracking)
+    campaignStatus: {
+      type: String,
+      enum: ["", "Delivered", "Unsubscribed", "Hard Bounce", "Soft Bounce"],
+      default: "",
+      index: true,
+    },
+    
+    // Campaign Type (for filtering)
+    campaignType: {
+      type: String,
+      enum: ["", "Buyer", "Seller", "CRE", "Exit Factor"],
+      default: "",
+      index: true,
+    },
 
     // Metadata
     tags: [String],

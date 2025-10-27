@@ -14,7 +14,7 @@ class HubSpotService {
   async getContacts(limit = 100, after = null, contactId = null) {
     try {
       const params = {
-        properties: 'firstname,lastname,jobtitle,linkedin_profile_url,email,phone,website,business_category___industry_of_interest,naics_code,numemployees,year_established,office_phone,address,city,state,zip,lead_source,contact_type,hs_email_last_send_date,createdate,lastmodifieddate,lifecyclestage,annualrevenue,industry,account_type,broker,buyer_status,seller_status,currently_own_a_business,legal_organization_type,primary_investor_type,buying_role,motivation_for_buying,dnc_flag,optout,compliance_notes,hs_do_not_call,do_not_call,seller_cold_lead,buyer_cold_lead,cre_cold_lead,exf_cold_lead'
+        properties: 'firstname,lastname,jobtitle,linkedin_profile_url,email,phone,website,business_category___industry_of_interest,naics_code,numemployees,year_established,office_phone,address,city,state,zip,lead_source,contact_type,hs_email_last_send_date,createdate,lastmodifieddate,lifecyclestage,annualrevenue,industry,account_type,broker,buyer_status,seller_status,currently_own_a_business,legal_organization_type,primary_investor_type,buying_role,motivation_for_buying,dnc_flag,optout,compliance_notes,hs_do_not_call,do_not_call,dnc___seller_outreach,dnc___buyer_outreach,dnc___cre_outreach,dnc___exf_outreach,seller_cold_lead,buyer_cold_lead,cre_cold_lead,exf_cold_lead'
       };
 
       let url = `${this.baseURL}/crm/v3/objects/contacts`;
@@ -375,6 +375,18 @@ class HubSpotService {
     contact.customFields.hubspotDoNotCall = props.hs_do_not_call || props.do_not_call || props.dnc_flag || props.hs_email_optout || 'false';
     contact.customFields.hubspotMarketingOptOut = props.optout || props.hs_email_optout || '';
     contact.customFields.hubspotMarketableStatus = props.hs_marketable_status || '';
+    
+    // Response Genius DNC Properties (8 properties)
+    contact.dnc___seller_outreach = props.dnc___seller_outreach === 'true' || props.dnc___seller_outreach === true;
+    contact.dnc___buyer_outreach = props.dnc___buyer_outreach === 'true' || props.dnc___buyer_outreach === true;
+    contact.dnc___cre_outreach = props.dnc___cre_outreach === 'true' || props.dnc___cre_outreach === true;
+    contact.dnc___exf_outreach = props.dnc___exf_outreach === 'true' || props.dnc___exf_outreach === true;
+    
+    // Response Genius Cold Lead Properties (4 properties)
+    contact.seller_cold_lead = props.seller_cold_lead === 'true' || props.seller_cold_lead === true;
+    contact.buyer_cold_lead = props.buyer_cold_lead === 'true' || props.buyer_cold_lead === true;
+    contact.cre_cold_lead = props.cre_cold_lead === 'true' || props.cre_cold_lead === true;
+    contact.exf_cold_lead = props.exf_cold_lead === 'true' || props.exf_cold_lead === true;
     
     contact.lastSyncedAt = new Date();
     
