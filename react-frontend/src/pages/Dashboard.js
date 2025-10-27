@@ -66,6 +66,96 @@ const Dashboard = () => {
     }
   };
 
+  const renderCampaignTypePieChart = () => {
+    const campaignTypes = stats.byCampaignType || {};
+    const total = Object.values(campaignTypes).reduce((a, b) => a + b, 0);
+
+    console.log("Dashboard: Rendering campaign type chart:", campaignTypes);
+    console.log("Dashboard: Total contacts:", total);
+
+    if (total === 0) {
+      return (
+        <p className="text-muted text-center">No campaign type data available</p>
+      );
+    }
+
+    // Check if Chart.js is available
+    if (Pie && ChartJS) {
+      try {
+        const labels = Object.keys(campaignTypes);
+        const data = Object.values(campaignTypes);
+
+        const colors = {
+          'Buyer': '#36A2EB',
+          'Seller': '#FF6384',
+          'CRE': '#FFCE56',
+          'Exit Factor': '#4BC0C0'
+        };
+
+        const chartData = {
+          labels: labels,
+          datasets: [
+            {
+              data: data,
+              backgroundColor: labels.map(label => colors[label] || '#9966FF'),
+              borderWidth: 2,
+              borderColor: '#fff',
+            },
+          ],
+        };
+
+        const options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const percentage = ((value / total) * 100).toFixed(1);
+                  return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+                },
+              },
+            },
+          },
+        };
+
+        return (
+          <div style={{ height: "300px", position: "relative" }}>
+            <Pie data={chartData} options={options} />
+          </div>
+        );
+      } catch (error) {
+        console.error("Error rendering campaign type chart:", error);
+      }
+    }
+
+    // Fallback to progress bars
+    return Object.entries(campaignTypes).map(([type, count]) => {
+      const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+      return (
+        <div key={type} className="mb-2">
+          <div className="d-flex justify-content-between">
+            <span>{type}</span>
+            <span>
+              {count.toLocaleString()} ({percentage}%)
+            </span>
+          </div>
+          <div className="progress" style={{ height: "8px" }}>
+            <div
+              className="progress-bar"
+              style={{ width: `${percentage}%` }}
+            ></div>
+          </div>
+        </div>
+      );
+    });
+  };
+
   const renderSourcePieChart = () => {
     const sources = stats.bySource || {};
     const total = Object.values(sources).reduce((a, b) => a + b, 0);
@@ -238,24 +328,20 @@ const Dashboard = () => {
         </Col>
       </Row>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Campaign Types */}
       <Row className="mb-4">
         <Col md={3}>
           <Card
             className="bg-primary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/sources")}
+            onClick={() => navigate("/hubspot-contacts")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-users fa-2x mb-2"></i>
               <h3>{stats.total}</h3>
               <p>Total Contacts</p>
               <small className="d-block">
-                HubSpot: {stats.bySource?.hubspot || 0} | Sheets:{" "}
-                {stats.bySource?.google_sheets || 0} | CSV:{" "}
-                {Object.entries(stats.bySource || {})
-                  .filter(([key]) => key.startsWith("csv_"))
-                  .reduce((sum, [, count]) => sum + count, 0)}
+                HubSpot + CSV Combined
               </small>
             </Card.Body>
           </Card>
@@ -264,16 +350,13 @@ const Dashboard = () => {
           <Card
             className="bg-success text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/category/clean")}
           >
             <Card.Body className="text-center">
-              <i className="fas fa-check-circle fa-2x mb-2"></i>
-              <h3>{stats.cleanContacts?.total || 0}</h3>
-              <p>Clean Contacts</p>
+              <i className="fas fa-shopping-cart fa-2x mb-2"></i>
+              <h3>{stats.byCampaignType?.Buyer || 0}</h3>
+              <p>Buyer Contacts</p>
               <small className="d-block">
-                HubSpot: {stats.cleanContacts?.hubspot || 0} | Sheets:{" "}
-                {stats.cleanContacts?.google_sheets || 0} | CSV:{" "}
-                {stats.cleanContacts?.csv || 0}
+                Campaign Type: Buyer
               </small>
             </Card.Body>
           </Card>
@@ -282,16 +365,13 @@ const Dashboard = () => {
           <Card
             className="bg-info text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/category/email-only")}
           >
             <Card.Body className="text-center">
-              <i className="fas fa-envelope fa-2x mb-2"></i>
-              <h3>{stats.emailOnlyContacts?.total || 0}</h3>
-              <p>Email Only</p>
+              <i className="fas fa-briefcase fa-2x mb-2"></i>
+              <h3>{stats.byCampaignType?.Seller || 0}</h3>
+              <p>Seller Contacts</p>
               <small className="d-block">
-                HubSpot: {stats.emailOnlyContacts?.hubspot || 0} | Sheets:{" "}
-                {stats.emailOnlyContacts?.google_sheets || 0} | CSV:{" "}
-                {stats.emailOnlyContacts?.csv || 0}
+                Campaign Type: Seller
               </small>
             </Card.Body>
           </Card>
@@ -300,6 +380,72 @@ const Dashboard = () => {
           <Card
             className="bg-warning text-white"
             style={{ cursor: "pointer" }}
+          >
+            <Card.Body className="text-center">
+              <i className="fas fa-building fa-2x mb-2"></i>
+              <h3>{stats.byCampaignType?.CRE || 0}</h3>
+              <p>CRE Contacts</p>
+              <small className="d-block">
+                Campaign Type: CRE
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Second Row - Exit Factor + Data Quality */}
+      <Row className="mb-4">
+        <Col md={3}>
+          <Card
+            className="bg-danger text-white"
+            style={{ cursor: "pointer" }}
+          >
+            <Card.Body className="text-center">
+              <i className="fas fa-rocket fa-2x mb-2"></i>
+              <h3>{stats.byCampaignType?.["Exit Factor"] || 0}</h3>
+              <p>Exit Factor</p>
+              <small className="d-block">
+                Campaign Type: Exit Factor
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card
+            className="bg-secondary text-white"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/category/clean")}
+          >
+            <Card.Body className="text-center">
+              <i className="fas fa-check-circle fa-2x mb-2"></i>
+              <h3>{stats.cleanContacts?.total || 0}</h3>
+              <p>Clean Contacts</p>
+              <small className="d-block">
+                Complete Information
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card
+            className="bg-secondary text-white"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/category/email-only")}
+          >
+            <Card.Body className="text-center">
+              <i className="fas fa-envelope fa-2x mb-2"></i>
+              <h3>{stats.emailOnlyContacts?.total || 0}</h3>
+              <p>Email Only</p>
+              <small className="d-block">
+                Missing Phone
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card
+            className="bg-secondary text-white"
+            style={{ cursor: "pointer" }}
             onClick={() => navigate("/contacts/category/phone-only")}
           >
             <Card.Body className="text-center">
@@ -307,47 +453,23 @@ const Dashboard = () => {
               <h3>{stats.phoneOnlyContacts?.total || 0}</h3>
               <p>Phone Only</p>
               <small className="d-block">
-                HubSpot: {stats.phoneOnlyContacts?.hubspot || 0} | Sheets:{" "}
-                {stats.phoneOnlyContacts?.google_sheets || 0} | CSV:{" "}
-                {stats.phoneOnlyContacts?.csv || 0}
+                Missing Email
               </small>
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* Second Row - Additional Categories */}
-      <Row className="mb-4">
-        <Col md={3}>
-          <Card
-            className="bg-secondary text-white"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/category/missing-company")}
-          >
-            <Card.Body className="text-center">
-              <i className="fas fa-building fa-2x mb-2"></i>
-              <h3>{stats.missingCompanyContacts?.total || 0}</h3>
-              <p>Missing Company</p>
-              <small className="d-block">
-                HubSpot: {stats.missingCompanyContacts?.hubspot || 0} | Sheets:{" "}
-                {stats.missingCompanyContacts?.google_sheets || 0} | CSV:{" "}
-                {stats.missingCompanyContacts?.csv || 0}
-              </small>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Contact Sources and Sync Jobs */}
+      {/* Campaign Types and Sync Jobs */}
       <Row>
         <Col md={6}>
           <Card>
             <Card.Header>
               <h5>
-                <i className="fas fa-chart-pie"></i> Contact Sources
+                <i className="fas fa-chart-pie"></i> Campaign Type Distribution
               </h5>
             </Card.Header>
-            <Card.Body>{renderSourcePieChart()}</Card.Body>
+            <Card.Body>{renderCampaignTypePieChart()}</Card.Body>
           </Card>
         </Col>
         <Col md={6}>

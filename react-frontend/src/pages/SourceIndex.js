@@ -78,7 +78,7 @@ const SourceIndex = () => {
       {/* Source Cards */}
       <Row className="mb-4">
         {/* HubSpot */}
-        <Col md={4}>
+        <Col md={6}>
           <Card 
             className="h-100 border-0 shadow-sm"
             style={{ cursor: "pointer" }}
@@ -100,31 +100,8 @@ const SourceIndex = () => {
           </Card>
         </Col>
 
-        {/* Google Sheets */}
-        <Col md={4}>
-          <Card 
-            className="h-100 border-0 shadow-sm"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/sheets-contacts")}
-          >
-            <Card.Body className="text-center p-4">
-              <div className="mb-3">
-                <i className="fab fa-google fa-3x text-success"></i>
-              </div>
-              <h4 className="mb-2">{formatNumber(stats.bySource?.google_sheets || 0)}</h4>
-              <h6 className="text-muted mb-3">Google Sheets Contacts</h6>
-              <p className="small text-muted">
-                Contacts imported from Google Sheets spreadsheets
-              </p>
-              <Button variant="outline-success" size="sm">
-                View Sheets Contacts <i className="fas fa-arrow-right"></i>
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
-
         {/* CSV Uploads */}
-        <Col md={4}>
+        <Col md={6}>
           <Card 
             className="h-100 border-0 shadow-sm"
             style={{ cursor: "pointer" }}
