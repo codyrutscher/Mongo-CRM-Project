@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ['nodejs_18', 'npm-9_x']
+
+[phases.install]
+cmds = [
+  'npm ci',
+  'cd react-frontend && npm ci'
+]
+
+[phases.build]
+cmds = [
+  'cd react-frontend && npm run build',
+  'ls -la react-frontend/build'
+]
+
+[start]
+cmd = 'node src/index.js'
