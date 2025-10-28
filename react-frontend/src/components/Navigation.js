@@ -45,6 +45,12 @@ const Navigation = () => {
               </LinkContainer>
             </NavDropdown>
             
+            <LinkContainer to="/csv-contacts">
+              <Nav.Link>
+                <i className="fas fa-upload"></i> Upload CSV
+              </Nav.Link>
+            </LinkContainer>
+            
             <LinkContainer to="/segments">
               <Nav.Link>Segments</Nav.Link>
             </LinkContainer>
