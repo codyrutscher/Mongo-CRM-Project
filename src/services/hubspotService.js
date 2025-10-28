@@ -14,7 +14,7 @@ class HubSpotService {
   async getContacts(limit = 100, after = null, contactId = null) {
     try {
       const params = {
-        properties: 'firstname,lastname,jobtitle,linkedin_profile_url,email,phone,website,business_category___industry_of_interest,naics_code,numemployees,year_established,office_phone,address,city,state,zip,lead_source,contact_type,hs_email_last_send_date,createdate,lastmodifieddate,lifecyclestage,annualrevenue,industry,account_type,broker,buyer_status,seller_status,currently_own_a_business,legal_organization_type,primary_investor_type,buying_role,motivation_for_buying,dnc_flag,optout,compliance_notes,hs_do_not_call,do_not_call,dnc___seller_outreach,dnc___buyer_outreach,dnc___cre_outreach,dnc___exf_outreach,seller_cold_lead,buyer_cold_lead,cre_cold_lead,exf_cold_lead'
+        properties: 'firstname,lastname,email,phone,jobtitle,linkedin_profile_url,company,website,business_category___industry_of_interest,naics_code,numemployees,year_established,office_phone,address,city,state,zip,lead_source,contact_type,campaign_type,last_campaign_date,dnc___cre_outreach,dnc___exf_outreach,dnc___buyer_outreach,dnc___seller_outreach,exf_cold_lead,cre_cold_lead,buyer_cold_lead,seller_cold_lead,createdate,lastmodifieddate,lifecyclestage,annualrevenue,industry,account_type,broker,buyer_status,seller_status,currently_own_a_business,legal_organization_type,primary_investor_type,buying_role,motivation_for_buying,dnc_flag,optout,compliance_notes,hs_do_not_call,do_not_call'
       };
 
       let url = `${this.baseURL}/crm/v3/objects/contacts`;
@@ -338,9 +338,8 @@ class HubSpotService {
     // Use the field mapping service to transform to NAICS standard
     const contact = mappingService.mapHubSpotToContact(hubspotContact);
     
-    // Handle missing company field (causes 500 error in API)
+    // Get properties
     const props = hubspotContact.properties;
-    contact.company = props.company || ''; // Will be empty since we can't fetch it
     
     // Add HubSpot-specific DNC and compliance handling
     const dncStatus = this.mapDncStatus(props);
