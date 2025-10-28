@@ -216,10 +216,10 @@ const Dashboard = () => {
           >
             <Card.Body className="text-center">
               <i className="fas fa-users fa-2x mb-2"></i>
-              <h3>{stats.total}</h3>
+              <h3>{stats.total?.toLocaleString()}</h3>
               <p>Total Contacts</p>
               <small className="d-block">
-                HubSpot + CSV Combined
+                All Contacts
               </small>
             </Card.Body>
           </Card>
@@ -296,11 +296,11 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/category/clean")}
+            onClick={() => navigate("/hubspot-contacts?filter=clean")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-check-circle fa-2x mb-2"></i>
-              <h3>{stats.cleanContacts?.total || 0}</h3>
+              <h3>{stats.cleanContacts?.total?.toLocaleString() || 0}</h3>
               <p>Clean Contacts</p>
               <small className="d-block">
                 Complete Information
@@ -312,11 +312,11 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/category/email-only")}
+            onClick={() => navigate("/hubspot-contacts?filter=email-only")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-envelope fa-2x mb-2"></i>
-              <h3>{stats.emailOnlyContacts?.total || 0}</h3>
+              <h3>{stats.emailOnlyContacts?.total?.toLocaleString() || 0}</h3>
               <p>Email Only</p>
               <small className="d-block">
                 Missing Phone
@@ -328,11 +328,11 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/category/phone-only")}
+            onClick={() => navigate("/hubspot-contacts?filter=phone-only")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-phone fa-2x mb-2"></i>
-              <h3>{stats.phoneOnlyContacts?.total || 0}</h3>
+              <h3>{stats.phoneOnlyContacts?.total?.toLocaleString() || 0}</h3>
               <p>Phone Only</p>
               <small className="d-block">
                 Missing Email

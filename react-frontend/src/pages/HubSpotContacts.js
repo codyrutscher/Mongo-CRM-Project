@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Button, InputGroup, Form, Alert } from 'react-bootstrap';
+import { useSearchParams } from 'react-router-dom';
 import ContactCard from '../components/ContactCard';
 import ContactTable from '../components/ContactTable';
 import ContactModal from '../components/ContactModal';
@@ -8,6 +9,7 @@ import AdvancedFilters from '../components/AdvancedFilters';
 import { getContacts, getContactsWithFilters, getContact, getAllFilteredContactIds, createSegment } from '../services/api';
 
 const HubSpotContacts = () => {
+  const [searchParams] = useSearchParams();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewType, setViewType] = useState('grid');
@@ -27,6 +29,36 @@ const HubSpotContacts = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
+
+  // Apply URL filter params on mount
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam) {
+      const initialFilters = {};
+      
+      switch (filterParam) {
+        case 'clean':
+          initialFilters.hasEmail = true;
+          initialFilters.hasPhone = true;
+          break;
+        case 'email-only':
+          initialFilters.hasEmail = true;
+          initialFilters.hasPhone = false;
+          break;
+        case 'phone-only':
+          initialFilters.hasPhone = true;
+          initialFilters.hasEmail = false;
+          break;
+        default:
+          break;
+      }
+      
+      if (Object.keys(initialFilters).length > 0) {
+        setFilters(initialFilters);
+        setShowFilters(true);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadContacts();

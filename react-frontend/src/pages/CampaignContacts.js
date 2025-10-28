@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Row, Col, Button, Badge } from 'react-bootstrap';
 import ContactTable from '../components/ContactTable';
 import PaginationComponent from '../components/PaginationComponent';
+import AdvancedFilters from '../components/AdvancedFilters';
 import { searchContacts } from '../services/api';
 
 const CampaignContacts = () => {
@@ -10,6 +11,8 @@ const CampaignContacts = () => {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({});
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -34,12 +37,13 @@ const CampaignContacts = () => {
     try {
       setLoading(true);
       
-      const filters = {
+      const combinedFilters = {
+        ...filters,
         campaignType: campaignTypeDisplay
       };
 
       const response = await searchContacts({
-        filters,
+        filters: combinedFilters,
         page,
         limit: 50,
         sort: 'createdAt',
@@ -55,6 +59,11 @@ const CampaignContacts = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    loadContacts(1);
   };
 
   const handlePageChange = (page) => {
@@ -113,11 +122,26 @@ const CampaignContacts = () => {
           <Button
             variant="outline-secondary"
             onClick={() => navigate('/dashboard')}
+            className="me-2"
           >
             <i className="fas fa-arrow-left"></i> Back to Dashboard
           </Button>
+          <Button
+            variant="outline-primary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <i className="fas fa-filter"></i> {showFilters ? 'Hide' : 'Show'} Filters
+          </Button>
         </Col>
       </Row>
+
+      {showFilters && (
+        <Row className="mb-4">
+          <Col>
+            <AdvancedFilters onFilterChange={handleFilterChange} />
+          </Col>
+        </Row>
+      )}
 
       {loading && (
         <Row>
