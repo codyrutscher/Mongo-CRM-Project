@@ -22,7 +22,8 @@ class FieldMappingService {
       'companyState',
       'companyZipCode',
       'leadSource',
-      'campaignCategory',
+      'campaignType',
+      'campaignStatus',
       'lastCampaignDate'
     ];
 
@@ -102,9 +103,14 @@ class FieldMappingService {
       'lead source': 'leadSource',
       'lead_source': 'leadSource',
       'source': 'leadSource',
-      'campaign category': 'campaignCategory',
-      'campaign': 'campaignCategory',
-      'campaign_type': 'campaignCategory',
+      'campaign category': 'campaignType',
+      'campaign': 'campaignType',
+      'campaign_type': 'campaignType',
+      'campaigncategory': 'campaignType',
+      'campaign status': 'campaignStatus',
+      'campaign_status': 'campaignStatus',
+      'campaignstatus': 'campaignStatus',
+      'status': 'campaignStatus',
       'last campaign date': 'lastCampaignDate',
       'campaign_date': 'lastCampaignDate',
       'last_contact': 'lastCampaignDate'
@@ -135,7 +141,7 @@ class FieldMappingService {
       
       // Lead Information
       'lead_source': 'leadSource',
-      'contact_type': 'campaignCategory',
+      'contact_type': 'campaignType',
       'hs_email_last_send_date': 'lastCampaignDate'
     };
 
