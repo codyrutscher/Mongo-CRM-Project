@@ -29,6 +29,20 @@ const Navigation = () => {
               <LinkContainer to="/sheets-contacts">
                 <NavDropdown.Item>📊 C17 Contacts</NavDropdown.Item>
               </LinkContainer>
+              <NavDropdown.Divider />
+              <NavDropdown.Header>By Campaign Type</NavDropdown.Header>
+              <LinkContainer to="/contacts/campaign/buyer">
+                <NavDropdown.Item>🛒 Buyer Contacts</NavDropdown.Item>
+              </LinkContainer>
+              <LinkContainer to="/contacts/campaign/seller">
+                <NavDropdown.Item>💼 Seller Contacts</NavDropdown.Item>
+              </LinkContainer>
+              <LinkContainer to="/contacts/campaign/cre">
+                <NavDropdown.Item>🏢 CRE Contacts</NavDropdown.Item>
+              </LinkContainer>
+              <LinkContainer to="/contacts/campaign/exit-factor">
+                <NavDropdown.Item>🚀 Exit Factor Contacts</NavDropdown.Item>
+              </LinkContainer>
             </NavDropdown>
             
             <LinkContainer to="/segments">

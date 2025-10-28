@@ -429,6 +429,7 @@ class SearchService {
         bySource,
         byLifecycleStage,
         byStatus,
+        byCampaignType,
         recentActivity,
         cleanHubSpot,
         cleanSheets,
@@ -453,6 +454,10 @@ class SearchService {
           { $sort: { count: -1 } },
         ]),
         Contact.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+        Contact.aggregate([
+          { $group: { _id: "$campaignType", count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+        ]),
         Contact.aggregate([
           {
             $group: {
@@ -605,6 +610,12 @@ class SearchService {
           csv: missingCompanyCSV,
           total: missingCompanyHubSpot + missingCompanySheets + missingCompanyCSV,
         },
+        byCampaignType: byCampaignType.reduce((acc, item) => {
+          if (item._id) { // Only include if campaignType is not null/undefined
+            acc[item._id] = item.count;
+          }
+          return acc;
+        }, {}),
       };
     } catch (error) {
       logger.error("Error getting contact stats:", error);

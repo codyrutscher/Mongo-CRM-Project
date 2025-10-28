@@ -10,6 +10,7 @@ import SheetsContacts from "./pages/SheetsContacts";
 import ContactsByCategory from "./pages/ContactsByCategory";
 import CategorySourceIndex from "./pages/CategorySourceIndex";
 import SourceIndex from "./pages/SourceIndex";
+import CampaignContacts from "./pages/CampaignContacts";
 import DebugAPI from "./pages/DebugAPI";
 import DebugPanel from "./components/DebugPanel";
 import Segments from "./pages/Segments";
@@ -155,6 +156,17 @@ function App() {
                 <Navigation />
                 <div className="container mt-4">
                   <ContactsByCategory />
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contacts/campaign/:campaignType"
+            element={
+              <ProtectedRoute>
+                <Navigation />
+                <div className="container mt-4">
+                  <CampaignContacts />
                 </div>
               </ProtectedRoute>
             }

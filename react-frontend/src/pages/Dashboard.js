@@ -228,6 +228,7 @@ const Dashboard = () => {
           <Card
             className="bg-success text-white"
             style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/campaign/buyer")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-shopping-cart fa-2x mb-2"></i>
@@ -243,6 +244,7 @@ const Dashboard = () => {
           <Card
             className="bg-info text-white"
             style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/campaign/seller")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-briefcase fa-2x mb-2"></i>
@@ -258,6 +260,7 @@ const Dashboard = () => {
           <Card
             className="bg-warning text-white"
             style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/campaign/cre")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-building fa-2x mb-2"></i>
@@ -277,6 +280,7 @@ const Dashboard = () => {
           <Card
             className="bg-danger text-white"
             style={{ cursor: "pointer" }}
+            onClick={() => navigate("/contacts/campaign/exit-factor")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-rocket fa-2x mb-2"></i>
