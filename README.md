@@ -427,4 +427,4 @@ For support and questions:
 
 ---
 
-**ProspereCRM** - Scale your customer relationships with confidence.
+**ProspereCRM** - Scale your customer relationships with confidence.# Campaign Types Synced - Ready for Production
