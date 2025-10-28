@@ -210,6 +210,8 @@ class FieldMappingService {
 
   // Map HubSpot contact to NAICS standard
   mapHubSpotToContact(hubspotContact) {
+    const contactTypeMapper = require('./contactTypeMapper');
+    
     const contact = {
       source: 'hubspot',
       sourceId: hubspotContact.id.toString(),
@@ -222,7 +224,17 @@ class FieldMappingService {
       const value = hubspotContact.properties[hubspotField];
       
       if (value) {
-        contact[naicsField] = value;
+        // Special handling for contact_type
+        if (hubspotField === 'contact_type') {
+          // Get primary campaign type
+          contact.campaignType = contactTypeMapper.getPrimaryCampaignType(value);
+          // Store all campaign types in customFields
+          contact.customFields = contact.customFields || {};
+          contact.customFields.campaignTypes = contactTypeMapper.parseContactType(value);
+          contact.customFields.contactTypeRaw = value;
+        } else {
+          contact[naicsField] = value;
+        }
       }
     });
 
