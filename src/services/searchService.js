@@ -522,26 +522,23 @@ class SearchService {
           { $sort: { _id: -1 } },
           { $limit: 30 },
         ]),
-        // Clean Contacts - HubSpot (email + phone + company)
+        // Clean Contacts - HubSpot (email + phone)
         Contact.countDocuments({
           source: "hubspot",
           email: { $exists: true, $nin: ["", null] },
           phone: { $exists: true, $nin: ["", null] },
-          company: { $exists: true, $nin: ["", null] },
         }),
-        // Clean Contacts - Google Sheets (email + phone + company)
+        // Clean Contacts - Google Sheets (email + phone)
         Contact.countDocuments({
           source: "google_sheets",
           email: { $exists: true, $nin: ["", null] },
           phone: { $exists: true, $nin: ["", null] },
-          company: { $exists: true, $nin: ["", null] },
         }),
-        // Clean Contacts - CSV (email + phone + company)
+        // Clean Contacts - CSV (email + phone)
         Contact.countDocuments({
           source: { $regex: "^csv_" },
           email: { $exists: true, $nin: ["", null] },
           phone: { $exists: true, $nin: ["", null] },
-          company: { $exists: true, $nin: ["", null] },
         }),
         // Email Only - HubSpot
         Contact.countDocuments({

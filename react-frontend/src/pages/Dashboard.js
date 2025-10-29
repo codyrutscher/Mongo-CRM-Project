@@ -75,7 +75,9 @@ const Dashboard = () => {
 
     if (total === 0) {
       return (
-        <p className="text-muted text-center">No campaign type data available</p>
+        <p className="text-muted text-center">
+          No campaign type data available
+        </p>
       );
     }
 
@@ -86,10 +88,10 @@ const Dashboard = () => {
         const data = Object.values(campaignTypes);
 
         const colors = {
-          'Buyer': '#36A2EB',
-          'Seller': '#FF6384',
-          'CRE': '#FFCE56',
-          'Exit Factor': '#4BC0C0'
+          Buyer: "#36A2EB",
+          Seller: "#FF6384",
+          CRE: "#FFCE56",
+          "Exit Factor": "#4BC0C0",
         };
 
         const chartData = {
@@ -97,9 +99,11 @@ const Dashboard = () => {
           datasets: [
             {
               data: data,
-              backgroundColor: labels.map(label => colors[label] || '#9966FF'),
+              backgroundColor: labels.map(
+                (label) => colors[label] || "#9966FF"
+              ),
               borderWidth: 2,
-              borderColor: '#fff',
+              borderColor: "#fff",
             },
           ],
         };
@@ -109,12 +113,12 @@ const Dashboard = () => {
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              position: 'bottom',
+              position: "bottom",
             },
             tooltip: {
               callbacks: {
                 label: function (context) {
-                  const label = context.label || '';
+                  const label = context.label || "";
                   const value = context.parsed || 0;
                   const percentage = ((value / total) * 100).toFixed(1);
                   return `${label}: ${value.toLocaleString()} (${percentage}%)`;
@@ -155,7 +159,6 @@ const Dashboard = () => {
       );
     });
   };
-
 
   const renderSyncJobs = () => {
     if (syncJobs.length === 0) {
@@ -218,9 +221,7 @@ const Dashboard = () => {
               <i className="fas fa-users fa-2x mb-2"></i>
               <h3>{stats.total?.toLocaleString()}</h3>
               <p>Total Contacts</p>
-              <small className="d-block">
-                All Contacts
-              </small>
+              <small className="d-block">All Contacts</small>
             </Card.Body>
           </Card>
         </Col>
@@ -234,9 +235,7 @@ const Dashboard = () => {
               <i className="fas fa-shopping-cart fa-2x mb-2"></i>
               <h3>{stats.byCampaignType?.Buyer?.toLocaleString() || 0}</h3>
               <p>Buyer Contacts</p>
-              <small className="d-block">
-                Campaign Type: Buyer
-              </small>
+              <small className="d-block">Campaign Type: Buyer</small>
             </Card.Body>
           </Card>
         </Col>
@@ -250,9 +249,7 @@ const Dashboard = () => {
               <i className="fas fa-briefcase fa-2x mb-2"></i>
               <h3>{stats.byCampaignType?.Seller?.toLocaleString() || 0}</h3>
               <p>Seller Contacts</p>
-              <small className="d-block">
-                Campaign Type: Seller
-              </small>
+              <small className="d-block">Campaign Type: Seller</small>
             </Card.Body>
           </Card>
         </Col>
@@ -266,9 +263,7 @@ const Dashboard = () => {
               <i className="fas fa-building fa-2x mb-2"></i>
               <h3>{stats.byCampaignType?.CRE?.toLocaleString() || 0}</h3>
               <p>CRE Contacts</p>
-              <small className="d-block">
-                Campaign Type: CRE
-              </small>
+              <small className="d-block">Campaign Type: CRE</small>
             </Card.Body>
           </Card>
         </Col>
@@ -280,15 +275,17 @@ const Dashboard = () => {
           <Card
             className="bg-danger text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?campaignType=Exit Factor")}
+            onClick={() =>
+              navigate("/hubspot-contacts?campaignType=Exit Factor")
+            }
           >
             <Card.Body className="text-center">
               <i className="fas fa-rocket fa-2x mb-2"></i>
-              <h3>{stats.byCampaignType?.["Exit Factor"]?.toLocaleString() || 0}</h3>
+              <h3>
+                {stats.byCampaignType?.["Exit Factor"]?.toLocaleString() || 0}
+              </h3>
               <p>Exit Factor</p>
-              <small className="d-block">
-                Campaign Type: Exit Factor
-              </small>
+              <small className="d-block">Campaign Type: Exit Factor</small>
             </Card.Body>
           </Card>
         </Col>
@@ -296,15 +293,15 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?hasEmail=true&hasPhone=true")}
+            onClick={() =>
+              navigate("/hubspot-contacts?hasEmail=true&hasPhone=true")
+            }
           >
             <Card.Body className="text-center">
               <i className="fas fa-check-circle fa-2x mb-2"></i>
               <h3>{stats.cleanContacts?.total?.toLocaleString() || 0}</h3>
               <p>Clean Contacts</p>
-              <small className="d-block">
-                Email + Phone
-              </small>
+              <small className="d-block">Email + Phone</small>
             </Card.Body>
           </Card>
         </Col>
@@ -312,15 +309,15 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?hasEmail=true&hasPhone=false")}
+            onClick={() =>
+              navigate("/hubspot-contacts?hasEmail=true&hasPhone=false")
+            }
           >
             <Card.Body className="text-center">
               <i className="fas fa-envelope fa-2x mb-2"></i>
               <h3>{stats.emailOnlyContacts?.total?.toLocaleString() || 0}</h3>
               <p>Email Only</p>
-              <small className="d-block">
-                Missing Phone
-              </small>
+              <small className="d-block">Missing Phone</small>
             </Card.Body>
           </Card>
         </Col>
@@ -328,15 +325,15 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?hasPhone=true&hasEmail=false")}
+            onClick={() =>
+              navigate("/hubspot-contacts?hasPhone=true&hasEmail=false")
+            }
           >
             <Card.Body className="text-center">
               <i className="fas fa-phone fa-2x mb-2"></i>
               <h3>{stats.phoneOnlyContacts?.total?.toLocaleString() || 0}</h3>
               <p>Phone Only</p>
-              <small className="d-block">
-                Missing Email
-              </small>
+              <small className="d-block">Missing Email</small>
             </Card.Body>
           </Card>
         </Col>
