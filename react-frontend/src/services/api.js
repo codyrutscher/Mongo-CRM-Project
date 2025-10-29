@@ -4,7 +4,7 @@ const API_BASE = '/api';
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 30000,
+  timeout: 300000, // 5 minutes for large file uploads
 });
 
 // Add auth token to requests
@@ -126,6 +126,7 @@ export const uploadContacts = (formData) => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 600000, // 10 minutes for large CSV uploads
   });
 };
 
