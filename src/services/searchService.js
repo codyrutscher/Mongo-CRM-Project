@@ -9,6 +9,9 @@ class SearchService {
 
   async searchContacts(query = {}, options = {}) {
     try {
+      console.log('📊 searchContacts called with query:', JSON.stringify(query, null, 2));
+      console.log('📊 searchContacts options:', JSON.stringify(options, null, 2));
+
       const {
         page = 1,
         limit = this.defaultPageSize,
@@ -19,6 +22,8 @@ class SearchService {
 
       const actualLimit = Math.min(limit, this.maxPageSize);
       const skip = (page - 1) * actualLimit;
+
+      console.log(`📊 Querying page ${page}, limit ${actualLimit}, skip ${skip}`);
 
       let contactQuery = Contact.find(query)
         .sort(sort)
@@ -38,6 +43,8 @@ class SearchService {
         contactQuery,
         Contact.countDocuments(query),
       ]);
+
+      console.log(`✅ Found ${contacts.length} contacts out of ${total} total matching query`);
 
       // Post-process contacts to fix CSV email display
       const processedContacts = contacts.map((contact) => {
@@ -107,8 +114,11 @@ class SearchService {
   buildFilterQuery(filters) {
     const query = {};
 
+    console.log('🔍 buildFilterQuery called with filters:', JSON.stringify(filters, null, 2));
+
     // Handle undefined, null, or empty filters
     if (!filters || typeof filters !== "object") {
+      console.log('⚠️  No filters provided, returning empty query');
       return query;
     }
 
@@ -226,6 +236,7 @@ class SearchService {
           break;
 
         case "campaignType":
+          console.log('✅ Setting campaignType filter:', value);
           query.campaignType = value;
           break;
 
@@ -307,6 +318,7 @@ class SearchService {
       }
     });
 
+    console.log('🎯 Final MongoDB query:', JSON.stringify(query, null, 2));
     return query;
   }
 

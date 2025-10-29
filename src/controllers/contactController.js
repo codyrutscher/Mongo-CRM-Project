@@ -404,10 +404,14 @@ class ContactController {
         pagination: result.pagination
       });
     } catch (error) {
+      console.error('❌ ERROR in searchContacts:', error);
+      console.error('Error stack:', error.stack);
+      console.error('Request body:', req.body);
       logger.error('Error in searchContacts:', error);
       res.status(500).json({
         success: false,
-        error: 'Search failed'
+        error: error.message || 'Search failed',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }
