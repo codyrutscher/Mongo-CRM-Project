@@ -248,7 +248,7 @@ class ContactController {
       // Get source name from request body or use filename
       const sourceName = req.body.sourceName || req.file.originalname.replace(/\.[^/.]+$/, "");
       const cleanSourceName = sourceName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-      const source = `csv_${cleanSourceName}`;
+      const source = "csv_upload"; // Use standard enum value
 
       logger.info(`Source name: "${sourceName}" -> Clean: "${cleanSourceName}" -> Final: "${source}"`);
 
