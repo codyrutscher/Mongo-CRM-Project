@@ -137,7 +137,8 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.urlencoded({ extended: true }));
 
 // Increase timeout for large exports
