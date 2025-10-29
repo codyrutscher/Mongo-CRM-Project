@@ -282,6 +282,14 @@ class SearchService {
           }
           break;
 
+        case "hasCompany":
+          if (value === true) {
+            query.company = { $exists: true, $ne: "", $ne: null };
+          } else if (value === false) {
+            query.$or = [{ company: { $exists: false } }, { company: "" }, { company: null }];
+          }
+          break;
+
         case "customFields":
           Object.keys(value).forEach((fieldName) => {
             const fieldValue = value[fieldName];
@@ -507,32 +515,26 @@ class SearchService {
           { $sort: { _id: -1 } },
           { $limit: 30 },
         ]),
-        // Clean Contacts - HubSpot (with meaningful company data)
+        // Clean Contacts - HubSpot (email + phone + company)
         Contact.countDocuments({
           source: "hubspot",
-          firstName: { $exists: true, $ne: "", $ne: null },
-          lastName: { $exists: true, $ne: "", $ne: null },
           email: { $exists: true, $ne: "", $ne: null },
           phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null, $regex: /.{2,}/ }, // At least 2 characters
+          company: { $exists: true, $ne: "", $ne: null },
         }),
-        // Clean Contacts - Google Sheets (with meaningful company data)
+        // Clean Contacts - Google Sheets (email + phone + company)
         Contact.countDocuments({
           source: "google_sheets",
-          firstName: { $exists: true, $ne: "", $ne: null },
-          lastName: { $exists: true, $ne: "", $ne: null },
           email: { $exists: true, $ne: "", $ne: null },
           phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null, $regex: /.{2,}/ }, // At least 2 characters
+          company: { $exists: true, $ne: "", $ne: null },
         }),
-        // Clean Contacts - CSV (with meaningful company data)
+        // Clean Contacts - CSV (email + phone + company)
         Contact.countDocuments({
           source: { $regex: "^csv_" },
-          firstName: { $exists: true, $ne: "", $ne: null },
-          lastName: { $exists: true, $ne: "", $ne: null },
           email: { $exists: true, $ne: "", $ne: null },
           phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null, $regex: /.{2,}/ }, // At least 2 characters
+          company: { $exists: true, $ne: "", $ne: null },
         }),
         // Email Only - HubSpot
         Contact.countDocuments({

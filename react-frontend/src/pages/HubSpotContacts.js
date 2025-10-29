@@ -52,6 +52,12 @@ const HubSpotContacts = () => {
       initialFilters.hasPhone = hasPhone === 'true';
     }
     
+    // Check for hasCompany parameter
+    const hasCompany = searchParams.get('hasCompany');
+    if (hasCompany !== null) {
+      initialFilters.hasCompany = hasCompany === 'true';
+    }
+    
     // Legacy filter parameter support
     const filterParam = searchParams.get('filter');
     if (filterParam) {
@@ -59,6 +65,7 @@ const HubSpotContacts = () => {
         case 'clean':
           initialFilters.hasEmail = true;
           initialFilters.hasPhone = true;
+          initialFilters.hasCompany = true;
           break;
         case 'email-only':
           initialFilters.hasEmail = true;
