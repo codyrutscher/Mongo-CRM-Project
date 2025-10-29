@@ -225,6 +225,10 @@ class SearchService {
           query.campaignCategory = value;
           break;
 
+        case "campaignType":
+          query.campaignType = value;
+          break;
+
         case "leadSource":
           query.leadSource = { $regex: value, $options: "i" };
           break;
@@ -247,6 +251,22 @@ class SearchService {
 
         case "lastName":
           query.lastName = { $regex: value, $options: "i" };
+          break;
+
+        case "hasEmail":
+          if (value === true) {
+            query.email = { $exists: true, $ne: "" };
+          } else if (value === false) {
+            query.$or = [{ email: { $exists: false } }, { email: "" }];
+          }
+          break;
+
+        case "hasPhone":
+          if (value === true) {
+            query.phone = { $exists: true, $ne: "" };
+          } else if (value === false) {
+            query.$or = [{ phone: { $exists: false } }, { phone: "" }];
+          }
           break;
 
         case "customFields":
