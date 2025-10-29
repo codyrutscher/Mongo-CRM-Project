@@ -117,6 +117,7 @@ class SearchService {
     const query = {};
 
     console.log('🔍 buildFilterQuery called with filters:', JSON.stringify(filters, null, 2));
+    console.log('🔍 Filter keys:', Object.keys(filters));
 
     // Handle undefined, null, or empty filters
     if (!filters || typeof filters !== "object") {

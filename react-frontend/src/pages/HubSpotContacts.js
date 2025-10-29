@@ -30,7 +30,7 @@ const HubSpotContacts = () => {
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  // Apply URL filter params on mount
+  // Apply URL filter params on mount and load contacts
   useEffect(() => {
     const initialFilters = {};
     

@@ -48,6 +48,7 @@ export const getContacts = (params = {}) => {
 };
 
 export const getContactsWithFilters = (filters = {}, page = 1, limit = 20, sort = 'createdAt', order = 'desc') => {
+  console.log('🔵 getContactsWithFilters called:', { filters, page, limit, sort, order });
   return api.post('/contacts/search', {
     filters,
     page,
