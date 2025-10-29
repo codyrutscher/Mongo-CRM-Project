@@ -66,7 +66,7 @@ export const getAllFilteredContactIds = (filters = {}) => {
   });
 };
 
-export const searchContacts = (params) => {
+export const searchContacts = (params, page, limit) => {
   console.log('🔵 searchContacts called with params:', params);
   
   // Support both old signature (query, page, limit) and new signature (object with filters)
@@ -77,10 +77,10 @@ export const searchContacts = (params) => {
   } else if (typeof params === 'string') {
     // Old signature: (query, page, limit) where query is a string
     const query = params;
-    const page = arguments[1] || 1;
-    const limit = arguments[2] || 100;
+    const actualPage = page || 1;
+    const actualLimit = limit || 100;
     console.log('🔵 Using old signature with query string:', query);
-    return api.post('/contacts/search', { query, page, limit });
+    return api.post('/contacts/search', { query, page: actualPage, limit: actualLimit });
   } else {
     // Fallback: treat as direct body
     console.log('🔵 Using direct body:', params);
