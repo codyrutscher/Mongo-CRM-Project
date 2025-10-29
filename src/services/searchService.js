@@ -269,7 +269,7 @@ class SearchService {
 
         case "hasEmail":
           if (value === true) {
-            query.email = { $exists: true, $ne: "", $ne: null };
+            query.email = { $exists: true, $nin: ["", null] };
           } else if (value === false) {
             query.$or = [{ email: { $exists: false } }, { email: "" }, { email: null }];
           }
@@ -277,7 +277,7 @@ class SearchService {
 
         case "hasPhone":
           if (value === true) {
-            query.phone = { $exists: true, $ne: "", $ne: null };
+            query.phone = { $exists: true, $nin: ["", null] };
           } else if (value === false) {
             // Don't overwrite existing $or, create a separate condition
             if (!query.$or) {
@@ -288,7 +288,7 @@ class SearchService {
 
         case "hasCompany":
           if (value === true) {
-            query.company = { $exists: true, $ne: "", $ne: null };
+            query.company = { $exists: true, $nin: ["", null] };
           } else if (value === false) {
             // Don't overwrite existing $or, create a separate condition
             if (!query.$or) {
