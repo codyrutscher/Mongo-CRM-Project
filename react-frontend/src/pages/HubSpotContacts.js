@@ -32,10 +32,29 @@ const HubSpotContacts = () => {
 
   // Apply URL filter params on mount
   useEffect(() => {
+    const initialFilters = {};
+    
+    // Check for campaignType parameter
+    const campaignType = searchParams.get('campaignType');
+    if (campaignType) {
+      initialFilters.campaignType = campaignType;
+    }
+    
+    // Check for hasEmail parameter
+    const hasEmail = searchParams.get('hasEmail');
+    if (hasEmail !== null) {
+      initialFilters.hasEmail = hasEmail === 'true';
+    }
+    
+    // Check for hasPhone parameter
+    const hasPhone = searchParams.get('hasPhone');
+    if (hasPhone !== null) {
+      initialFilters.hasPhone = hasPhone === 'true';
+    }
+    
+    // Legacy filter parameter support
     const filterParam = searchParams.get('filter');
     if (filterParam) {
-      const initialFilters = {};
-      
       switch (filterParam) {
         case 'clean':
           initialFilters.hasEmail = true;
@@ -52,11 +71,12 @@ const HubSpotContacts = () => {
         default:
           break;
       }
-      
-      if (Object.keys(initialFilters).length > 0) {
-        setFilters(initialFilters);
-        setShowFilters(true);
-      }
+    }
+    
+    if (Object.keys(initialFilters).length > 0) {
+      console.log('📌 Applying URL filters:', initialFilters);
+      setFilters(initialFilters);
+      setShowFilters(true);
     }
   }, [searchParams]);
 

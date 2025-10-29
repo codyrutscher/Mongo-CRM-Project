@@ -90,7 +90,9 @@ class SearchService {
 
   async textSearch(searchText, options = {}) {
     try {
-      if (!searchText || searchText.trim() === "") {
+      // Handle case where searchText is not a string
+      if (!searchText || typeof searchText !== 'string' || searchText.trim() === "") {
+        console.log('⚠️  textSearch called with invalid searchText, using empty query');
         return this.searchContacts({}, options);
       }
 

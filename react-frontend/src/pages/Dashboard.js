@@ -228,11 +228,11 @@ const Dashboard = () => {
           <Card
             className="bg-success text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/campaign/buyer")}
+            onClick={() => navigate("/hubspot-contacts?campaignType=Buyer")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-shopping-cart fa-2x mb-2"></i>
-              <h3>{stats.byCampaignType?.Buyer || 0}</h3>
+              <h3>{stats.byCampaignType?.Buyer?.toLocaleString() || 0}</h3>
               <p>Buyer Contacts</p>
               <small className="d-block">
                 Campaign Type: Buyer
@@ -244,11 +244,11 @@ const Dashboard = () => {
           <Card
             className="bg-info text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/campaign/seller")}
+            onClick={() => navigate("/hubspot-contacts?campaignType=Seller")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-briefcase fa-2x mb-2"></i>
-              <h3>{stats.byCampaignType?.Seller || 0}</h3>
+              <h3>{stats.byCampaignType?.Seller?.toLocaleString() || 0}</h3>
               <p>Seller Contacts</p>
               <small className="d-block">
                 Campaign Type: Seller
@@ -260,11 +260,11 @@ const Dashboard = () => {
           <Card
             className="bg-warning text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/campaign/cre")}
+            onClick={() => navigate("/hubspot-contacts?campaignType=CRE")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-building fa-2x mb-2"></i>
-              <h3>{stats.byCampaignType?.CRE || 0}</h3>
+              <h3>{stats.byCampaignType?.CRE?.toLocaleString() || 0}</h3>
               <p>CRE Contacts</p>
               <small className="d-block">
                 Campaign Type: CRE
@@ -280,11 +280,11 @@ const Dashboard = () => {
           <Card
             className="bg-danger text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/contacts/campaign/exit-factor")}
+            onClick={() => navigate("/hubspot-contacts?campaignType=Exit Factor")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-rocket fa-2x mb-2"></i>
-              <h3>{stats.byCampaignType?.["Exit Factor"] || 0}</h3>
+              <h3>{stats.byCampaignType?.["Exit Factor"]?.toLocaleString() || 0}</h3>
               <p>Exit Factor</p>
               <small className="d-block">
                 Campaign Type: Exit Factor
@@ -296,14 +296,14 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?filter=clean")}
+            onClick={() => navigate("/hubspot-contacts?hasEmail=true&hasPhone=true")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-check-circle fa-2x mb-2"></i>
               <h3>{stats.cleanContacts?.total?.toLocaleString() || 0}</h3>
               <p>Clean Contacts</p>
               <small className="d-block">
-                Complete Information
+                Email + Phone
               </small>
             </Card.Body>
           </Card>
@@ -312,7 +312,7 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?filter=email-only")}
+            onClick={() => navigate("/hubspot-contacts?hasEmail=true&hasPhone=false")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-envelope fa-2x mb-2"></i>
@@ -328,7 +328,7 @@ const Dashboard = () => {
           <Card
             className="bg-secondary text-white"
             style={{ cursor: "pointer" }}
-            onClick={() => navigate("/hubspot-contacts?filter=phone-only")}
+            onClick={() => navigate("/hubspot-contacts?hasPhone=true&hasEmail=false")}
           >
             <Card.Body className="text-center">
               <i className="fas fa-phone fa-2x mb-2"></i>

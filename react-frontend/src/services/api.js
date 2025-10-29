@@ -66,8 +66,27 @@ export const getAllFilteredContactIds = (filters = {}) => {
   });
 };
 
-export const searchContacts = (query, page = 1, limit = 100) => 
-  api.post('/contacts/search', { query, page, limit });
+export const searchContacts = (params) => {
+  console.log('🔵 searchContacts called with params:', params);
+  
+  // Support both old signature (query, page, limit) and new signature (object with filters)
+  if (typeof params === 'object' && params.filters !== undefined) {
+    // New signature: { filters, page, limit, sort, order }
+    console.log('🔵 Using new signature with filters:', params.filters);
+    return api.post('/contacts/search', params);
+  } else if (typeof params === 'string') {
+    // Old signature: (query, page, limit) where query is a string
+    const query = params;
+    const page = arguments[1] || 1;
+    const limit = arguments[2] || 100;
+    console.log('🔵 Using old signature with query string:', query);
+    return api.post('/contacts/search', { query, page, limit });
+  } else {
+    // Fallback: treat as direct body
+    console.log('🔵 Using direct body:', params);
+    return api.post('/contacts/search', params);
+  }
+};
 
 export const getContact = (id) => api.get(`/contacts/${id}`);
 
