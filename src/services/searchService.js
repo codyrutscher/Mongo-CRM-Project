@@ -525,58 +525,58 @@ class SearchService {
         // Clean Contacts - HubSpot (email + phone + company)
         Contact.countDocuments({
           source: "hubspot",
-          email: { $exists: true, $ne: "", $ne: null },
-          phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $nin: ["", null] },
+          phone: { $exists: true, $nin: ["", null] },
+          company: { $exists: true, $nin: ["", null] },
         }),
         // Clean Contacts - Google Sheets (email + phone + company)
         Contact.countDocuments({
           source: "google_sheets",
-          email: { $exists: true, $ne: "", $ne: null },
-          phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $nin: ["", null] },
+          phone: { $exists: true, $nin: ["", null] },
+          company: { $exists: true, $nin: ["", null] },
         }),
         // Clean Contacts - CSV (email + phone + company)
         Contact.countDocuments({
           source: { $regex: "^csv_" },
-          email: { $exists: true, $ne: "", $ne: null },
-          phone: { $exists: true, $ne: "", $ne: null },
-          company: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $nin: ["", null] },
+          phone: { $exists: true, $nin: ["", null] },
+          company: { $exists: true, $nin: ["", null] },
         }),
         // Email Only - HubSpot
         Contact.countDocuments({
           source: "hubspot",
-          email: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $nin: ["", null] },
           $or: [{ phone: { $exists: false } }, { phone: "" }, { phone: null }],
         }),
         // Email Only - Google Sheets
         Contact.countDocuments({
           source: "google_sheets",
-          email: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $nin: ["", null] },
           $or: [{ phone: { $exists: false } }, { phone: "" }, { phone: null }],
         }),
         // Email Only - CSV
         Contact.countDocuments({
           source: { $regex: "^csv_" },
-          email: { $exists: true, $ne: "", $ne: null },
+          email: { $exists: true, $nin: ["", null] },
           $or: [{ phone: { $exists: false } }, { phone: "" }, { phone: null }],
         }),
         // Phone Only - HubSpot
         Contact.countDocuments({
           source: "hubspot",
-          phone: { $exists: true, $ne: "", $ne: null },
+          phone: { $exists: true, $nin: ["", null] },
           $or: [{ email: { $exists: false } }, { email: "" }, { email: null }],
         }),
         // Phone Only - Google Sheets
         Contact.countDocuments({
           source: "google_sheets",
-          phone: { $exists: true, $ne: "", $ne: null },
+          phone: { $exists: true, $nin: ["", null] },
           $or: [{ email: { $exists: false } }, { email: "" }, { email: null }],
         }),
         // Phone Only - CSV
         Contact.countDocuments({
           source: { $regex: "^csv_" },
-          phone: { $exists: true, $ne: "", $ne: null },
+          phone: { $exists: true, $nin: ["", null] },
           $or: [{ email: { $exists: false } }, { email: "" }, { email: null }],
         }),
         // Missing Company - HubSpot
