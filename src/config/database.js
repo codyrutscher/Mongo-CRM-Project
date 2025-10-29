@@ -3,7 +3,14 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    // Use RAILWAY_MONGODB_URI if MONGODB_URI is not set (for Railway deployment)
+    const mongoUri = process.env.MONGODB_URI || process.env.RAILWAY_MONGODB_URI;
+    
+    if (!mongoUri) {
+      throw new Error('No MongoDB URI found in environment variables');
+    }
+    
+    const conn = await mongoose.connect(mongoUri);
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
     
