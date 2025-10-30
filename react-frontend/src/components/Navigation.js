@@ -31,16 +31,16 @@ const Navigation = () => {
               </LinkContainer>
               <NavDropdown.Divider />
               <NavDropdown.Header>By Campaign Type</NavDropdown.Header>
-              <LinkContainer to="/contacts/campaign/buyer">
+              <LinkContainer to="/hubspot-contacts?campaignType=Buyer">
                 <NavDropdown.Item>🛒 Buyer Contacts</NavDropdown.Item>
               </LinkContainer>
-              <LinkContainer to="/contacts/campaign/seller">
+              <LinkContainer to="/hubspot-contacts?campaignType=Seller">
                 <NavDropdown.Item>💼 Seller Contacts</NavDropdown.Item>
               </LinkContainer>
-              <LinkContainer to="/contacts/campaign/cre">
+              <LinkContainer to="/hubspot-contacts?campaignType=CRE">
                 <NavDropdown.Item>🏢 CRE Contacts</NavDropdown.Item>
               </LinkContainer>
-              <LinkContainer to="/contacts/campaign/exit-factor">
+              <LinkContainer to="/hubspot-contacts?campaignType=Exit Factor">
                 <NavDropdown.Item>🚀 Exit Factor Contacts</NavDropdown.Item>
               </LinkContainer>
             </NavDropdown>
