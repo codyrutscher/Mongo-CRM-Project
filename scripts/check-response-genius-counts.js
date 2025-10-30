@@ -52,7 +52,7 @@ const lists = {
 
 async function getResponseGeniusListCount(listId) {
   try {
-    const response = await axios.get(`${RESPONSE_GENIUS_API_URL}/lists/get_list`, {
+    const response = await axios.get(`${RESPONSE_GENIUS_API_URL}/lists/search`, {
       params: {
         api_id: RESPONSE_GENIUS_API_ID,
         api_key: RESPONSE_GENIUS_API_KEY,
@@ -60,9 +60,14 @@ async function getResponseGeniusListCount(listId) {
       }
     });
     
-    return response.data?.list?.subscriber_count || 0;
+    // Response Genius returns list info with subscriber count
+    if (response.data && typeof response.data === 'object') {
+      return response.data.subscriber_count || response.data.total_subscribers || 0;
+    }
+    
+    return 0;
   } catch (error) {
-    console.error(`Error fetching list ${listId}:`, error.message);
+    console.error(`Error fetching list ${listId}:`, error.response?.data || error.message);
     return 'ERROR';
   }
 }

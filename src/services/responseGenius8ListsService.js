@@ -198,22 +198,29 @@ class ResponseGenius8ListsService {
     
     try {
       if (isOnList) {
-        // Add to list
-        await this.makeRequest('/lists/import_optin', 'POST', {
-          list_api_identifier: config.listId,
-          contacts: [{
-            email: contact.email,
+        // Add to list using subscribe_user endpoint
+        const response = await axios.get(`${this.baseUrl}/lists/subscribe_user`, {
+          params: {
+            api_id: this.apiId,
+            api_key: this.apiKey,
+            list_api_identifier: config.listId,
+            email_address: contact.email,
             first_name: contact.firstname || '',
             last_name: contact.lastname || '',
             phone: contact.phone || ''
-          }]
+          }
         });
         console.log(`✓ Added ${contact.email} to ${config.name}`);
       } else {
-        // Remove from list
-        await this.makeRequest('/lists/import_optout', 'POST', {
-          list_api_identifier: config.listId,
-          contacts: [{ email: contact.email }]
+        // Remove from list using subscribe_user with optout
+        const response = await axios.get(`${this.baseUrl}/lists/subscribe_user`, {
+          params: {
+            api_id: this.apiId,
+            api_key: this.apiKey,
+            list_api_identifier: config.listId,
+            email_address: contact.email,
+            list_preference: 'optout'
+          }
         });
         console.log(`✓ Removed ${contact.email} from ${config.name}`);
       }
@@ -221,6 +228,9 @@ class ResponseGenius8ListsService {
       return { success: true, listName: config.name, action: isOnList ? 'added' : 'removed' };
     } catch (error) {
       console.error(`Error syncing to Response Genius: ${error.message}`);
+      if (error.response) {
+        console.error(`Response: ${JSON.stringify(error.response.data)}`);
+      }
       return { success: false, error: error.message };
     }
   }

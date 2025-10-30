@@ -5,7 +5,7 @@ const Contact = require('../src/models/Contact');
 
 const RESPONSE_GENIUS_API_ID = process.env.RESPONSE_GENIUS_API_ID;
 const RESPONSE_GENIUS_API_KEY = process.env.RESPONSE_GENIUS_API_KEY;
-const RESPONSE_GENIUS_API_URL = process.env.RESPONSE_GENIUS_API_URL;
+const RESPONSE_GENIUS_API_URL = process.env.RESPONSE_GENIUS_API_URL || 'https://control.responsegenius.com/rest';
 const BATCH_SIZE = 100;
 const DELAY_MS = 200; // Delay between batches to respect rate limits
 
@@ -58,24 +58,55 @@ function delay(ms) {
 
 async function syncBatchToResponseGenius(listId, contacts) {
   try {
-    const formattedContacts = contacts.map(c => ({
-      email: c.email,
-      first_name: c.firstName || '',
-      last_name: c.lastName || '',
-      phone: c.phone || ''
-    }));
-
-    await axios.post(`${RESPONSE_GENIUS_API_URL}/lists/import_optin`, {
-      list_api_identifier: listId,
-      contacts: formattedContacts
-    }, {
-      params: {
-        api_id: RESPONSE_GENIUS_API_ID,
-        api_key: RESPONSE_GENIUS_API_KEY
+    // Use subscribe_user endpoint for each contact
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const contact of contacts) {
+      try {
+        await axios.get(`${RESPONSE_GENIUS_API_URL}/lists/subscribe_user`, {
+          params: {
+            api_id: RESPONSE_GENIUS_API_ID,
+            api_key: RESPONSE_GENIUS_API_KEY,
+            list_api_identifier: listId,
+            email_address: contact.email,
+            first_name: contact.firstName || '',
+            last_name: contact.lastName || '',
+            phone: contact.phone || ''
+          }
+        });
+        successCount++;
+      } catch (error) {
+        // 404 means user doesn't exist, which is expected for new contacts
+        // We need to create them first or use a different endpoint
+        if (error.response?.status === 404) {
+          // Try to add as new user
+          try {
+            await axios.get(`${RESPONSE_GENIUS_API_URL}/lists/subscribe_user`, {
+              params: {
+                api_id: RESPONSE_GENIUS_API_ID,
+                api_key: RESPONSE_GENIUS_API_KEY,
+                list_api_identifier: listId,
+                email_address: contact.email,
+                first_name: contact.firstName || '',
+                last_name: contact.lastName || '',
+                phone: contact.phone || '',
+                create_user: 'Y'
+              }
+            });
+            successCount++;
+          } catch (createError) {
+            failCount++;
+          }
+        } else {
+          failCount++;
+        }
       }
-    });
+      // Small delay between individual requests
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
 
-    return { success: true, count: contacts.length };
+    return { success: true, count: successCount, failed: failCount };
   } catch (error) {
     console.error(`    ❌ Batch error: ${error.message}`);
     return { success: false, error: error.message };
