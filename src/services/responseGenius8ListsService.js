@@ -207,7 +207,8 @@ class ResponseGenius8ListsService {
             email_address: contact.email,
             first_name: contact.firstname || '',
             last_name: contact.lastname || '',
-            phone: contact.phone || ''
+            phone: contact.phone || '',
+            subscribed: 'Y'
           }
         });
         console.log(`✓ Added ${contact.email} to ${config.name}`);
@@ -219,7 +220,7 @@ class ResponseGenius8ListsService {
             api_key: this.apiKey,
             list_api_identifier: config.listId,
             email_address: contact.email,
-            list_preference: 'optout'
+            subscribed: 'N'
           }
         });
         console.log(`✓ Removed ${contact.email} from ${config.name}`);
