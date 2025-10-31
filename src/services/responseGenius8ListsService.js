@@ -199,6 +199,7 @@ class ResponseGenius8ListsService {
     try {
       if (isOnList) {
         // Add to list using subscribe_user endpoint
+        // Try with force_subscribe to create new contacts
         const response = await axios.get(`${this.baseUrl}/lists/subscribe_user`, {
           params: {
             api_id: this.apiId,
@@ -208,7 +209,8 @@ class ResponseGenius8ListsService {
             first_name: contact.firstname || '',
             last_name: contact.lastname || '',
             phone: contact.phone || '',
-            subscribed: 'Y'
+            subscribed: 'Y',
+            force_subscribe: 'Y'
           }
         });
         console.log(`✓ Added ${contact.email} to ${config.name}`);
